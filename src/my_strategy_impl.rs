@@ -1,5 +1,7 @@
+use std::time::{Instant, Duration};
 use model::{Game, Action, Robot, Rules, Ball, Arena};
 use strategy::Strategy;
+use my_strategy::random::{XorShiftRng, SeedableRng};
 use my_strategy::vec3::Vec3;
 use my_strategy::world::{World};
 
@@ -84,6 +86,12 @@ fn get_defend_target(arena: &Arena) -> Vec3 {
 pub struct MyStrategyImpl {
     game: Game,
     world: World,
+    rng: XorShiftRng,
+    max_ticks_count: i32,
+    start_time: Instant,
+    tick_start_time: Instant,
+    cpu_time_spent: Duration,
+    plan_orders_max_cpu_time: Duration,
 }
 
 impl Default for MyStrategyImpl {
@@ -94,16 +102,49 @@ impl Default for MyStrategyImpl {
 
 impl Strategy for MyStrategyImpl {
     fn act(&mut self, me: &Robot, rules: &Rules, game: &Game, action: &mut Action) {
+        use std::process::exit;
+        if game.current_tick >= self.max_ticks_count {
+            exit(1);
+        }
+        self.tick_start_time = if game.current_tick == 0 {
+            self.start_time
+        } else {
+            Instant::now()
+        };
         self.update_actual_game(me, game);
         self.apply_action(action);
+        let finish = Instant::now();
+        let cpu_time_spent = finish - self.tick_start_time;
+        self.cpu_time_spent += cpu_time_spent;
     }
 }
 
 impl MyStrategyImpl {
-    pub fn new(me: &Robot, rules: &Rules, game: &Game) -> Self {
+    pub fn new(me: &Robot, rules: &Rules, game: &Game, start_time: Instant, random_seed: u64) -> Self {
+        use std::env;
+        use std::i32;
         MyStrategyImpl {
             game: game.clone(),
             world: World::new(me.clone(), rules.clone(), game.clone()),
+            rng: XorShiftRng::from_seed([
+                random_seed as u32,
+                (random_seed >> 32) as u32,
+                0,
+                0,
+            ]),
+            max_ticks_count: if let Ok(v) = env::var("MAX_TICKS_COUNT") {
+                if let Ok(v_v) = v.parse::<i32>() {
+                    v_v
+                } else {
+                    i32::MAX
+                }
+            } else {
+                i32::MAX
+            },
+            start_time,
+            tick_start_time: start_time,
+            cpu_time_spent: Duration::default(),
+            plan_orders_max_cpu_time: Duration::default(),
         }
     }
 
@@ -142,5 +183,13 @@ impl MyStrategyImpl {
         let desired_robot_hit_direction = (desired_ball_velocity - self.world.game.ball.velocity()).normalized();
         (self.world.game.ball.position() - desired_robot_hit_direction * (self.world.game.ball.radius + ROBOT_MIN_RADIUS + 1e-3))
             .with_min_y(ROBOT_MIN_RADIUS)
+    }
+
+    fn real_time_spent(&self) -> Duration {
+        Instant::now() - self.start_time
+    }
+
+    fn cpu_time_spent(&self) -> Duration {
+        self.cpu_time_spent + (Instant::now() - self.tick_start_time)
     }
 }
