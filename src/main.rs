@@ -1,1 +1,1 @@
-../rust-cgdk/src/main.rs
+../raic/packages/rust/src/main.rs

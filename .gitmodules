@@ -1,0 +1,3 @@
+[submodule "raic"]
+	path = raic
+	url = git@github.com:MailRuChamps/raic.git
