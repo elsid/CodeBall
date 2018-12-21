@@ -1,9 +1,9 @@
 use std::time::{Instant, Duration};
-use model::{Game, Action, Robot, Rules, Ball, Arena};
-use strategy::Strategy;
-use my_strategy::random::{XorShiftRng, SeedableRng};
-use my_strategy::vec3::Vec3;
-use my_strategy::world::{World};
+use crate::model::{Game, Action, Robot, Rules, Ball, Arena};
+use crate::strategy::Strategy;
+use crate::my_strategy::random::{XorShiftRng, SeedableRng};
+use crate::my_strategy::vec3::Vec3;
+use crate::my_strategy::world::{World};
 
 const BALL_RADIUS: f64 = 2.0;
 const ROBOT_MAX_GROUND_SPEED: f64 = 30.0;

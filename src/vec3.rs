@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub, Mul, Div, Neg};
 //use std::hash::{Hash, Hasher};
-use my_strategy::common::{Square};
+use crate::my_strategy::common::{Square};
 
 #[derive(Default, Clone, Copy, Debug, PartialOrd)]
 pub struct Vec3 {

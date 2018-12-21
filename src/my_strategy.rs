@@ -15,8 +15,8 @@ mod world;
 mod my_strategy_impl;
 
 use std::time::{Instant, Duration};
-use model::{Game, Action, Robot, Rules};
-use strategy::Strategy;
+use crate::model::{Game, Action, Robot, Rules};
+use crate::strategy::Strategy;
 use self::my_strategy_impl::MyStrategyImpl;
 
 pub struct MyStrategy {

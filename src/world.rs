@@ -1,4 +1,4 @@
-use model::{Robot, Game, Rules};
+use crate::model::{Robot, Game, Rules};
 
 #[derive(Debug)]
 pub struct World {

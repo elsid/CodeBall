@@ -14,7 +14,7 @@ pub trait Sample<Support> {
 }
 
 pub trait IndependentSample<Support>: Sample<Support> {
-    fn ind_sample<R: Rng>(&self, &mut R) -> Support;
+    fn ind_sample<R: Rng>(&self, rng: &mut R) -> Support;
 }
 
 pub trait Rand : Sized {
@@ -212,7 +212,7 @@ impl<'a, R: Rng> Iterator for AsciiGenerator<'a, R> {
 }
 
 pub trait SeedableRng<Seed>: Rng {
-    fn reseed(&mut self, Seed);
+    fn reseed(&mut self, seed: Seed);
 
     fn from_seed(seed: Seed) -> Self;
 }
