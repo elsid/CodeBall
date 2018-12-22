@@ -1,6 +1,7 @@
 use std::ops::{Add, Sub, Mul, Div, Neg};
 //use std::hash::{Hash, Hasher};
 use crate::my_strategy::common::{Square};
+use crate::my_strategy::vec2::Vec2;
 
 #[derive(Default, Clone, Copy, Debug, PartialOrd)]
 pub struct Vec3 {
@@ -10,7 +11,7 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
+    pub const fn new(x: f64, y: f64, z: f64) -> Self {
         Vec3 { x, y, z }
     }
 
@@ -18,28 +19,57 @@ impl Vec3 {
 //        Vec3 { x: radius * angle.cos(), y: radius * angle.sin() }
 //    }
 
-    pub fn x(&self) -> f64 {
+    pub const fn x(&self) -> f64 {
         self.x
     }
 
-    pub fn y(&self) -> f64 {
+    pub const fn y(&self) -> f64 {
         self.y
     }
 
-    pub fn z(&self) -> f64 {
+    pub const fn z(&self) -> f64 {
         self.z
     }
 
-//    pub fn with_x(&self, x: f64) -> Vec3 {
-//        Vec3::new(x, self.y)
-//    }
+    pub const fn xy(&self) -> Vec2 {
+        Vec2::new(self.x, self.y)
+    }
 
-    pub fn with_y(&self, y: f64) -> Vec3 {
+    pub const fn with_x(&self, x: f64) -> Vec3 {
+        Vec3::new(x, self.y, self.z)
+    }
+
+    pub const fn with_y(&self, y: f64) -> Vec3 {
         Vec3::new(self.x, y, self.z)
+    }
+
+    pub const fn with_z(&self, z: f64) -> Vec3 {
+        Vec3::new(self.x, self.y, z)
     }
 
     pub fn with_min_y(&self, y: f64) -> Vec3 {
         Vec3::new(self.x, self.y.max(y), self.z)
+    }
+
+    pub fn with_neg_x(&self) -> Vec3 {
+        self.with_x(-self.x)
+    }
+
+    pub fn with_neg_y(&self) -> Vec3 {
+        self.with_y(-self.y)
+    }
+
+    pub fn with_neg_z(&self) -> Vec3 {
+        self.with_z(-self.z)
+    }
+
+    pub fn clamp(&self, value: f64) -> Vec3 {
+        let norm = self.norm();
+        if norm > value {
+            *self / (norm * value)
+        } else {
+            *self
+        }
     }
 
 //    pub fn with_dx(&self, dx: f64) -> Vec3 {
@@ -66,12 +96,12 @@ impl Vec3 {
         (other - *self).norm()
     }
 
-//    pub fn rotated(&self, angle: f64) -> Vec3 {
-//        let sin = angle.sin();
-//        let cos = angle.cos();
-//        Vec3::new(self.x * cos - self.y * sin, self.y * cos + self.x * sin)
-//    }
-//
+    pub fn rotated_by_y(&self, angle: f64) -> Vec3 {
+        let sin = angle.sin();
+        let cos = angle.cos();
+        Vec3::new(self.x * cos - self.z * sin, self.y, self.z * cos + self.x * sin)
+    }
+
 //    pub fn det(&self, other: Vec3) -> f64 {
 //        self.x * other.y - self.y * other.x
 //    }
@@ -79,15 +109,15 @@ impl Vec3 {
 //    pub fn square(&self) -> f64 {
 //        self.x * self.x + self.y * self.y
 //    }
-//
-//    pub fn cos(&self, other: Vec3) -> f64 {
-//        self.dot(other) / (self.norm() * other.norm())
-//    }
-//
-//    pub fn dot(&self, other: Vec3) -> f64 {
-//        self.x * other.x + self.y * other.y
-//    }
-//
+
+    pub fn cos(&self, other: Vec3) -> f64 {
+        self.dot(other) / (self.norm() * other.norm())
+    }
+
+    pub fn dot(&self, other: Vec3) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
+
 //    pub fn abs(&self) -> Vec3 {
 //        Vec3::new(self.x.abs(), self.y.abs())
 //    }

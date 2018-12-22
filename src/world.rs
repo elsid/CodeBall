@@ -1,6 +1,6 @@
 use crate::model::{Robot, Game, Rules};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct World {
     pub me: Robot,
     pub rules: Rules,
@@ -9,11 +9,7 @@ pub struct World {
 
 impl World {
     pub fn new(me: Robot, rules: Rules, game: Game) -> Self {
-        World {
-            me: me,
-            rules: rules,
-            game: game,
-        }
+        World {me, rules, game}
     }
 
     pub fn update(&mut self, me: &Robot, game: &Game) {
