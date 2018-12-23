@@ -110,30 +110,29 @@ impl Robot {
                     global_simulator.rules(),
                     rng
                 );
-                for mut target in points {
-                    let action_id = next_action_id;
-                    next_action_id += 1;
-                    target = {
+                for point in points {
+                    let target = {
                         let mut robot = global_simulator.me().clone();
-                        robot.set_position(target);
+                        robot.set_position(point);
                         world.rules.arena.collide(&mut robot);
                         robot.position()
                     };
                     let to_target = target - self.position();
                     let distance_to_target = to_target.norm();
-                    let target_direction = to_target.normalized();
                     let required_speed = distance_to_target / global_simulator.current_time();
 //                    log!(world.game.current_tick, "    <{}> suggest target {}:{} distance={} speed={} target={:?}", action_id, global_simulator.current_time(), global_simulator.current_tick(), distance_to_target, required_speed, target);
                     if required_speed.is_between(0.9 * world.rules.ROBOT_MAX_GROUND_SPEED, world.rules.ROBOT_MAX_GROUND_SPEED) {
                         continue;
                     }
+                    let action_id = next_action_id;
+                    next_action_id += 1;
                     let mut local_simulator = initial_simulator.clone();
                     let mut action = Action::default();
                     let velocity = if distance_to_target > 1e-3 {
                         if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * far_time_interval {
-                            target_direction * world.rules.ROBOT_MAX_GROUND_SPEED
+                            to_target.normalized() * world.rules.ROBOT_MAX_GROUND_SPEED
                         } else {
-                            target_direction * required_speed
+                            to_target.normalized() * required_speed
                         }
                     } else {
                         Vec3::default()
