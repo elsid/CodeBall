@@ -67,7 +67,6 @@ pub struct MyStrategy {
 impl Strategy for MyStrategy {
     fn act(&mut self, me: &Robot, rules: &Rules, game: &Game, action: &mut Action) {
         if self.strategy_impl.is_none() {
-            log!(game.current_tick, "start");
 //            self.strategy_impl = Some(MyStrategyImpl::new(me, rules, game, self.start_time));
             self.strategy_impl = Some(MyStrategyImpl::new(me, rules, game));
         }

@@ -59,6 +59,7 @@ impl MyStrategyImpl {
         use std::env;
         use std::i32;
         let world = World::new(me.clone(), rules.clone(), game.clone());
+        log!(game.current_tick, "start");
         MyStrategyImpl {
             world: world.clone(),
             rng: XorShiftRng::from_seed([
