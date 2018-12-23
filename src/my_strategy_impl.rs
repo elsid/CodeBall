@@ -18,7 +18,6 @@ pub struct MyStrategyImpl {
     tick_start_time: Instant,
     cpu_time_spent: Duration,
     plan_orders_max_cpu_time: Duration,
-    simulator: Simulator,
     last_tick: i32,
     actions: Vec<(i32, OptimalAction)>,
     render: Render,
@@ -84,7 +83,6 @@ impl MyStrategyImpl {
             tick_start_time: start_time,
             cpu_time_spent: Duration::default(),
             plan_orders_max_cpu_time: Duration::default(),
-            simulator: Simulator::new(&world),
             last_tick: -1,
             actions: Vec::new(),
             render: Render::new(),
@@ -133,19 +131,6 @@ impl MyStrategyImpl {
             * self.world.rules.ROBOT_MAX_GROUND_SPEED;
         action.set_target_velocity(velocity);
         log!(self.world.game.current_tick, "[{}] apply default action {:?}", self.world.me.id, action);
-    }
-
-    fn test_simulator(&mut self, action: &mut Action) {
-        log!(self.world.game.current_tick, "{} {} {} {:?} {:?} {}",
-             self.simulator.me().radius(), self.world.me.radius, self.simulator.me().radius() - self.world.me.radius,
-             self.simulator.me().position(), self.world.me.position(), self.simulator.me().position().distance(self.world.me.position()));
-        self.simulator = Simulator::new(&self.world);
-        action.jump_speed = self.world.rules.ROBOT_MAX_JUMP_SPEED;
-        self.simulator.tick(
-            self.world.rules.tick_time_interval(),
-            self.world.rules.MICROTICKS_PER_TICK,
-            &mut self.rng
-        );
     }
 
     fn real_time_spent(&self) -> Duration {
