@@ -100,6 +100,7 @@ impl Robot {
         let far_time_interval = near_time_interval * 2.0;
         let simulation_time_depth = world.rules.tick_time_interval() * 100.0;
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
+        let max_micro_ticks = 1000;
         let mut next_action_id = 0;
         let mut optimal_action = OptimalAction {
             id: next_action_id,
@@ -170,7 +171,7 @@ impl Robot {
                         log!(world.game.current_tick, "[{}]    <{}> will move {}:{} target={}/{} ball={}/{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), 1.5 * velocity.norm() * near_time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * near_time_interval);
                         local_simulator.me_mut().action = action.clone();
                         while local_simulator.current_time() + far_time_interval < simulation_time_depth
-                            && local_simulator.current_micro_tick() < 1000
+                            && local_simulator.current_micro_tick() < max_micro_ticks
                             && local_simulator.score() == 0
                             && local_simulator.me().position().distance(target)
                                 > 1.5 * velocity.norm() * far_time_interval
@@ -184,7 +185,7 @@ impl Robot {
                         stats.micro_ticks_to_near = local_simulator.current_micro_tick();
                         stats.time_to_near = local_simulator.current_time();
                         while local_simulator.current_time() + near_time_interval < simulation_time_depth
-                            && local_simulator.current_micro_tick() < 1000
+                            && local_simulator.current_micro_tick() < max_micro_ticks
                             && local_simulator.score() == 0
                             && local_simulator.me().position().distance(target)
                                 > velocity.norm() * near_time_interval
@@ -204,7 +205,7 @@ impl Robot {
                     local_simulator.me_mut().action.jump_speed = world.rules.ROBOT_MAX_JUMP_SPEED;
                     let time_to_ball = local_simulator.current_time();
                     while local_simulator.current_time() + near_time_interval < simulation_time_depth
-                        && local_simulator.current_micro_tick() < 1000
+                        && local_simulator.current_micro_tick() < max_micro_ticks
                         && local_simulator.score() == 0
                         && (
                             local_simulator.me().position().distance(target)
@@ -223,7 +224,7 @@ impl Robot {
                     local_simulator.me_mut().action.jump_speed = 0.0;
                     local_simulator.me_mut().action.set_target_velocity(Vec3::default());
                     while local_simulator.current_time() + far_time_interval < simulation_time_depth
-                        && local_simulator.current_micro_tick() < 1000
+                        && local_simulator.current_micro_tick() < max_micro_ticks
                         && local_simulator.score() == 0
                     {
                         log!(world.game.current_tick, "[{}]    <{}> watch {}:{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick());
