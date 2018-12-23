@@ -110,7 +110,6 @@ impl Robot {
                     global_simulator.rules(),
                     rng
                 );
-                let step_local_simulator = initial_simulator.clone();
                 for mut target in points {
                     let action_id = next_action_id;
                     next_action_id += 1;
@@ -128,7 +127,7 @@ impl Robot {
                     if required_speed.is_between(0.9 * world.rules.ROBOT_MAX_GROUND_SPEED, world.rules.ROBOT_MAX_GROUND_SPEED) {
                         continue;
                     }
-                    let mut local_simulator = step_local_simulator.clone();
+                    let mut local_simulator = initial_simulator.clone();
                     let mut action = Action::default();
                     let velocity = if distance_to_target > 1e-3 {
                         if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * far_time_interval {
