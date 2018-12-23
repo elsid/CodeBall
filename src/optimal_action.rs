@@ -37,7 +37,7 @@ impl State {
                 radius: me.radius,
                 position: me.position(),
                 velocity: me.velocity(),
-            }
+            },
         }
     }
 }
@@ -93,7 +93,7 @@ impl Robot {
                 global_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
             }
             let ball_y = global_simulator.ball().base().y;
-            let ball_radius = global_simulator.ball().base().radius;
+            let ball_radius = global_simulator.ball().radius();
             if let Some(distance) = get_min_distance_between_spheres(ball_y, ball_radius, (world.rules.ROBOT_MAX_RADIUS +  world.rules.ROBOT_MIN_RADIUS) / 2.0) {
                 log!(world.game.current_tick, "  use time point {} {}", global_simulator.current_tick(), global_simulator.current_time());
                 iterations += 1;
@@ -136,17 +136,17 @@ impl Robot {
                     let mut history = vec![State::new(&local_simulator)];
 //                    log!(world.game.current_tick, "    <{}> use velocity {}:{} {} {:?}", action_id, local_simulator.current_time(), local_simulator.current_tick(), velocity.norm(), velocity);
                     action.set_target_velocity(velocity);
-                    if local_simulator.me().base().position().distance(target)
+                    if local_simulator.me().position().distance(target)
                             > 1.5 * velocity.norm() * near_time_interval
-                        && local_simulator.me().base().position().distance(local_simulator.ball().base().position())
+                        && local_simulator.me().position().distance(local_simulator.ball().position())
                             > (world.rules.ROBOT_MIN_RADIUS + world.rules.ROBOT_MAX_RADIUS) / 2.0
                     {
                         local_simulator.me_mut().action = action.clone();
                         while local_simulator.current_time() < simulation_time_depth
                             && local_simulator.score() == 0
-                            && local_simulator.me().base().position().distance(target)
+                            && local_simulator.me().position().distance(target)
                                 > 1.5 * velocity.norm() * far_time_interval
-                            && local_simulator.me().base().position().distance(local_simulator.ball().base().position())
+                            && local_simulator.me().position().distance(local_simulator.ball().position())
                                 > (world.rules.ROBOT_MIN_RADIUS + world.rules.ROBOT_MAX_RADIUS) / 2.0
                         {
                             local_simulator.tick(far_time_interval, far_micro_ticks_per_tick, rng);
@@ -155,9 +155,9 @@ impl Robot {
                         }
                         while local_simulator.current_time() < simulation_time_depth
                             && local_simulator.score() == 0
-                            && local_simulator.me().base().position().distance(target)
+                            && local_simulator.me().position().distance(target)
                                 > 1.5 * velocity.norm() * near_time_interval
-                            && local_simulator.me().base().position().distance(local_simulator.ball().base().position())
+                            && local_simulator.me().position().distance(local_simulator.ball().position())
                                 > (world.rules.ROBOT_MIN_RADIUS + world.rules.ROBOT_MAX_RADIUS) / 2.0
                         {
                             local_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
@@ -170,7 +170,7 @@ impl Robot {
                     local_simulator.me_mut().action.jump_speed = world.rules.ROBOT_MAX_JUMP_SPEED;
                     while local_simulator.current_time() < simulation_time_depth
                         && local_simulator.score() == 0
-                        && local_simulator.me().base().position().distance(local_simulator.ball().base().position())
+                        && local_simulator.me().position().distance(local_simulator.ball().position())
                             < (world.rules.ROBOT_MIN_RADIUS + world.rules.ROBOT_MAX_RADIUS) / 2.0
                     {
                         local_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
@@ -219,9 +219,9 @@ impl Robot {
             render.add(Object::line(prev.me.position, next.me.position, 1.0, OPTIMAL_ME_POSITION));
         }
 //        render.add(Object::line(world.me.position(), world.me.position() + optimal_action.action.target_velocity() * 100.0, 2.0, VELOCITY));
-//        render.add(Object::sphere(optimal_action.local_simulator_before_jump.me().base().position(), optimal_action.local_simulator_before_jump.me().base().radius, OPTIMAL_ME_POSITION));
-//        render.add(Object::sphere(optimal_action.local_simulator_after_jump.me().base().position(), optimal_action.local_simulator_after_jump.me().base().radius, OPTIMAL_ME_POSITION));
-//        render.add(Object::sphere(optimal_action.local_simulator_end.ball().base().position(), optimal_action.local_simulator_end.ball().base().radius, OPTIMAL_BALL_POSITION));
+//        render.add(Object::sphere(optimal_action.local_simulator_before_jump.me().position(), optimal_action.local_simulator_before_jump.me().radius(), OPTIMAL_ME_POSITION));
+//        render.add(Object::sphere(optimal_action.local_simulator_after_jump.me().position(), optimal_action.local_simulator_after_jump.me().radius(), OPTIMAL_ME_POSITION));
+//        render.add(Object::sphere(optimal_action.local_simulator_end.ball().position(), optimal_action.local_simulator_end.ball().radius(), OPTIMAL_BALL_POSITION));
         render.add(Object::text(format!("{}\n{}", optimal_action.action.target_velocity().norm(), world.me.velocity().norm())));
 //        log!(world.game.current_tick, "<{}> optimal action", optimal_action.id);
         optimal_action

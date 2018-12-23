@@ -5,7 +5,7 @@ use crate::my_strategy::random::{XorShiftRng, SeedableRng};
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::world::World;
 use crate::my_strategy::entity::Entity;
-use crate::my_strategy::simulator::Simulator;
+use crate::my_strategy::simulator::{Simulator, Solid};
 use crate::my_strategy::render::Render;
 use crate::my_strategy::optimal_action::OptimalAction;
 
@@ -137,8 +137,8 @@ impl MyStrategyImpl {
 
     fn test_simulator(&mut self, action: &mut Action) {
         log!(self.world.game.current_tick, "{} {} {} {:?} {:?} {}",
-             self.simulator.me().base().radius, self.world.me.radius, self.simulator.me().base().radius - self.world.me.radius,
-             self.simulator.me().base().position(), self.world.me.position(), self.simulator.me().base().position().distance(self.world.me.position()));
+             self.simulator.me().radius(), self.world.me.radius, self.simulator.me().radius() - self.world.me.radius,
+             self.simulator.me().position(), self.world.me.position(), self.simulator.me().position().distance(self.world.me.position()));
         self.simulator = Simulator::new(&self.world);
         action.jump_speed = self.world.rules.ROBOT_MAX_JUMP_SPEED;
         self.simulator.tick(
