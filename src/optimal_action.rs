@@ -263,23 +263,25 @@ impl Robot {
                 global_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
             }
         }
-        render.add_with_tag(Tag::RobotId(self.id), Object::sphere(optimal_action.target, world.rules.ROBOT_MIN_RADIUS, OPTIMAL_TARGET));
-        for state in optimal_action.history.iter() {
-            render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.ball.position, world.rules.BALL_RADIUS, OPTIMAL_BALL_POSITION));
-            render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.me.position, state.me.radius, OPTIMAL_ME_POSITION));
-            for (i, robot) in state.robots.iter().enumerate() {
-                render.add_with_tag(Tag::RobotId(self.id), Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len())));
+        if cfg!(feature = "enable_render") {
+            render.add_with_tag(Tag::RobotId(self.id), Object::sphere(optimal_action.target, world.rules.ROBOT_MIN_RADIUS, OPTIMAL_TARGET));
+            for state in optimal_action.history.iter() {
+                render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.ball.position, world.rules.BALL_RADIUS, OPTIMAL_BALL_POSITION));
+                render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.me.position, state.me.radius, OPTIMAL_ME_POSITION));
+                for (i, robot) in state.robots.iter().enumerate() {
+                    render.add_with_tag(Tag::RobotId(self.id), Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len())));
+                }
             }
-        }
-        for (prev, next) in (&optimal_action.history[0..optimal_action.history.len() - 1]).iter()
+            for (prev, next) in (&optimal_action.history[0..optimal_action.history.len() - 1]).iter()
                 .zip((&optimal_action.history[1..optimal_action.history.len()]).iter()) {
-            render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.ball.position, next.ball.position, 1.0, OPTIMAL_BALL_POSITION));
-            render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.me.position, next.me.position, 1.0, OPTIMAL_ME_POSITION));
-            for (i, (prev_robot, next_robot)) in (prev.robots.iter().zip(next.robots.iter())).enumerate() {
-                render.add_with_tag(Tag::RobotId(self.id), Object::line(prev_robot.position, next_robot.position, 1.0, get_robot_color(i, prev.robots.len())));
+                render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.ball.position, next.ball.position, 1.0, OPTIMAL_BALL_POSITION));
+                render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.me.position, next.me.position, 1.0, OPTIMAL_ME_POSITION));
+                for (i, (prev_robot, next_robot)) in (prev.robots.iter().zip(next.robots.iter())).enumerate() {
+                    render.add_with_tag(Tag::RobotId(self.id), Object::line(prev_robot.position, next_robot.position, 1.0, get_robot_color(i, prev.robots.len())));
+                }
             }
+            render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  velocity.norm(): {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
         }
-        render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  velocity.norm(): {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
         optimal_action.stats.iterations = iterations;
         optimal_action
     }

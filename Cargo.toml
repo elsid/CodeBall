@@ -14,3 +14,4 @@ serde_derive = "1"
 enable_log = []
 dump_result = []
 dump_stats = []
+enable_render = []

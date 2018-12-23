@@ -74,8 +74,12 @@ impl Strategy for MyStrategy {
     }
 
     fn custom_rendering(&mut self) -> String {
-        if let Some(v) = &self.strategy_impl {
-            serde_json::to_string(v.render()).unwrap()
+        if cfg!(feature = "enable_render") {
+            if let Some(v) = &self.strategy_impl {
+                serde_json::to_string(v.render()).unwrap()
+            } else {
+                String::new()
+            }
         } else {
             String::new()
         }
