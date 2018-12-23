@@ -13,7 +13,7 @@ pub struct MyStrategyImpl {
 //    tick_start_time: Instant,
 //    cpu_time_spent: Duration,
     last_tick: i32,
-    actions: Vec<(i32, OptimalAction)>,
+    optimal_action: Option<OptimalAction>,
     render: Render,
 }
 
@@ -36,13 +36,12 @@ impl Strategy for MyStrategyImpl {
 //        };
         if self.last_tick != game.current_tick {
             self.last_tick = game.current_tick;
-            self.actions.clear();
             self.render.clear();
             self.update_world(me, game);
             self.generate_actions();
             self.render.ignore_all();
-            for (id, _) in self.actions.iter() {
-                self.render.include_tag(Tag::RobotId(*id));
+            for v in self.optimal_action.iter() {
+                self.render.include_tag(Tag::RobotId(v.robot_id));
             }
         } else {
             self.update_world_me(me);
@@ -81,7 +80,7 @@ impl MyStrategyImpl {
 //            tick_start_time: start_time,
 //            cpu_time_spent: Duration::default(),
             last_tick: -1,
-            actions: Vec::new(),
+            optimal_action: None,
             render: Render::new(),
         }
     }
@@ -100,27 +99,35 @@ impl MyStrategyImpl {
 
     fn generate_actions(&mut self) {
         let world = &self.world;
-        let actions = &mut self.actions;
-        let render= &mut self.render;
         let rng = &mut self.rng;
-        for (id, action) in world.game.robots.iter()
-            .filter(|v| v.is_teammate)
-            .map(|v| (v.id, v.get_optimal_action(world, rng, render)))
-            .max_by_key(|(_, v)| v.score)
-        {
-            actions.push((id, action));
-        }
+        let render= &mut self.render;
+        self.optimal_action = if let Some(action) = &self.optimal_action {
+            let current_robot_action = world.game.robots.iter()
+                .find(|v| v.id == action.robot_id)
+                .unwrap()
+                .get_optimal_action(world, rng, render);
+            world.game.robots.iter()
+                .filter(|v| v.is_teammate && v.id != action.robot_id)
+                .map(|v| v.get_optimal_action(world, rng, render))
+                .max_by_key(|v| v.score)
+                .filter(|v| v.score > current_robot_action.score + 100)
+                .or(Some(current_robot_action))
+        } else {
+            world.game.robots.iter()
+                .filter(|v| v.is_teammate)
+                .map(|v| v.get_optimal_action(world, rng, render))
+                .max_by_key(|v| v.score)
+        };
     }
 
     fn apply_action(&mut self, action: &mut Action) {
-        let mut action_applied = false;
-        self.actions.iter()
-            .find(|(id, _)| *id == self.world.me.id)
-            .map(|(_, v)| {
+        let action_applied = self.optimal_action.iter()
+            .find(|v| v.robot_id == self.world.me.id)
+            .map(|v| {
                 *action = v.action.clone();
-                action_applied = true;
                 log!(self.world.game.current_tick, "[{}] <{}> apply optimal action {:?}", self.world.me.id, v.id, action);
-            });
+            })
+            .is_some();
         if action_applied {
             return;
         }

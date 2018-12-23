@@ -58,6 +58,7 @@ impl State {
 
 pub struct OptimalAction {
     pub id: i32,
+    pub robot_id: i32,
     pub action: Action,
     pub score: i32,
     pub target: Vec3,
@@ -83,6 +84,7 @@ impl Robot {
         let mut next_action_id = 0;
         let mut optimal_action = OptimalAction {
             id: next_action_id,
+            robot_id: self.id,
             action: default_action,
             score: -1000,
             target: self.position(),
@@ -198,6 +200,7 @@ impl Robot {
                     if optimal_action.score < action_score {
                         optimal_action = OptimalAction {
                             id: action_id,
+                            robot_id: self.id,
                             action,
                             score: action_score,
                             target,
