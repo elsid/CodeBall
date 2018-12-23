@@ -104,7 +104,7 @@ impl Robot {
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
             if let Some(distance) = get_min_distance_between_spheres(ball_y, ball_radius, (world.rules.ROBOT_MAX_RADIUS +  world.rules.ROBOT_MIN_RADIUS) / 2.0) {
-                log!(world.game.current_tick, "  use time point {} {}", global_simulator.current_tick(), global_simulator.current_time());
+//                log!(world.game.current_tick, "  use time point {} {}", global_simulator.current_tick(), global_simulator.current_time());
                 iterations += 1;
                 let points = get_points(
                     distance,
