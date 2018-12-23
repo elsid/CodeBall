@@ -142,7 +142,7 @@ impl Robot {
                         world.rules.ROBOT_MAX_GROUND_SPEED
                     };
                     log!(world.game.current_tick, "[{}]    suggest target {}:{} distance={} velocity.norm()={} target={:?}", self.id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
-                    if required_speed.is_between(0.9 * world.rules.ROBOT_MAX_GROUND_SPEED, world.rules.ROBOT_MAX_GROUND_SPEED) {
+                    if required_speed.is_between(0.9 * world.rules.ROBOT_MAX_GROUND_SPEED, 1.01 * world.rules.ROBOT_MAX_GROUND_SPEED) {
                         continue;
                     }
                     let action_id = next_action_id;
