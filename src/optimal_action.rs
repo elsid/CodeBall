@@ -93,7 +93,7 @@ impl Robot {
         next_action_id += 1;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
-        while (iterations < 5 || optimal_action.id == 0) && global_simulator.current_time() < simulation_time_depth {
+        while (iterations < 5 || optimal_action.id == 0) && global_simulator.current_time() + near_time_interval < simulation_time_depth {
 //            log!(world.game.current_tick, "  try time point {} {}", global_simulator.current_tick(), global_simulator.current_time());
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
                 global_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
@@ -148,7 +148,7 @@ impl Robot {
                             > (world.rules.ROBOT_MIN_RADIUS + world.rules.ROBOT_MAX_RADIUS) / 2.0
                     {
                         local_simulator.me_mut().action = action.clone();
-                        while local_simulator.current_time() < simulation_time_depth
+                        while local_simulator.current_time() + far_time_interval < simulation_time_depth
                             && local_simulator.score() == 0
                             && local_simulator.me().position().distance(target)
                                 > 1.5 * velocity.norm() * far_time_interval
@@ -159,7 +159,7 @@ impl Robot {
                             history.push(State::new(&local_simulator));
 //                            log!(world.game.current_tick, "    <{}> move far {}:{} {}", action_id, local_simulator.current_time(), local_simulator.current_tick(), simulation_time_depth);
                         }
-                        while local_simulator.current_time() < simulation_time_depth
+                        while local_simulator.current_time() + near_time_interval < simulation_time_depth
                             && local_simulator.score() == 0
                             && local_simulator.me().position().distance(target)
                                 > 1.5 * velocity.norm() * near_time_interval
@@ -174,7 +174,8 @@ impl Robot {
                         action.jump_speed = world.rules.ROBOT_MAX_JUMP_SPEED;
                     }
                     local_simulator.me_mut().action.jump_speed = world.rules.ROBOT_MAX_JUMP_SPEED;
-                    while local_simulator.current_time() < simulation_time_depth
+                    let time_to_ball = local_simulator.current_time();
+                    while local_simulator.current_time() + near_time_interval < simulation_time_depth
                         && local_simulator.score() == 0
                         && local_simulator.me().position().distance(local_simulator.ball().position())
                             < (world.rules.ROBOT_MIN_RADIUS + world.rules.ROBOT_MAX_RADIUS) / 2.0
@@ -185,7 +186,7 @@ impl Robot {
                     }
 //                    local_simulator.me_mut().action.jump_speed = 0.0;
                     local_simulator.me_mut().action.set_target_velocity(Vec3::default());
-                    while local_simulator.current_time() < simulation_time_depth
+                    while local_simulator.current_time() + far_time_interval < simulation_time_depth
                         && local_simulator.score() == 0
                     {
                         local_simulator.tick(far_time_interval, far_micro_ticks_per_tick, rng);
@@ -195,6 +196,8 @@ impl Robot {
                     let action_score = get_action_score(
                         &world.rules,
                         &local_simulator,
+                        time_to_ball,
+                        simulation_time_depth + far_time_interval,
                     );
 //                    log!(world.game.current_tick, "    <{}> suggest action {}:{} score={} speed={}", action_id, local_simulator.current_time(), local_simulator.current_tick(), action_score, action.target_velocity().norm());
                     if optimal_action.score < action_score {
@@ -236,18 +239,25 @@ impl Robot {
     }
 }
 
-fn get_action_score(rules: &Rules, simulator: &Simulator) -> i32 {
+fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: f64, max_time: f64) -> i32 {
     let ball = simulator.ball();
-    let goal = rules.arena.get_goal_target();
-    let to_goal = ball.position() - goal;
-    let ball_goal_distance_score = -to_goal.norm()
-        / Vec2::new(rules.arena.width + 2.0 * rules.arena.goal_depth, rules.arena.depth).norm();
+    let to_goal = rules.arena.get_goal_target() - ball.position();
+    let ball_goal_distance_score = if simulator.score() < 1 {
+        1.0 - to_goal.norm()
+            / Vec2::new(rules.arena.width + 2.0 * rules.arena.goal_depth, rules.arena.depth).norm()
+    } else {
+        1.0
+    };
     let ball_goal_direction_score = if simulator.score() <= 0 && ball.velocity().norm() > 0.0 {
-        to_goal.cos(ball.velocity()).round()
+        (to_goal.cos(ball.velocity()) + 1.0) / 2.0
     } else {
         0.0
     };
-    let score = ball_goal_distance_score + 0.0 * ball_goal_direction_score;
+    let time_score = 1.0 - time_to_ball / max_time;
+    let score = 0.0
+        + ball_goal_distance_score
+        + 0.1 * ball_goal_direction_score
+        + 0.5 * time_score;
 //    log!(current_tick, "    <{}> action ball_goal_distance_score={} ball_goal_direction_score={} time_score={}", action_id, ball_goal_distance_score, ball_goal_direction_score, time_score);
     (1000.0 * score).round() as i32
 }
