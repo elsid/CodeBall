@@ -77,16 +77,16 @@ impl Robot {
         global_simulator.me_mut().set_velocity(Vec3::default());
         let default_action = Action::default();
         let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK;
-        let far_micro_ticks_per_tick = near_micro_ticks_per_tick / 4;
+        let far_micro_ticks_per_tick = near_micro_ticks_per_tick / 10;
         let near_time_interval = world.rules.tick_time_interval();
         let far_time_interval = near_time_interval * 2.0;
-        let simulation_time_depth = far_time_interval * 100.0;
+        let simulation_time_depth = world.rules.tick_time_interval() * 100.0;
         let mut next_action_id = 0;
         let mut optimal_action = OptimalAction {
             id: next_action_id,
             robot_id: self.id,
             action: default_action,
-            score: -1000,
+            score: std::i32::MIN,
             target: self.position(),
             history: vec![State::new(&global_simulator)],
         };
