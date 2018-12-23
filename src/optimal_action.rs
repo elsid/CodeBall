@@ -113,7 +113,7 @@ impl Robot {
         next_action_id += 1;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
-        while (iterations < 5 || optimal_action.id == 0) && global_simulator.current_time() + near_time_interval < simulation_time_depth {
+        while (iterations < 3 || optimal_action.id == 0) && global_simulator.current_time() + near_time_interval < simulation_time_depth {
             log!(world.game.current_tick, "[{}]  try time point {} {}", self.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
