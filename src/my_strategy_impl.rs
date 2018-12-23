@@ -6,7 +6,7 @@ use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::world::World;
 use crate::my_strategy::entity::Entity;
 use crate::my_strategy::simulator::{Simulator, Solid};
-use crate::my_strategy::render::Render;
+use crate::my_strategy::render::{Render, Tag};
 use crate::my_strategy::optimal_action::OptimalAction;
 
 pub struct MyStrategyImpl {
@@ -44,6 +44,7 @@ impl Strategy for MyStrategyImpl {
             self.last_tick = game.current_tick;
             self.actions.clear();
             self.render.clear();
+            self.render.include_tag(Tag::RobotId(1));
             self.update_world(me, game);
             self.generate_actions();
         } else {
