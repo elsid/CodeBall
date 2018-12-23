@@ -15,6 +15,7 @@ pub struct BallState {
 }
 
 pub struct RobotState {
+    pub id: i32,
     pub radius: f64,
     pub position: Vec3,
     pub velocity: Vec3,
@@ -30,23 +31,27 @@ impl State {
     pub fn new(simulator: &Simulator) -> Self {
         let ball = simulator.ball().base();
         let me = simulator.me().base();
+        let mut robots: Vec<RobotState> = simulator.robots().iter()
+            .filter(|v| !v.is_me)
+            .map(|v| RobotState {
+                id: v.id(),
+                radius: v.radius(),
+                position: v.position(),
+                velocity: v.velocity(),
+            })
+            .collect();
+        robots.sort_by_key(|v| v.id);
         State {
             ball: BallState {
                 position: ball.position(),
             },
             me: RobotState {
+                id: me.id,
                 radius: me.radius,
                 position: me.position(),
                 velocity: me.velocity(),
             },
-            robots: simulator.robots().iter()
-                .filter(|v| !v.is_me)
-                .map(|v| RobotState {
-                    radius: v.radius(),
-                    position: v.position(),
-                    velocity: v.velocity(),
-                })
-                .collect(),
+            robots,
         }
     }
 }

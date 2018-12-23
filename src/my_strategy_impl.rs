@@ -44,9 +44,11 @@ impl Strategy for MyStrategyImpl {
             self.last_tick = game.current_tick;
             self.actions.clear();
             self.render.clear();
-            self.render.include_tag(Tag::RobotId(1));
             self.update_world(me, game);
             self.generate_actions();
+            for (id, _) in self.actions.first().iter() {
+                self.render.include_tag(Tag::RobotId(*id));
+            }
         } else {
             self.update_world_me(me);
         }
@@ -108,8 +110,9 @@ impl MyStrategyImpl {
         let render= &mut self.render;
         let rng = &mut self.rng;
         for (id, action) in world.game.robots.iter()
-                .filter(|v| v.is_teammate)
-                .map(|v| (v.id, v.get_optimal_action(world, rng, render)))
+            .filter(|v| v.is_teammate)
+            .map(|v| (v.id, v.get_optimal_action(world, rng, render)))
+            .max_by_key(|(_, v)| v.score)
         {
             actions.push((id, action));
         }
