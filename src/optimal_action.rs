@@ -94,7 +94,7 @@ impl Robot {
         let mut global_simulator = initial_simulator.clone();
         global_simulator.me_mut().set_velocity(Vec3::default());
         let default_action = Action::default();
-        let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK;
+        let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 2;
         let far_micro_ticks_per_tick = near_micro_ticks_per_tick / 10;
         let near_time_interval = world.rules.tick_time_interval();
         let far_time_interval = near_time_interval * 2.0;
