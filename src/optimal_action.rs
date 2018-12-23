@@ -23,6 +23,7 @@ pub struct RobotState {
 pub struct State {
     pub ball: BallState,
     pub me: RobotState,
+    pub robots: Vec<RobotState>,
 }
 
 impl State {
@@ -38,6 +39,14 @@ impl State {
                 position: me.position(),
                 velocity: me.velocity(),
             },
+            robots: simulator.robots().iter()
+                .filter(|v| !v.is_me)
+                .map(|v| RobotState {
+                    radius: v.radius(),
+                    position: v.position(),
+                    velocity: v.velocity(),
+                })
+                .collect(),
         }
     }
 }
@@ -212,11 +221,17 @@ impl Robot {
         for state in optimal_action.history.iter() {
             render.add(Object::sphere(state.ball.position, world.rules.BALL_RADIUS, OPTIMAL_BALL_POSITION));
             render.add(Object::sphere(state.me.position, state.me.radius, OPTIMAL_ME_POSITION));
+            for (i, robot) in state.robots.iter().enumerate() {
+                render.add(Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len())));
+            }
         }
         for (prev, next) in (&optimal_action.history[0..optimal_action.history.len() - 1]).iter()
                 .zip((&optimal_action.history[1..optimal_action.history.len()]).iter()) {
             render.add(Object::line(prev.ball.position, next.ball.position, 1.0, OPTIMAL_BALL_POSITION));
             render.add(Object::line(prev.me.position, next.me.position, 1.0, OPTIMAL_ME_POSITION));
+            for (i, (prev_robot, next_robot)) in (prev.robots.iter().zip(next.robots.iter())).enumerate() {
+                render.add(Object::line(prev_robot.position, next_robot.position, 1.0, get_robot_color(i, prev.robots.len())));
+            }
         }
 //        render.add(Object::line(world.me.position(), world.me.position() + optimal_action.action.target_velocity() * 100.0, 2.0, VELOCITY));
 //        render.add(Object::sphere(optimal_action.local_simulator_before_jump.me().position(), optimal_action.local_simulator_before_jump.me().radius(), OPTIMAL_ME_POSITION));
@@ -278,4 +293,8 @@ fn get_position_to_jump(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules
     let desired_robot_hit_direction = (desired_ball_velocity - ball.velocity()).with_y(0.0).normalized();
     (ball.position() - desired_robot_hit_direction * (ball.radius + distance))
         .with_y(rules.ROBOT_MIN_RADIUS)
+}
+
+fn get_robot_color(i: usize, n: usize) -> Color {
+    Color::new(0.8, 0.2 + (i as f64 / n as f64) * 0.8, 0.2, 0.5)
 }
