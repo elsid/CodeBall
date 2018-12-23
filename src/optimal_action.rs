@@ -266,10 +266,11 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: f64, max
 
 pub fn get_points(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules, rng: &mut XorShiftRng) -> Vec<Vec3> {
     let mut result = Vec::new();
+    let ball_position = ball.position().with_y(rules.ROBOT_MAX_RADIUS);
+    let to_robot = (robot.position() - ball_position).normalized();
     for _ in 0..3 {
         let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
-        let to_ball = (ball.position().with_y(rules.ROBOT_MIN_RADIUS) - robot.position()).normalized();
-        result.push(ball.position().with_y(rules.ROBOT_MIN_RADIUS) + (to_ball * distance).rotated_by_y(angle))
+        result.push(ball_position + to_robot.rotated_by_y(angle) * distance);
     }
 //    let to_robot = (robot.position() - ball.position().with_y(rules.ROBOT_MIN_RADIUS)).normalized();
 //    result.push(ball.position().with_y(rules.ROBOT_MIN_RADIUS) + to_robot * distance);
