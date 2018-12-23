@@ -148,6 +148,7 @@ pub struct Simulator {
     ball: BallExt,
     rules: Rules,
     current_tick: i32,
+    current_micro_tick: i32,
     current_time: f64,
     score: i32,
     me_index: usize,
@@ -190,6 +191,7 @@ impl Simulator {
             },
             rules: world.rules.clone(),
             current_tick: 0,
+            current_micro_tick: 0,
             current_time: 0.0,
             score: 0,
             me_index,
@@ -215,6 +217,10 @@ impl Simulator {
 //    pub fn current_tick(&self) -> i32 {
 //        self.current_tick
 //    }
+
+    pub fn current_micro_tick(&self) -> i32 {
+        self.current_micro_tick
+    }
 
     pub fn current_time(&self) -> f64 {
         self.current_time
@@ -304,6 +310,8 @@ impl Simulator {
         } else if self.ball.position().z() < -(self.rules.arena.depth / 2.0 + self.ball.radius()) {
             self.score = -1;
         }
+
+        self.current_micro_tick += 1;
     }
 
     pub fn collide(&self, a: &mut Solid, b: &mut Solid, rng: &mut XorShiftRng) {
