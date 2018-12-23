@@ -119,7 +119,11 @@ impl Robot {
                     };
                     let to_target = target - self.position();
                     let distance_to_target = to_target.norm();
-                    let required_speed = distance_to_target / global_simulator.current_time();
+                    let required_speed = if global_simulator.current_time() > 0.0 {
+                        distance_to_target / global_simulator.current_time()
+                    } else {
+                        world.rules.ROBOT_MAX_GROUND_SPEED
+                    };
 //                    log!(world.game.current_tick, "    <{}> suggest target {}:{} distance={} speed={} target={:?}", action_id, global_simulator.current_time(), global_simulator.current_tick(), distance_to_target, required_speed, target);
                     if required_speed.is_between(0.9 * world.rules.ROBOT_MAX_GROUND_SPEED, world.rules.ROBOT_MAX_GROUND_SPEED) {
                         continue;
