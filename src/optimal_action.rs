@@ -115,9 +115,6 @@ impl Robot {
         let mut iterations = 0;
         while (iterations < 5 || optimal_action.id == 0) && global_simulator.current_time() + near_time_interval < simulation_time_depth {
             log!(world.game.current_tick, "[{}]  try time point {} {}", self.id, global_simulator.current_micro_tick(), global_simulator.current_time());
-            for _ in 0..steps[iterations.min(steps.len() - 1)] {
-                global_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
-            }
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
             if let Some(distance) = get_min_distance_between_spheres(ball_y, ball_radius, (world.rules.ROBOT_MAX_RADIUS +  world.rules.ROBOT_MIN_RADIUS) / 2.0) {
@@ -257,6 +254,9 @@ impl Robot {
                         };
                     }
                 }
+            }
+            for _ in 0..steps[iterations.min(steps.len() - 1)] {
+                global_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
             }
         }
         render.add_with_tag(Tag::RobotId(self.id), Object::sphere(optimal_action.target, world.rules.ROBOT_MIN_RADIUS, OPTIMAL_TARGET));
