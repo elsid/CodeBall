@@ -46,6 +46,7 @@ impl Strategy for MyStrategyImpl {
             self.render.clear();
             self.update_world(me, game);
             self.generate_actions();
+            self.render.ignore_all();
             for (id, _) in self.actions.first().iter() {
                 self.render.include_tag(Tag::RobotId(*id));
             }

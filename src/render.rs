@@ -212,6 +212,11 @@ impl Render {
         self.exclude.remove(&tag);
     }
 
+    pub fn ignore_all(&mut self) {
+        self.include.clear();
+        self.exclude.clear();
+    }
+
     pub fn clear(&mut self) {
         self.objects.clear();
     }
