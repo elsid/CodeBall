@@ -23,6 +23,14 @@ impl Default for MyStrategyImpl {
     }
 }
 
+impl Drop for MyStrategyImpl {
+    fn drop(&mut self) {
+        if cfg!(feature = "dump_result") {
+            println!("{}", serde_json::to_string(&self.world.game.players).unwrap());
+        }
+    }
+}
+
 impl Strategy for MyStrategyImpl {
     fn act(&mut self, me: &Robot, _rules: &Rules, game: &Game, action: &mut Action) {
         use std::process::exit;
