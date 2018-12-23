@@ -1,7 +1,7 @@
-use crate::model::{Action, Ball, Robot, Arena, Rules};
+use crate::model::{Action, Ball, Robot, Rules};
 use crate::my_strategy::common::Square;
 use crate::my_strategy::vec3::Vec3;
-use crate::my_strategy::random::{Rng, XorShiftRng, Range};
+use crate::my_strategy::random::{Rng, XorShiftRng};
 use crate::my_strategy::world::World;
 use crate::my_strategy::entity::Entity;
 
@@ -32,7 +32,7 @@ pub struct RobotExt {
     pub action: Action,
     pub mass: f64,
     pub arena_e: f64,
-    pub is_me: bool,
+    is_me: bool,
 }
 
 impl RobotExt {
@@ -200,9 +200,9 @@ impl Simulator {
         &self.robots
     }
 
-    pub fn robots_mut(&mut self) -> &mut Vec<RobotExt> {
-        &mut self.robots
-    }
+//    pub fn robots_mut(&mut self) -> &mut Vec<RobotExt> {
+//        &mut self.robots
+//    }
 
     pub fn ball(&self) -> &BallExt {
         &self.ball
@@ -212,9 +212,9 @@ impl Simulator {
         &self.rules
     }
 
-    pub fn current_tick(&self) -> i32 {
-        self.current_tick
-    }
+//    pub fn current_tick(&self) -> i32 {
+//        self.current_tick
+//    }
 
     pub fn current_time(&self) -> f64 {
         self.current_time
@@ -238,7 +238,6 @@ impl Simulator {
 
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize, rng: &mut XorShiftRng) {
         let micro_tick_time_interval = time_interval / micro_ticks_per_tick as f64;
-        let current_time = self.current_time;
         for _ in 0..micro_ticks_per_tick {
             self.micro_tick(micro_tick_time_interval, rng);
         }
@@ -322,7 +321,7 @@ impl Simulator {
             let delta_velocity = normal.dot(b.velocity() - a.velocity())
                 + b.radius_change_speed() - a.radius_change_speed();
             if delta_velocity < 0.0 {
-                let k = (1.0 + rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E));
+                let k = 1.0 + rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E);
                 let impulse = normal * k * delta_velocity;
                 let a_velocity = a.velocity() + impulse * k_a;
                 let b_velocity = b.velocity() - impulse * k_b;

@@ -1,5 +1,5 @@
 use crate::model::Arena;
-use crate::my_strategy::common::{Clamp, Square};
+use crate::my_strategy::common::Clamp;
 use crate::my_strategy::plane::Plane;
 use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::sphere::Sphere;
@@ -34,15 +34,15 @@ impl Arena {
         }
     }
 
-    pub fn get_penetration(&self, e: &Solid) -> f64 {
-        let (distance, normal) = self.distance_and_normal_to_arena(e.position());
-        e.radius() - distance
-    }
+//    pub fn get_penetration(&self, e: &Solid) -> f64 {
+//        let (distance, normal) = self.distance_and_normal_to_arena(e.position());
+//        e.radius() - distance
+//    }
 
-    pub fn contains(&self, position: Vec3) -> bool {
-        let (distance, _) = self.distance_and_normal_to_arena(position);
-        distance > 0.0
-    }
+//    pub fn contains(&self, position: Vec3) -> bool {
+//        let (distance, _) = self.distance_and_normal_to_arena(position);
+//        distance > 0.0
+//    }
 
     pub fn distance_and_normal_to_arena(&self, mut position: Vec3) -> (f64, Vec3) {
         let negate_x = position.x() < 0.0;

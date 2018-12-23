@@ -25,25 +25,25 @@ impl Vec2 {
         self.y
     }
 
-    pub fn with_x(&self, x: f64) -> Vec2 {
-        Vec2::new(x, self.y)
-    }
+//    pub fn with_x(&self, x: f64) -> Vec2 {
+//        Vec2::new(x, self.y)
+//    }
 
-    pub fn with_y(&self, y: f64) -> Vec2 {
-        Vec2::new(self.x, y)
-    }
+//    pub fn with_y(&self, y: f64) -> Vec2 {
+//        Vec2::new(self.x, y)
+//    }
 
-    pub fn with_min_y(&self, y: f64) -> Vec2 {
-        Vec2::new(self.x, self.y.max(y))
-    }
+//    pub fn with_min_y(&self, y: f64) -> Vec2 {
+//        Vec2::new(self.x, self.y.max(y))
+//    }
 
-    pub fn with_neg_x(&self) -> Vec2 {
-        self.with_x(-self.x)
-    }
+//    pub fn with_neg_x(&self) -> Vec2 {
+//        self.with_x(-self.x)
+//    }
 
-    pub fn with_neg_y(&self) -> Vec2 {
-        self.with_y(-self.y)
-    }
+//    pub fn with_neg_y(&self) -> Vec2 {
+//        self.with_y(-self.y)
+//    }
 
 //    pub fn with_dx(&self, dx: f64) -> Vec2 {
 //        Vec2::new(self.x + dx, self.y)
@@ -65,9 +65,9 @@ impl Vec2 {
 //        (other - *self).squared_norm()
 //    }
 
-    pub fn distance(&self, other: Vec2) -> f64 {
-        (other - *self).norm()
-    }
+//    pub fn distance(&self, other: Vec2) -> f64 {
+//        (other - *self).norm()
+//    }
 
 //    pub fn rotated(&self, angle: f64) -> Vec2 {
 //        let sin = angle.sin();
@@ -87,9 +87,9 @@ impl Vec2 {
 //        self.dot(other) / (self.norm() * other.norm())
 //    }
 
-    pub fn dot(&self, other: Vec2) -> f64 {
-        self.x * other.x + self.y * other.y
-    }
+//    pub fn dot(&self, other: Vec2) -> f64 {
+//        self.x * other.x + self.y * other.y
+//    }
 
 //    pub fn abs(&self) -> Vec2 {
 //        Vec2::new(self.x.abs(), self.y.abs())

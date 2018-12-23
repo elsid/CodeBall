@@ -42,12 +42,12 @@ impl Sphere {
         }
     }
 
-    pub fn set_color(&mut self, color: Color) {
-        self.r = color.r;
-        self.g = color.g;
-        self.b = color.b;
-        self.a = color.a;
-    }
+//    pub fn set_color(&mut self, color: Color) {
+//        self.r = color.r;
+//        self.g = color.g;
+//        self.b = color.b;
+//        self.a = color.a;
+//    }
 }
 
 type Text = String;
@@ -84,12 +84,12 @@ impl Line {
         }
     }
 
-    pub fn set_color(&mut self, color: Color) {
-        self.r = color.r;
-        self.g = color.g;
-        self.b = color.b;
-        self.a = color.a;
-    }
+//    pub fn set_color(&mut self, color: Color) {
+//        self.r = color.r;
+//        self.g = color.g;
+//        self.b = color.b;
+//        self.a = color.a;
+//    }
 }
 
 #[derive(Serialize)]
@@ -115,26 +115,8 @@ impl Object {
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub enum Tag {
-    Default,
+//    Default,
     RobotId(i32),
-}
-
-#[allow(non_snake_case)]
-#[derive(Serialize)]
-struct SphereWrapper<'r> {
-    Sphere: &'r Sphere,
-}
-
-#[allow(non_snake_case)]
-#[derive(Serialize)]
-struct TextWrapper<'r> {
-    Text: &'r Text,
-}
-
-#[allow(non_snake_case)]
-#[derive(Serialize)]
-struct LineWrapper<'r> {
-    Line: &'r Line,
 }
 
 struct Item {
@@ -159,12 +141,12 @@ impl Render {
         }
     }
 
-    pub fn add(&mut self, object: Object) -> i32 {
-        let id = self.next_id;
-        self.objects.insert(id, Item {tag: Tag::Default, object});
-        self.next_id += 1;
-        id
-    }
+//    pub fn add(&mut self, object: Object) -> i32 {
+//        let id = self.next_id;
+//        self.objects.insert(id, Item {tag: Tag::Default, object});
+//        self.next_id += 1;
+//        id
+//    }
 
     pub fn add_with_tag(&mut self, tag: Tag, object: Object) -> i32 {
         let id = self.next_id;
@@ -173,44 +155,44 @@ impl Render {
         id
     }
 
-    pub fn get(&mut self, id: i32) -> Option<&Object> {
-        self.objects.get(&id).map(|v| &v.object)
-    }
+//    pub fn get(&mut self, id: i32) -> Option<&Object> {
+//        self.objects.get(&id).map(|v| &v.object)
+//    }
+//
+//    pub fn get_mut(&mut self, id: i32) -> Option<&mut Object> {
+//        self.objects.get_mut(&id).map(|v| &mut v.object)
+//    }
 
-    pub fn get_mut(&mut self, id: i32) -> Option<&mut Object> {
-        self.objects.get_mut(&id).map(|v| &mut v.object)
-    }
+//    pub fn get_sphere(&mut self, id: i32) -> Option<&Sphere> {
+//        if let Some(Object::Sphere(ref v)) = self.get(id) {
+//            Some(&v)
+//        } else {
+//            None
+//        }
+//    }
 
-    pub fn get_sphere(&mut self, id: i32) -> Option<&Sphere> {
-        if let Some(Object::Sphere(ref v)) = self.get(id) {
-            Some(&v)
-        } else {
-            None
-        }
-    }
-
-    pub fn get_sphere_mut(&mut self, id: i32) -> Option<&mut Sphere> {
-        if let Some(Object::Sphere(ref mut v)) = self.get_mut(id) {
-            Some(v)
-        } else {
-            None
-        }
-    }
+//    pub fn get_sphere_mut(&mut self, id: i32) -> Option<&mut Sphere> {
+//        if let Some(Object::Sphere(ref mut v)) = self.get_mut(id) {
+//            Some(v)
+//        } else {
+//            None
+//        }
+//    }
 
     pub fn include_tag(&mut self, tag: Tag) {
         self.exclude.remove(&tag);
         self.include.insert(tag);
     }
 
-    pub fn exclude_tag(&mut self, tag: Tag) {
-        self.include.remove(&tag);
-        self.exclude.insert(tag);
-    }
+//    pub fn exclude_tag(&mut self, tag: Tag) {
+//        self.include.remove(&tag);
+//        self.exclude.insert(tag);
+//    }
 
-    pub fn ignore_tag(&mut self, tag: Tag) {
-        self.include.remove(&tag);
-        self.exclude.remove(&tag);
-    }
+//    pub fn ignore_tag(&mut self, tag: Tag) {
+//        self.include.remove(&tag);
+//        self.exclude.remove(&tag);
+//    }
 
     pub fn ignore_all(&mut self) {
         self.include.clear();
@@ -226,7 +208,7 @@ impl Serialize for Render {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where S: serde::Serializer {
         serializer.collect_seq(
-            self.objects.iter()
+        self.objects.iter()
                 .filter(|(_, v)| {
                     self.include.contains(&v.tag)
                         || (self.include.is_empty() && !self.exclude.contains(&v.tag))

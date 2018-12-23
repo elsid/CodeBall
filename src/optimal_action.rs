@@ -1,4 +1,4 @@
-use crate::model::{Robot, Action, Ball, Rules, Arena};
+use crate::model::{Robot, Action, Ball, Rules};
 use crate::my_strategy::random::Rng;
 use crate::my_strategy::world::World;
 use crate::my_strategy::random::XorShiftRng;
@@ -32,7 +32,7 @@ impl State {
         let ball = simulator.ball().base();
         let me = simulator.me().base();
         let mut robots: Vec<RobotState> = simulator.robots().iter()
-            .filter(|v| !v.is_me)
+            .filter(|v| !v.is_me())
             .map(|v| RobotState {
                 id: v.id(),
                 radius: v.radius(),
@@ -67,21 +67,11 @@ pub struct OptimalAction {
 const OPTIMAL_TARGET: Color = Color::new(0.0, 0.8, 0.0, 0.5);
 const OPTIMAL_ME_POSITION: Color = Color::new(0.0, 0.8, 0.4, 0.5);
 const OPTIMAL_BALL_POSITION: Color = Color::new(0.0, 0.4, 0.8, 0.5);
-const CANDIDATE_TARGET: Color = Color::new(0.0, 0.0, 0.8, 0.5);
-const LINE: Color = Color::new(0.0, 0.0, 0.0, 0.5);
-const REJECTED_TARGET: Color = Color::new(0.8, 0.0, 0.0, 0.5);
-const VELOCITY: Color = Color::new(0.0, 0.0, 0.0, 0.0);
 
 impl Robot {
     pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> OptimalAction {
 //        log!(world.game.current_tick, "generate actions {}", self.id);
-        let mut initial_simulator = {
-            let mut s = Simulator::new(world, self.id);
-            s.robots_mut().iter_mut()
-                .filter(|v| !v.is_me && v.base().is_teammate)
-                .map(|v| v.set_velocity(Vec3::default()));
-            s
-        };
+        let initial_simulator = Simulator::new(world, self.id);
         let mut global_simulator = initial_simulator.clone();
         global_simulator.me_mut().set_velocity(Vec3::default());
         let default_action = Action::default();
@@ -203,11 +193,6 @@ impl Robot {
                     let action_score = get_action_score(
                         &world.rules,
                         &local_simulator,
-                        &history,
-                        &action,
-                        simulation_time_depth,
-                        action_id,
-                        world.game.current_tick
                     );
 //                    log!(world.game.current_tick, "    <{}> suggest action {}:{} score={} speed={}", action_id, local_simulator.current_time(), local_simulator.current_tick(), action_score, action.target_velocity().norm());
                     if optimal_action.score < action_score {
@@ -248,9 +233,8 @@ impl Robot {
     }
 }
 
-fn get_action_score(rules: &Rules, simulator: &Simulator, history: &Vec<State>, action: &Action, max_time: f64, action_id: i32, current_tick: i32) -> i32 {
+fn get_action_score(rules: &Rules, simulator: &Simulator) -> i32 {
     let ball = simulator.ball();
-    let me = simulator.me();
     let goal = rules.arena.get_goal_target();
     let to_goal = ball.position() - goal;
     let ball_goal_distance_score = -to_goal.norm()
@@ -290,15 +274,15 @@ pub fn get_min_distance_between_spheres(ball_y: f64, ball_radius: f64, robot_rad
     }
 }
 
-fn get_position_to_jump(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules) -> Vec3 {
-    let goal_target = rules.arena.get_goal_target();
-    let to_goal = goal_target - ball.position();
-    let to_goal_direction = to_goal.normalized();
-    let desired_ball_velocity = to_goal_direction * rules.ROBOT_MAX_JUMP_SPEED;
-    let desired_robot_hit_direction = (desired_ball_velocity - ball.velocity()).with_y(0.0).normalized();
-    (ball.position() - desired_robot_hit_direction * (ball.radius + distance))
-        .with_y(rules.ROBOT_MIN_RADIUS)
-}
+//fn get_position_to_jump(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules) -> Vec3 {
+//    let goal_target = rules.arena.get_goal_target();
+//    let to_goal = goal_target - ball.position();
+//    let to_goal_direction = to_goal.normalized();
+//    let desired_ball_velocity = to_goal_direction * rules.ROBOT_MAX_JUMP_SPEED;
+//    let desired_robot_hit_direction = (desired_ball_velocity - ball.velocity()).with_y(0.0).normalized();
+//    (ball.position() - desired_robot_hit_direction * (ball.radius + distance))
+//        .with_y(rules.ROBOT_MIN_RADIUS)
+//}
 
 fn get_robot_color(i: usize, n: usize) -> Color {
     Color::new(0.8, 0.2 + (i as f64 / n as f64) * 0.8, 0.2, 0.5)

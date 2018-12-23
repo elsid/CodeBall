@@ -1,4 +1,3 @@
-use crate::model::Action;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::entity::Entity;
@@ -9,7 +8,6 @@ use crate::my_strategy::tests::world::default_world;
 fn test_simulator_robot_jump() {
     let world = default_world();
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut action = Action::default();
     let mut rng = XorShiftRng::from_seed([
         simulator.rules().seed as u32,
         (simulator.rules().seed >> 32) as u32,

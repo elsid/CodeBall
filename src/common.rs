@@ -1,4 +1,5 @@
-use std::hash::{BuildHasher, Hash, Hasher, SipHasher};
+use std::hash::{BuildHasher};
+use std::collections::hash_map::DefaultHasher;
 use std::ops::Mul;
 
 macro_rules! log {
@@ -56,10 +57,10 @@ impl Clamp for f64 {}
 pub struct ConstState;
 
 impl BuildHasher for ConstState {
-    type Hasher = SipHasher;
+    type Hasher = DefaultHasher;
 
     #[inline]
-    fn build_hasher(&self) -> SipHasher {
-        SipHasher::new_with_keys(3841724797260025322, 16478027545562035801)
+    fn build_hasher(&self) -> DefaultHasher {
+        DefaultHasher::new()
     }
 }
