@@ -175,8 +175,12 @@ impl Robot {
                     let time_to_ball = local_simulator.current_time();
                     while local_simulator.current_time() + near_time_interval < simulation_time_depth
                         && local_simulator.score() == 0
-                        && local_simulator.me().position().distance(local_simulator.ball().position())
-                            < (world.rules.ROBOT_MIN_RADIUS + world.rules.ROBOT_MAX_RADIUS) / 2.0
+                        && (
+                            local_simulator.me().position().distance(target)
+                                <= 1.5 * velocity.norm() * near_time_interval
+                            || local_simulator.me().position().distance(local_simulator.ball().position())
+                                <= (world.rules.ROBOT_MIN_RADIUS + world.rules.ROBOT_MAX_RADIUS) / 2.0
+                        )
                     {
                         local_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
                         history.push(State::new(&local_simulator));
