@@ -50,6 +50,9 @@ impl Strategy for MyStrategyImpl {
             self.render.ignore_all();
             for v in self.optimal_action.iter() {
                 self.render.include_tag(Tag::RobotId(v.robot_id));
+                if cfg!(feature = "dump_stats") {
+                    println!("{}", serde_json::to_string(&v.stats).unwrap());
+                }
             }
         } else {
             self.update_world_me(me);
