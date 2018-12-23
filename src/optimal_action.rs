@@ -163,7 +163,7 @@ impl Robot {
                     log!(world.game.current_tick, "[{}]    <{}> use velocity {}:{} {} {:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
                     action.set_target_velocity(velocity);
                     if local_simulator.me().position().distance(target)
-                            > 1.5 * velocity.norm() * near_time_interval
+                            > velocity.norm() * near_time_interval
                         && local_simulator.me().position().distance(local_simulator.ball().position())
                             > ball_distance_limit + velocity.norm() * near_time_interval
                     {
@@ -185,7 +185,7 @@ impl Robot {
                         while local_simulator.current_time() + near_time_interval < simulation_time_depth
                             && local_simulator.score() == 0
                             && local_simulator.me().position().distance(target)
-                                > 1.5 * velocity.norm() * near_time_interval
+                                > velocity.norm() * near_time_interval
                             && local_simulator.me().position().distance(local_simulator.ball().position())
                                 > ball_distance_limit + velocity.norm() * near_time_interval
                         {
@@ -205,7 +205,7 @@ impl Robot {
                         && local_simulator.score() == 0
                         && (
                             local_simulator.me().position().distance(target)
-                                <= 1.5 * velocity.norm() * near_time_interval
+                                <= velocity.norm() * near_time_interval
                             || local_simulator.me().position().distance(local_simulator.ball().position())
                                 <= ball_distance_limit + velocity.norm() * near_time_interval
                         )
