@@ -15,7 +15,7 @@ fn test_simulator_robot_jump() {
         0,
         0,
     ]);
-    action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+    simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
