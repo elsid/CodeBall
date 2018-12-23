@@ -71,7 +71,7 @@ impl Robot {
     pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> OptimalAction {
 //        log!(world.game.current_tick, "generate actions {}", self.id);
         let mut initial_simulator = {
-            let mut s = Simulator::new(world);
+            let mut s = Simulator::new(world, self.id);
             s.robots_mut().iter_mut()
                 .filter(|v| !v.is_me && v.base().is_teammate)
                 .map(|v| v.set_velocity(Vec3::default()));
@@ -90,7 +90,7 @@ impl Robot {
             id: next_action_id,
             action: default_action,
             score: -1000,
-            target: world.me.position(),
+            target: self.position(),
             history: vec![State::new(&global_simulator)],
         };
         next_action_id += 1;
@@ -123,7 +123,7 @@ impl Robot {
                         world.rules.arena.collide(&mut robot);
                         robot.position()
                     };
-                    let to_target = target - world.me.position();
+                    let to_target = target - self.position();
                     let distance_to_target = to_target.norm();
                     let target_direction = to_target.normalized();
                     let required_speed = distance_to_target / global_simulator.current_time();

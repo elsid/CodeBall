@@ -36,6 +36,10 @@ pub struct RobotExt {
 }
 
 impl RobotExt {
+    pub fn id(&self) -> i32 {
+        self.base.id
+    }
+
     pub fn base(&self) -> &Robot {
         &self.base
     }
@@ -146,11 +150,12 @@ pub struct Simulator {
     current_tick: i32,
     current_time: f64,
     score: i32,
+    me_index: usize,
 }
 
 impl Simulator {
-    pub fn new(world: &World) -> Self {
-        let robots = world.game.robots.iter()
+    pub fn new(world: &World, me_id: i32) -> Self {
+        let robots: Vec<RobotExt> = world.game.robots.iter()
             .map(|v| {
                 let touch_normal = if v.touch {
                     Some(Vec3::new(
@@ -168,10 +173,13 @@ impl Simulator {
                     action: Action::default(),
                     mass: world.rules.ROBOT_MASS,
                     arena_e: world.rules.ROBOT_ARENA_E,
-                    is_me: v.id == world.me.id,
+                    is_me: v.id == me_id,
                 }
             })
             .collect();
+        let me_index = robots.iter()
+            .position(|v| v.id() == me_id)
+            .unwrap();
 
         Simulator {
             robots,
@@ -184,6 +192,7 @@ impl Simulator {
             current_tick: 0,
             current_time: 0.0,
             score: 0,
+            me_index,
         }
     }
 
