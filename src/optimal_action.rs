@@ -217,7 +217,7 @@ impl Robot {
                     }
                     stats.micro_ticks_to_watch = local_simulator.current_micro_tick();
                     stats.time_to_watch = local_simulator.current_time();
-//                    local_simulator.me_mut().action.jump_speed = 0.0;
+                    local_simulator.me_mut().action.jump_speed = 0.0;
                     local_simulator.me_mut().action.set_target_velocity(Vec3::default());
                     while local_simulator.current_time() + far_time_interval < simulation_time_depth
                         && local_simulator.score() == 0
