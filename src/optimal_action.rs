@@ -130,9 +130,9 @@ impl Robot {
                     let mut action = Action::default();
                     let velocity = if distance_to_target > 1e-3 {
                         if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * far_time_interval {
-                            to_target.normalized() * world.rules.ROBOT_MAX_GROUND_SPEED
+                            to_target * world.rules.ROBOT_MAX_GROUND_SPEED / distance_to_target
                         } else {
-                            to_target.normalized() * required_speed
+                            to_target * required_speed / distance_to_target
                         }
                     } else {
                         Vec3::default()
