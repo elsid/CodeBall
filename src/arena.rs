@@ -15,6 +15,14 @@ impl Arena {
         Vec3::new(0.0, self.goal_height / 2.0, -self.depth / 2.0 + self.goal_depth / 2.0)
     }
 
+    pub fn get_my_goal_target(&self) -> Vec3 {
+        Vec3::new(0.0, self.goal_height / 2.0, -self.depth / 2.0 - self.goal_depth / 2.0)
+    }
+
+    pub fn max_distance(&self) -> f64 {
+        Vec3::new(self.width, self.depth + 2.0 * self.goal_depth, self.height).norm()
+    }
+
     pub fn collide(&self, e: &mut Solid) -> Option<Vec3> {
         let (distance, normal) = self.distance_and_normal_to_arena(e.position());
         let penetration = e.radius() - distance;

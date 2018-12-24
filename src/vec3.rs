@@ -47,9 +47,9 @@ impl Vec3 {
         Vec3::new(self.x, self.y, z)
     }
 
-//    pub fn with_min_y(&self, y: f64) -> Vec3 {
-//        Vec3::new(self.x, self.y.max(y), self.z)
-//    }
+    pub fn with_max_y(&self, y: f64) -> Vec3 {
+        Vec3::new(self.x, self.y.max(y), self.z)
+    }
 
     pub fn with_neg_x(&self) -> Vec3 {
         self.with_x(-self.x)

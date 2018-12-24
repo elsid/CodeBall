@@ -18,6 +18,9 @@ mod plane;
 #[path = "sphere.rs"]
 mod sphere;
 
+#[path = "optimization.rs"]
+mod optimization;
+
 #[path = "render.rs"]
 mod render;
 
