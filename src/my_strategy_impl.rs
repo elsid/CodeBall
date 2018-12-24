@@ -76,8 +76,8 @@ impl MyStrategyImpl {
             rng: XorShiftRng::from_seed([
                 rules.seed as u32,
                 (rules.seed >> 32) as u32,
-                0,
-                0,
+                1841971383,
+                1904458926,
             ]),
             max_ticks_count: if let Ok(v) = env::var("MAX_TICKS") {
                 if let Ok(v_v) = v.parse::<i32>() {
