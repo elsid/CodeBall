@@ -139,7 +139,7 @@ impl Robot {
                     } else {
                         world.rules.ROBOT_MAX_GROUND_SPEED
                     };
-                    log!(world.game.current_tick, "[{}]    suggest target {}:{} distance={} velocity.norm()={} target={:?}", self.id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
+                    log!(world.game.current_tick, "[{}]    suggest target {}:{} distance={} speed={} target={:?}", self.id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
                     if required_speed.is_between(0.9 * world.rules.ROBOT_MAX_GROUND_SPEED, 1.01 * world.rules.ROBOT_MAX_GROUND_SPEED) {
                         continue;
                     }
@@ -243,7 +243,7 @@ impl Robot {
                     };
                     stats.score = local_simulator.score();
                     stats.action_score = action_score;
-                    log!(world.game.current_tick, "[{}]    <{}> suggest action {}:{} score={} velocity.norm()={}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
+                    log!(world.game.current_tick, "[{}]    <{}> suggest action {}:{} score={} speed={}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
                     if optimal_action.score < action_score {
                         optimal_action = OptimalAction {
                             id: action_id,
