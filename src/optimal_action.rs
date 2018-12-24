@@ -106,7 +106,7 @@ impl Robot {
             id: next_action_id,
             robot_id: self.id,
             action: default_action,
-            score: std::i32::MIN,
+            score: 0,
             history: vec![State::new(&global_simulator)],
             stats: Stats::default(),
         };
