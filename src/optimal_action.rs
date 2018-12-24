@@ -78,12 +78,10 @@ pub struct OptimalAction {
     pub robot_id: i32,
     pub action: Action,
     pub score: i32,
-    pub target: Vec3,
     pub history: Vec<State>,
     pub stats: Stats,
 }
 
-const OPTIMAL_TARGET: Color = Color::new(0.0, 0.8, 0.0, 0.5);
 const OPTIMAL_ME_POSITION: Color = Color::new(0.0, 0.8, 0.4, 0.5);
 const OPTIMAL_BALL_POSITION: Color = Color::new(0.0, 0.4, 0.8, 0.5);
 
@@ -107,7 +105,6 @@ impl Robot {
             robot_id: self.id,
             action: default_action,
             score: std::i32::MIN,
-            target: self.position(),
             history: vec![State::new(&global_simulator)],
             stats: Stats::default(),
         };
@@ -253,7 +250,6 @@ impl Robot {
                             robot_id: self.id,
                             action,
                             score: action_score,
-                            target,
                             history,
                             stats,
                         };
@@ -265,7 +261,6 @@ impl Robot {
             }
         }
         if cfg!(feature = "enable_render") {
-            render.add_with_tag(Tag::RobotId(self.id), Object::sphere(optimal_action.target, world.rules.ROBOT_MIN_RADIUS, OPTIMAL_TARGET));
             for state in optimal_action.history.iter() {
                 render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.ball.position, world.rules.BALL_RADIUS, OPTIMAL_BALL_POSITION));
                 render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.me.position, state.me.radius, OPTIMAL_ME_POSITION));
