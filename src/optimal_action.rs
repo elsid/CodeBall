@@ -291,18 +291,24 @@ impl Robot {
 fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: f64, max_time: f64) -> i32 {
     let ball = simulator.ball();
     let to_goal = rules.arena.get_goal_target() - ball.position();
-    let ball_goal_distance_score = if simulator.score() < 1 {
+    let ball_goal_distance_score = if simulator.score() == 0 {
         1.0 - to_goal.norm()
             / Vec2::new(rules.arena.width + 2.0 * rules.arena.goal_depth, rules.arena.depth).norm()
-    } else {
+    } else if simulator.score() > 0 {
         1.0
+    } else {
+        0.0
     };
-    let ball_goal_direction_score = if simulator.score() <= 0 && ball.velocity().norm() > 0.0 {
+    let ball_goal_direction_score = if ball.velocity().norm() > 0.0 {
         (to_goal.cos(ball.velocity()) + 1.0) / 2.0
     } else {
         0.0
     };
-    let time_score = 1.0 - time_to_ball / max_time;
+    let time_score = if simulator.score() < 0 {
+        time_to_ball / max_time - 1.0
+    } else {
+        1.0 - time_to_ball / max_time
+    };
     let score = 0.0
         + ball_goal_distance_score
         + 0.1 * ball_goal_direction_score
