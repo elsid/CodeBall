@@ -12,7 +12,7 @@ impl Arena {
     }
 
     pub fn get_defend_target(&self) -> Vec3 {
-        Vec3::new(0.0, self.goal_height / 2.0, -self.depth / 2.0 + self.goal_depth / 2.0)
+        Vec3::new(0.0, self.goal_height / 2.0, -self.depth / 2.0)
     }
 
     pub fn get_my_goal_target(&self) -> Vec3 {
