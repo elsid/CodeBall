@@ -42,5 +42,5 @@ cp ${SRC}/raic/packages/rust/src/remote_process_client.rs ${DIR}/src
 cp ${SRC}/raic/packages/rust/src/strategy.rs ${DIR}/src
 cp -r ${SRC}/raic/packages/rust/src/model ${DIR}/src
 
-cargo build --frozen
-cargo test
+cargo build --frozen --release
+cargo test --release
