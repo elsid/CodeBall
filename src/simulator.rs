@@ -331,7 +331,7 @@ impl Simulator {
             a.set_position(a_position);
             b.set_position(b_position);
             let delta_velocity = normal.dot(b.velocity() - a.velocity())
-                + b.radius_change_speed() - a.radius_change_speed();
+                - b.radius_change_speed() - a.radius_change_speed();
             if delta_velocity < 0.0 {
                 let k = 1.0 + rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E);
                 let impulse = normal * k * delta_velocity;
