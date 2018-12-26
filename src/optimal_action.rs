@@ -98,7 +98,7 @@ impl Robot {
         let far_micro_ticks_per_tick = near_micro_ticks_per_tick / 10;
         let near_time_interval = world.rules.tick_time_interval();
         let far_time_interval = near_time_interval * 2.0;
-        let simulation_time_depth = world.rules.tick_time_interval() * 100.0;
+        let simulation_time_depth = world.rules.tick_time_interval() * 90.0;
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
         let max_micro_ticks = 1000;
         let mut next_action_id = 0;
