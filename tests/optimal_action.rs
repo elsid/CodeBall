@@ -1,4 +1,4 @@
-use crate::my_strategy::optimal_action::get_min_distance_between_spheres;
+use my_strategy::my_strategy::optimal_action::get_min_distance_between_spheres;
 
 #[test]
 fn test_get_min_distance_between_spheres() {

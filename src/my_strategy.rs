@@ -1,62 +1,58 @@
 #[allow(dead_code)]
 #[path = "random.rs"]
-mod random;
+pub mod random;
 
 #[path = "common.rs"]
 #[macro_use]
-mod common;
+pub mod common;
 
 #[path = "vec2.rs"]
-mod vec2;
+pub mod vec2;
 
 #[path = "vec3.rs"]
-mod vec3;
+pub mod vec3;
 
 #[path = "plane.rs"]
-mod plane;
+pub mod plane;
 
 #[path = "sphere.rs"]
-mod sphere;
+pub mod sphere;
 
 #[path = "optimization.rs"]
 mod optimization;
 
 #[path = "render.rs"]
-mod render;
+pub mod render;
 
 #[path = "arena.rs"]
-mod arena;
+pub mod arena;
 
 #[path = "rules.rs"]
-mod rules;
+pub mod rules;
 
 #[path = "action.rs"]
-mod action;
+pub mod action;
 
 #[path = "entity.rs"]
-mod entity;
+pub mod entity;
 
 #[path = "ball.rs"]
-mod robot;
+pub mod robot;
 
 #[path = "robot.rs"]
-mod ball;
+pub mod ball;
 
 #[path = "world.rs"]
-mod world;
+pub mod world;
 
 #[path = "simulator.rs"]
-mod simulator;
+pub mod simulator;
 
 #[path = "optimal_action.rs"]
-mod optimal_action;
+pub mod optimal_action;
 
 #[path = "my_strategy_impl.rs"]
-mod my_strategy_impl;
-
-#[cfg(test)]
-#[path = "tests/mod.rs"]
-mod tests;
+pub mod my_strategy_impl;
 
 use crate::model::{Game, Action, Robot, Rules};
 use crate::strategy::Strategy;

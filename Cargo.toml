@@ -3,15 +3,29 @@ name = "my-strategy"
 version = "1.0.0"
 edition = "2018"
 
+[lib]
+name = "my_strategy"
+version = "1.0.0"
+edition = "2018"
+
 [dependencies]
 log = "0.4.6"
 env_logger = "0.6.0"
 serde = "1"
 serde_json = "1"
 serde_derive = "1"
+criterion = "0.2.5"
 
 [features]
 enable_log = []
 dump_result = []
 dump_stats = []
 enable_render = []
+
+[[bench]]
+name = "simulator"
+harness = false
+
+[[bench]]
+name = "arena"
+harness = false

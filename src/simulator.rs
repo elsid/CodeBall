@@ -79,6 +79,10 @@ pub struct BallExt {
 }
 
 impl BallExt {
+    pub fn new(base: Ball, mass: f64, arena_e: f64) -> Self {
+        BallExt {base, mass, arena_e}
+    }
+
     pub fn base(&self) -> &Ball {
         &self.base
     }

@@ -32,9 +32,12 @@ cd ${DIR}/src
 
 zip ${SRC}/release/${VERSION}.zip *.rs
 
+cp ${SRC}/src/examples.rs .
+cp ${SRC}/src/lib.rs .
+
 cd ..
 
-cp -r ${SRC}/src/tests ${DIR}/src
+cp -r ${SRC}/tests ${DIR}/
 
 cp ${SRC}/raic/packages/rust/Cargo.lock ${DIR}
 cp ${SRC}/raic/packages/rust/Cargo.toml ${DIR}

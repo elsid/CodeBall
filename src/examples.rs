@@ -1,60 +1,36 @@
 use crate::model::{Arena, Ball, Game, Player, Robot, Rules};
 use crate::my_strategy::world::World;
 
-pub fn default_world() -> World {
-    World::new(default_me(), default_rules(), default_game())
+pub fn example_world() -> World {
+    World::new(example_me(), example_rules(), example_game())
 }
 
-pub fn default_game() -> Game {
+pub fn example_game() -> Game {
     Game {
         current_tick: 0,
         players: vec![
-            Player {
-                id: 1,
-                me: true,
-                strategy_crashed: false,
-                score: 0,
-            },
-            Player {
-                id: 2,
-                me: false,
-                strategy_crashed: false,
-                score: 0,
-            },
+            Player { id: 1, me: true, strategy_crashed: false, score: 0 },
+            Player { id: 2, me: false, strategy_crashed: false, score: 0 },
         ],
         robots: vec![
-            default_me(),
-            Robot {
-                id: 2,
-                player_id: 2,
-                is_teammate: false,
-                x: 0.289095425043726,
-                y: 1.0,
-                z: 19.997910486728827,
-                velocity_x: 0.0,
-                velocity_y: 0.0,
-                velocity_z: 0.0,
-                radius: 1.0,
-                nitro_amount: 0.0,
-                touch: true,
-                touch_normal_x: Some(0.0),
-                touch_normal_y: Some(1.0),
-                touch_normal_z: Some(0.0),
-            }
+            example_me(),
+            example_teammate(),
+            example_opponent_1(),
+            example_opponent_2(),
         ],
         nitro_packs: vec![],
-        ball: default_ball(),
+        ball: example_ball(),
     }
 }
 
-pub fn default_me() -> Robot {
+pub fn example_me() -> Robot {
     Robot {
         id: 1,
         player_id: 1,
         is_teammate: true,
-        x: -0.289095425043726,
+        x: 9.748591261158683,
         y: 1.0,
-        z: -19.997910486728827,
+        z: -17.463246216636257,
         velocity_x: 0.0,
         velocity_y: 0.0,
         velocity_z: 0.0,
@@ -67,7 +43,67 @@ pub fn default_me() -> Robot {
     }
 }
 
-pub fn default_ball() -> Ball {
+pub fn example_teammate() -> Robot {
+    Robot {
+        id: 2,
+        player_id: 1,
+        is_teammate: true,
+        x: -10.24931922557014,
+        y: 1.0,
+        z: -17.17415079159253,
+        velocity_x: 0.0,
+        velocity_y: 0.0,
+        velocity_z: 0.0,
+        radius: 1.0,
+        nitro_amount: 0.0,
+        touch: true,
+        touch_normal_x: Some(0.0),
+        touch_normal_y: Some(1.0),
+        touch_normal_z: Some(0.0),
+    }
+}
+
+pub fn example_opponent_1() -> Robot {
+    Robot {
+        id: 3,
+        player_id: 2,
+        is_teammate: false,
+        x: -9.748591261158683,
+        y: 1.0,
+        z: 17.463246216636257,
+        velocity_x: 0.0,
+        velocity_y: 0.0,
+        velocity_z: 0.0,
+        radius: 1.0,
+        nitro_amount: 0.0,
+        touch: true,
+        touch_normal_x: Some(0.0),
+        touch_normal_y: Some(1.0),
+        touch_normal_z: Some(0.0),
+    }
+}
+
+pub fn example_opponent_2() -> Robot {
+    Robot {
+        id: 4,
+        player_id: 2,
+        is_teammate: false,
+        x: 10.24931922557014,
+        y: 1.0,
+        z: 17.17415079159253,
+        velocity_x: 0.0,
+        velocity_y: 0.0,
+        velocity_z: 0.0,
+        radius: 1.0,
+        nitro_amount: 0.0,
+        touch: true,
+        touch_normal_x: Some(0.0),
+        touch_normal_y: Some(1.0),
+        touch_normal_z: Some(0.0),
+    }
+}
+
+pub fn example_ball() -> Ball {
     Ball {
         x: 0.0,
         y: 7.837328533066,
@@ -79,10 +115,10 @@ pub fn default_ball() -> Ball {
     }
 }
 
-pub fn default_rules() -> Rules {
+pub fn example_rules() -> Rules {
     Rules {
         max_tick_count: 18000,
-        arena: default_arena(),
+        arena: example_arena(),
         team_size: 1,
         seed: 42,
         ROBOT_MIN_RADIUS: 1.0,
@@ -116,7 +152,7 @@ pub fn default_rules() -> Rules {
     }
 }
 
-pub fn default_arena() -> Arena {
+pub fn example_arena() -> Arena {
     Arena {
         width: 60.0,
         height: 20.0,
