@@ -44,7 +44,7 @@ def main():
 
 
 def ratio(values):
-    return [values[1] / values[0]]
+    return [values[1] / values[0] if values[0] else float('inf')]
 
 
 def row(*args):
