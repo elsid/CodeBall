@@ -383,7 +383,7 @@ impl Robot {
 
 fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: f64, max_time: f64) -> i32 {
     let ball = simulator.ball();
-    let to_goal = rules.arena.get_goal_target() - ball.position();
+    let to_goal = rules.arena.get_goal_target(rules.BALL_RADIUS) - ball.position();
     let ball_goal_distance_score = if simulator.score() == 0 {
         1.0 - to_goal.norm()
             / Vec2::new(rules.arena.width + 2.0 * rules.arena.goal_depth, rules.arena.depth).norm()
