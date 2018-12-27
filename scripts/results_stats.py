@@ -53,7 +53,9 @@ def row(*args):
 
 def collect_data(paths):
     for path in paths:
-        yield parse_result(read_result(path))
+        content = read_result(path)
+        if content:
+            yield parse_result(read_result(path))
 
 
 def read_result(path):
