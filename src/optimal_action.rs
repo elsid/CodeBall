@@ -149,7 +149,7 @@ impl Robot {
                     let mut action = Action::default();
                     let mut stats = Stats::default();
                     let velocity = if distance_to_target > 1e-3 {
-                        if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * time_interval {
+                        if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * 20.0 * time_interval {
                             to_target * world.rules.ROBOT_MAX_GROUND_SPEED / distance_to_target
                         } else {
                             to_target * required_speed / distance_to_target
