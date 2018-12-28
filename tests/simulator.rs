@@ -1,5 +1,5 @@
 use my_strategy::my_strategy::vec3::Vec3;
-use my_strategy::my_strategy::simulator::Simulator;
+use my_strategy::my_strategy::simulator::{Simulator, CollisionType};
 use my_strategy::my_strategy::entity::Entity;
 use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
 use my_strategy::my_strategy::optimal_action::get_min_distance_between_spheres;
@@ -155,6 +155,7 @@ fn test_simulator_robot_kick_ball() {
     );
     assert_eq!(simulator.ball().position(), Vec3::new(0.0, 2.685785194346652, 0.6238366102032489));
     assert_eq!(simulator.ball().velocity(), Vec3::new(0.0, 15.671092310398691, 35.07455928925282));
+    assert_eq!(simulator.me().ball_collision_type(), CollisionType::Kick);
     while simulator.ball().position().y().is_between(
             world.rules.BALL_RADIUS + 0.1,
             world.rules.arena.goal_height - world.rules.BALL_RADIUS - 1e-2

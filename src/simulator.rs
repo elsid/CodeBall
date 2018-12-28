@@ -24,6 +24,13 @@ pub trait Solid : Entity {
     fn arena_e(&self) -> f64;
 }
 
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum CollisionType {
+    None,
+    Touch,
+    Kick,
+}
+
 #[derive(Clone, Debug)]
 pub struct RobotExt {
     pub base: Robot,
@@ -32,7 +39,8 @@ pub struct RobotExt {
     pub action: Action,
     pub mass: f64,
     pub arena_e: f64,
-    is_me: bool,
+    pub is_me: bool,
+    pub ball_collision_type: CollisionType,
 }
 
 impl RobotExt {
@@ -46,6 +54,10 @@ impl RobotExt {
 
     pub fn is_me(&self) -> bool {
         self.is_me
+    }
+
+    pub fn ball_collision_type(&self) -> CollisionType {
+        self.ball_collision_type
     }
 
     fn set_radius(&mut self, value: f64) {
@@ -179,6 +191,7 @@ impl Simulator {
                     mass: world.rules.ROBOT_MASS,
                     arena_e: world.rules.ROBOT_ARENA_E,
                     is_me: v.id == me_id,
+                    ball_collision_type: CollisionType::None,
                 }
             })
             .collect();
@@ -248,6 +261,9 @@ impl Simulator {
 
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize, rng: &mut XorShiftRng) {
         let micro_tick_time_interval = time_interval / micro_ticks_per_tick as f64;
+        for robot in self.robots.iter_mut() {
+            robot.ball_collision_type = CollisionType::None;
+        }
         for _ in 0..micro_ticks_per_tick {
             self.micro_tick(micro_tick_time_interval, rng);
         }
@@ -299,9 +315,12 @@ impl Simulator {
 
         for i in 0 .. self.robots.len() {
             let mut robot = self.robots[i].clone();
-            self.collide(&mut robot, &mut ball, rng);
+            let collision_type = self.collide(&mut robot, &mut ball, rng);
             let touch_normal = self.rules.arena.collide(&mut robot);
             robot.touch_normal = touch_normal;
+            if robot.ball_collision_type == CollisionType::None {
+                robot.ball_collision_type = collision_type;
+            }
             self.robots[i] = robot;
         }
 
@@ -318,7 +337,7 @@ impl Simulator {
         self.current_micro_tick += 1;
     }
 
-    pub fn collide(&self, a: &mut Solid, b: &mut Solid, rng: &mut XorShiftRng) {
+    pub fn collide(&self, a: &mut Solid, b: &mut Solid, rng: &mut XorShiftRng) -> CollisionType {
         let delta_position = b.position() - a.position();
         let distance = delta_position.norm();
         let penetration = a.radius() + b.radius() - distance;
@@ -339,7 +358,10 @@ impl Simulator {
                 let b_velocity = b.velocity() - impulse * k_b;
                 a.set_velocity(a_velocity);
                 b.set_velocity(b_velocity);
+                return CollisionType::Kick;
             }
+            return CollisionType::Touch;
         }
+        CollisionType::None
     }
 }
