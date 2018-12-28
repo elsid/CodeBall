@@ -97,8 +97,7 @@ impl Robot {
         let default_action = Action::default();
         let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 3;
         let far_micro_ticks_per_tick = near_micro_ticks_per_tick / 10;
-        let near_time_interval = world.rules.tick_time_interval();
-        let far_time_interval = near_time_interval * 2.0;
+        let time_interval = world.rules.tick_time_interval();
         let simulation_time_depth = world.rules.tick_time_interval() * 90.0;
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
         let max_micro_ticks = 1000;
@@ -115,7 +114,7 @@ impl Robot {
         next_action_id += 1;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
-        while (iterations < 5 || optimal_action.score <= 0) && global_simulator.current_time() + near_time_interval < simulation_time_depth {
+        while (iterations < 5 || optimal_action.score <= 0) && global_simulator.current_time() + time_interval < simulation_time_depth {
             log!(world.game.current_tick, "[{}] try time point {} {}", self.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
@@ -150,7 +149,7 @@ impl Robot {
                     let mut action = Action::default();
                     let mut stats = Stats::default();
                     let velocity = if distance_to_target > 1e-3 {
-                        if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * far_time_interval {
+                        if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * time_interval {
                             to_target * world.rules.ROBOT_MAX_GROUND_SPEED / distance_to_target
                         } else {
                             to_target * required_speed / distance_to_target
@@ -161,12 +160,12 @@ impl Robot {
                     let mut history = vec![State::new(&local_simulator)];
                     log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
                     action.set_target_velocity(velocity);
-                    let (before_time_interval, before_micro_ticks_per_tick) = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * far_time_interval {
+                    let before_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
                         log!(world.game.current_tick, "[{}] <{}> far", self.id, action_id);
-                        (far_time_interval, far_micro_ticks_per_tick)
+                        far_micro_ticks_per_tick
                     } else {
                         log!(world.game.current_tick, "[{}] <{}> near", self.id, action_id);
-                        (near_time_interval, near_micro_ticks_per_tick)
+                        near_micro_ticks_per_tick
                     };
                     let mut time_to_ball = None;
                     let mut ball_hit_position = None;
@@ -177,48 +176,48 @@ impl Robot {
                         }
                     };
                     if local_simulator.me().position().distance(target)
-                            > velocity.norm() * before_time_interval
+                            > velocity.norm() * time_interval
                         && local_simulator.me().position().distance(local_simulator.ball().position())
-                            > ball_distance_limit + velocity.norm() * before_time_interval
+                            > ball_distance_limit + velocity.norm() * time_interval
                     {
-                        log!(world.game.current_tick, "[{}] <{}> will move {}:{} target={}/{} ball={}/{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * before_time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * before_time_interval);
+                        log!(world.game.current_tick, "[{}] <{}> will move {}:{} target={}/{} ball={}/{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * time_interval);
                         local_simulator.me_mut().action = action.clone();
                         stats.micro_ticks_to_near = local_simulator.current_micro_tick();
                         stats.time_to_near = local_simulator.current_time();
-                        while local_simulator.current_time() + before_time_interval < simulation_time_depth
+                        while local_simulator.current_time() + time_interval < simulation_time_depth
                             && local_simulator.current_micro_tick() < max_micro_ticks
                             && local_simulator.score() == 0
                             && local_simulator.me().position().distance(target)
-                                > velocity.norm() * before_time_interval
+                                > velocity.norm() * time_interval
                             && local_simulator.me().position().distance(local_simulator.ball().position())
-                                > ball_distance_limit + velocity.norm() * before_time_interval
+                                > ball_distance_limit + velocity.norm() * time_interval
                             && local_simulator.me().ball_collision_type() == CollisionType::None
                         {
-                            log!(world.game.current_tick, "[{}] <{}> move {}:{} target={}/{} ball={}/{} position={:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * before_time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * before_time_interval, global_simulator.me().position());
-                            local_simulator.tick(before_time_interval, before_micro_ticks_per_tick, rng);
+                            log!(world.game.current_tick, "[{}] <{}> move {}:{} target={}/{} ball={}/{} position={:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * time_interval, global_simulator.me().position());
+                            local_simulator.tick(time_interval, before_micro_ticks_per_tick, rng);
                             history.push(State::new(&local_simulator));
                             on_hit_ball(local_simulator.me().ball_collision_type(), local_simulator.me().position(), local_simulator.current_time());
                         }
                         stats.micro_ticks_to_jump = local_simulator.current_micro_tick();
                         stats.time_to_jump = local_simulator.current_time();
                     } else {
-                        log!(world.game.current_tick, "[{}] <{}> will jump {}:{} target={}/{} ball={}/{} position={:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * before_time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * before_time_interval, global_simulator.me().position());
+                        log!(world.game.current_tick, "[{}] <{}> will jump {}:{} target={}/{} ball={}/{} position={:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * time_interval, global_simulator.me().position());
                         action.jump_speed = world.rules.ROBOT_MAX_JUMP_SPEED;
                     }
                     local_simulator.me_mut().action.jump_speed = world.rules.ROBOT_MAX_JUMP_SPEED;
-                    while local_simulator.current_time() + before_time_interval < simulation_time_depth
+                    while local_simulator.current_time() + time_interval < simulation_time_depth
                         && local_simulator.current_micro_tick() < max_micro_ticks
                         && local_simulator.score() == 0
                         && (
                             local_simulator.me().position().distance(target)
-                                <= velocity.norm() * before_time_interval
+                                <= velocity.norm() * time_interval
                             || local_simulator.me().position().distance(local_simulator.ball().position())
-                                <= ball_distance_limit + velocity.norm() * before_time_interval
+                                <= ball_distance_limit + velocity.norm() * time_interval
                             || local_simulator.me().ball_collision_type() == CollisionType::None
                         )
                     {
-                        log!(world.game.current_tick, "[{}] <{}> jump {}:{} target={}/{} ball={}/{} position={:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * before_time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * before_time_interval, global_simulator.me().position());
-                        local_simulator.tick(before_time_interval, before_micro_ticks_per_tick, rng);
+                        log!(world.game.current_tick, "[{}] <{}> jump {}:{} target={}/{} ball={}/{} position={:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * time_interval, global_simulator.me().position());
+                        local_simulator.tick(time_interval, before_micro_ticks_per_tick, rng);
                         history.push(State::new(&local_simulator));
                         on_hit_ball(local_simulator.me().ball_collision_type(), local_simulator.me().position(), local_simulator.current_time());
                         stats.jump_simulation = true;
@@ -227,12 +226,12 @@ impl Robot {
                     stats.time_to_watch = local_simulator.current_time();
                     local_simulator.me_mut().action.jump_speed = 0.0;
                     local_simulator.me_mut().action.set_target_velocity(Vec3::default());
-                    while local_simulator.current_time() + far_time_interval < simulation_time_depth
+                    while local_simulator.current_time() + time_interval < simulation_time_depth
                         && local_simulator.current_micro_tick() < max_micro_ticks
                         && local_simulator.score() == 0
                     {
                         log!(world.game.current_tick, "[{}] <{}> watch {}:{} ball_position={:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.ball().position());
-                        local_simulator.tick(far_time_interval, far_micro_ticks_per_tick, rng);
+                        local_simulator.tick(time_interval, far_micro_ticks_per_tick, rng);
                         history.push(State::new(&local_simulator));
                         on_hit_ball(local_simulator.me().ball_collision_type(), local_simulator.me().position(), local_simulator.current_time());
                     }
@@ -243,7 +242,7 @@ impl Robot {
                         &world.rules,
                         &local_simulator,
                         time_to_ball,
-                        simulation_time_depth + far_time_interval,
+                        simulation_time_depth + time_interval,
                     );
                     stats.micro_ticks_to_end = local_simulator.current_micro_tick();
                     stats.time_to_end = local_simulator.current_time();
@@ -269,7 +268,7 @@ impl Robot {
                 }
             }
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
-                global_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
+                global_simulator.tick(time_interval, near_micro_ticks_per_tick, rng);
             }
         }
         if self.does_jump_hit_ball(&world.rules, &world.game.ball) {
@@ -293,37 +292,37 @@ impl Robot {
                 }
             };
             log!(world.game.current_tick, "[{}] <{}> jump to ball {}:{} ball={}/{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit);
-            local_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
+            local_simulator.tick(time_interval, near_micro_ticks_per_tick, rng);
             history.push(State::new(&local_simulator));
             on_hit_ball(local_simulator.me().ball_collision_type(), local_simulator.me().position(), local_simulator.current_time());
             stats.far_jump_simulation = true;
-            while local_simulator.current_time() + near_time_interval < simulation_time_depth
+            while local_simulator.current_time() + time_interval < simulation_time_depth
                 && local_simulator.current_micro_tick() < max_micro_ticks
                 && local_simulator.score() == 0
                 && local_simulator.me().position().distance(local_simulator.ball().position())
-                    > ball_distance_limit + local_simulator.me().velocity().norm() * far_time_interval
+                    > ball_distance_limit + local_simulator.me().velocity().norm() * time_interval
             {
-                log!(world.game.current_tick, "[{}] <{}> jump far to ball {}:{} ball={}/{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + local_simulator.me().velocity().norm() * far_time_interval);
-                local_simulator.tick(near_time_interval, far_micro_ticks_per_tick, rng);
+                log!(world.game.current_tick, "[{}] <{}> jump far to ball {}:{} ball={}/{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + local_simulator.me().velocity().norm() * time_interval);
+                local_simulator.tick(time_interval, far_micro_ticks_per_tick, rng);
                 history.push(State::new(&local_simulator));
                 on_hit_ball(local_simulator.me().ball_collision_type(), local_simulator.me().position(), local_simulator.current_time());
             }
-            while local_simulator.current_time() + near_time_interval < simulation_time_depth
+            while local_simulator.current_time() + time_interval < simulation_time_depth
                 && local_simulator.current_micro_tick() < max_micro_ticks
                 && local_simulator.score() == 0
                 && local_simulator.me().velocity().y().abs() > 0.0
             {
                 log!(world.game.current_tick, "[{}] <{}> jump near to ball {}:{} ball={}/{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit);
-                local_simulator.tick(near_time_interval, near_micro_ticks_per_tick, rng);
+                local_simulator.tick(time_interval, near_micro_ticks_per_tick, rng);
                 history.push(State::new(&local_simulator));
                 on_hit_ball(local_simulator.me().ball_collision_type(), local_simulator.me().position(), local_simulator.current_time());
             }
-            while local_simulator.current_time() + far_time_interval < simulation_time_depth
+            while local_simulator.current_time() + time_interval < simulation_time_depth
                 && local_simulator.current_micro_tick() < max_micro_ticks
                 && local_simulator.score() == 0
             {
                 log!(world.game.current_tick, "[{}] <{}> watch {}:{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick());
-                local_simulator.tick(far_time_interval, far_micro_ticks_per_tick, rng);
+                local_simulator.tick(time_interval, far_micro_ticks_per_tick, rng);
                 history.push(State::new(&local_simulator));
                 on_hit_ball(local_simulator.me().ball_collision_type(), local_simulator.me().position(), local_simulator.current_time());
             }
@@ -331,7 +330,7 @@ impl Robot {
                 &world.rules,
                 &local_simulator,
                 time_to_ball,
-                simulation_time_depth + far_time_interval,
+                simulation_time_depth + time_interval,
             );
             stats.micro_ticks_to_end = local_simulator.current_micro_tick();
             stats.time_to_end = local_simulator.current_time();
