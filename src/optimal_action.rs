@@ -5,7 +5,7 @@ use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
-use crate::my_strategy::common::{Square, IsBetween};
+use crate::my_strategy::common::Square;
 use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
 use crate::my_strategy::render::{Render, Color, Object, Tag};
@@ -142,9 +142,6 @@ impl Robot {
                         world.rules.ROBOT_MAX_GROUND_SPEED
                     };
                     log!(world.game.current_tick, "[{}]    suggest target {}:{} distance={} speed={} target={:?}", self.id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
-                    if required_speed.is_between(0.9 * world.rules.ROBOT_MAX_GROUND_SPEED, 1.01 * world.rules.ROBOT_MAX_GROUND_SPEED) {
-                        continue;
-                    }
                     let action_id = next_action_id;
                     next_action_id += 1;
                     let mut local_simulator = initial_simulator.clone();
