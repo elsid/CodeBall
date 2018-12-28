@@ -173,6 +173,37 @@ fn test_simulator_robot_kick_ball() {
 }
 
 #[test]
+fn test_simulator_wait_for_goal() {
+    let world = {
+        let mut world = example_world();
+        world.game.ball.y = 7.584569693698086;
+        world.game.ball.x = 2.354339378140074;
+        world.game.ball.z = 27.7479348041067;
+        world.game.ball.velocity_x = 2.048068106203642;
+        world.game.ball.velocity_y = -27.116734448465703;
+        world.game.ball.velocity_z = 24.13826180412662;
+        world.rules.seed = 2793871283;
+        world
+    };
+    let mut simulator = Simulator::new(&world, world.game.robots[0].id);
+    let mut rng = XorShiftRng::from_seed([
+        simulator.rules().seed as u32,
+        (simulator.rules().seed >> 32) as u32,
+        1841971383,
+        1904458926,
+    ]);
+    for _ in 0..34 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(3.5149113049892926, 6.909288205242904, 46.22324077130158));
+    assert_eq!(simulator.score(), 1);
+}
+
+#[test]
 fn test_simulator_theoretic() {
     let mut world = example_world();
     let initial_position = Vec3::new(0.0, 2.685785194346652, 0.6238366102032489);
