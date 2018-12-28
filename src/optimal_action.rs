@@ -95,8 +95,8 @@ impl Robot {
         let mut global_simulator = initial_simulator.clone();
         global_simulator.me_mut().set_velocity(Vec3::default());
         let default_action = Action::default();
-        let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 3;
-        let far_micro_ticks_per_tick = near_micro_ticks_per_tick / 10;
+        let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 4;
+        let far_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 30;
         let time_interval = world.rules.tick_time_interval();
         let simulation_time_depth = world.rules.tick_time_interval() * 90.0;
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
