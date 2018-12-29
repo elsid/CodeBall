@@ -204,6 +204,142 @@ fn test_simulator_wait_for_goal() {
 }
 
 #[test]
+fn test_simulator_throw_ball_by_plus_x_and_z() {
+    let world = {
+        let mut world = example_world();
+        world.game.ball.velocity_x = world.rules.MAX_ENTITY_SPEED / 2.0;
+        world.game.ball.velocity_y = 0.0;
+        world.game.ball.velocity_z = world.rules.MAX_ENTITY_SPEED / 2.0;
+        world
+    };
+    let mut simulator = Simulator::new(&world, world.game.robots[0].id);
+    let mut rng = XorShiftRng::from_seed([
+        simulator.rules().seed as u32,
+        (simulator.rules().seed >> 32) as u32,
+        1841971383,
+        1904458926,
+    ]);
+    for _ in 0..10 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(8.333333333333501, 7.420661866399502, 8.333333333333501));
+    for _ in 0..90 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(-23.451917024130786, 3.123213400000252, 18.627066409350064));
+}
+
+#[test]
+fn test_simulator_throw_ball_by_plus_x_and_neg_z() {
+    let world = {
+        let mut world = example_world();
+        world.game.ball.velocity_x = world.rules.MAX_ENTITY_SPEED / 2.0;
+        world.game.ball.velocity_y = 0.0;
+        world.game.ball.velocity_z = -world.rules.MAX_ENTITY_SPEED / 2.0;
+        world
+    };
+    let mut simulator = Simulator::new(&world, world.game.robots[0].id);
+    let mut rng = XorShiftRng::from_seed([
+        simulator.rules().seed as u32,
+        (simulator.rules().seed >> 32) as u32,
+        1841971383,
+        1904458926,
+    ]);
+    for _ in 0..10 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(8.333333333333501, 7.420661866399502, -8.333333333333501));
+    for _ in 0..90 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(-23.451917024130786, 3.123213400000252, -18.627066409350064));
+}
+
+#[test]
+fn test_simulator_throw_ball_by_neg_x_and_plus_z() {
+    let world = {
+        let mut world = example_world();
+        world.game.ball.velocity_x = -world.rules.MAX_ENTITY_SPEED / 2.0;
+        world.game.ball.velocity_y = 0.0;
+        world.game.ball.velocity_z = world.rules.MAX_ENTITY_SPEED / 2.0;
+        world
+    };
+    let mut simulator = Simulator::new(&world, world.game.robots[0].id);
+    let mut rng = XorShiftRng::from_seed([
+        simulator.rules().seed as u32,
+        (simulator.rules().seed >> 32) as u32,
+        1841971383,
+        1904458926,
+    ]);
+    for _ in 0..10 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(-8.333333333333501, 7.420661866399502, 8.333333333333501));
+    for _ in 0..90 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(23.451917024130786, 3.123213400000252, 18.627066409350064));
+}
+
+#[test]
+fn test_simulator_throw_ball_by_neg_x_and_z() {
+    let world = {
+        let mut world = example_world();
+        world.game.ball.velocity_x = -world.rules.MAX_ENTITY_SPEED / 2.0;
+        world.game.ball.velocity_y = 0.0;
+        world.game.ball.velocity_z = -world.rules.MAX_ENTITY_SPEED / 2.0;
+        world
+    };
+    let mut simulator = Simulator::new(&world, world.game.robots[0].id);
+    let mut rng = XorShiftRng::from_seed([
+        simulator.rules().seed as u32,
+        (simulator.rules().seed >> 32) as u32,
+        1841971383,
+        1904458926,
+    ]);
+    for _ in 0..10 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(-8.333333333333501, 7.420661866399502, -8.333333333333501));
+    for _ in 0..90 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.ball().position(), Vec3::new(23.451917024130786, 3.123213400000252, -18.627066409350064));
+}
+
+#[test]
 fn test_simulator_theoretic() {
     let mut world = example_world();
     let initial_position = Vec3::new(0.0, 2.685785194346652, 0.6238366102032489);
