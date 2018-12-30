@@ -305,7 +305,8 @@ impl Simulator {
             for j in i + 1 .. self.robots.len() {
                 let mut robot_i = self.robots[i].clone();
                 let mut robot_j = self.robots[j].clone();
-                self.collide(&mut robot_i, &mut robot_j, rng);
+                let e = || { rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E) };
+                Simulator::collide(e, &mut robot_i, &mut robot_j);
                 self.robots[i] = robot_i;
                 self.robots[j] = robot_j;
             }
@@ -315,7 +316,8 @@ impl Simulator {
 
         for i in 0 .. self.robots.len() {
             let mut robot = self.robots[i].clone();
-            let collision_type = self.collide(&mut robot, &mut ball, rng);
+            let e = || { rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E) };
+            let collision_type = Simulator::collide(e, &mut robot, &mut ball);
             let touch_normal = self.rules.arena.collide(&mut robot);
             robot.touch_normal = touch_normal;
             if robot.ball_collision_type == CollisionType::None {
@@ -337,7 +339,9 @@ impl Simulator {
         self.current_micro_tick += 1;
     }
 
-    pub fn collide(&self, a: &mut Solid, b: &mut Solid, rng: &mut XorShiftRng) -> CollisionType {
+    pub fn collide<F>(mut e: F, a: &mut Solid, b: &mut Solid) -> CollisionType
+        where F: FnMut() -> f64 {
+
         let delta_position = b.position() - a.position();
         let distance = delta_position.norm();
         let penetration = a.radius() + b.radius() - distance;
@@ -352,7 +356,7 @@ impl Simulator {
             let delta_velocity = normal.dot(b.velocity() - a.velocity())
                 - b.radius_change_speed() - a.radius_change_speed();
             if delta_velocity < 0.0 {
-                let k = 1.0 + rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E);
+                let k = 1.0 + e();
                 let impulse = normal * k * delta_velocity;
                 let a_velocity = a.velocity() + impulse * k_a;
                 let b_velocity = b.velocity() - impulse * k_b;
