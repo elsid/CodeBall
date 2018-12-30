@@ -453,11 +453,6 @@ pub fn get_points(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules, rng:
         let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
         result.push(ball_position + to_robot.rotated_by_y(angle) * distance);
     }
-//    let to_robot = (robot.position() - ball.position().with_y(rules.ROBOT_MIN_RADIUS)).normalized();
-//    result.push(ball.position().with_y(rules.ROBOT_MIN_RADIUS) + to_robot * distance);
-//    let to_defend = (rules.arena.get_defend_target() - ball.position().with_y(rules.ROBOT_MIN_RADIUS)).normalized();
-//    result.push(ball.position().with_y(rules.ROBOT_MIN_RADIUS) + to_defend * distance);
-//    result.push(get_position_to_jump(distance, ball, robot, rules));
     result
 }
 
@@ -470,16 +465,6 @@ pub fn get_min_distance_between_spheres(ball_y: f64, ball_radius: f64, robot_rad
         None
     }
 }
-
-//fn get_position_to_jump(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules) -> Vec3 {
-//    let goal_target = rules.arena.get_goal_target();
-//    let to_goal = goal_target - ball.position();
-//    let to_goal_direction = to_goal.normalized();
-//    let desired_ball_velocity = to_goal_direction * rules.ROBOT_MAX_JUMP_SPEED;
-//    let desired_robot_hit_direction = (desired_ball_velocity - ball.velocity()).with_y(0.0).normalized();
-//    (ball.position() - desired_robot_hit_direction * (ball.radius + distance))
-//        .with_y(rules.ROBOT_MIN_RADIUS)
-//}
 
 fn get_robot_color(i: usize, n: usize) -> Color {
     Color::new(0.8, 0.2 + (i as f64 / n as f64) * 0.8, 0.2, 0.5)
