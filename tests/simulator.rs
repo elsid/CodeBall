@@ -338,22 +338,3 @@ fn test_simulator_throw_ball_by_neg_x_and_z() {
     }
     assert_eq!(simulator.ball().position(), Vec3::new(23.451917024130786, 3.123213400000252, -18.627066409350064));
 }
-
-#[test]
-fn test_simulator_theoretic() {
-    let mut world = example_world();
-    let initial_position = Vec3::new(0.0, 2.685785194346652, 0.6238366102032489);
-    let initial_velocity = Vec3::new(0.0, 15.671092310398691, 35.07455928925282);
-    let final_position = Vec3::new(0.0, 2.0586351972784565, 38.62127584022837);
-    let final_velocity = Vec3::new(0.0, -16.828907689603298, 35.07455928925282);
-    let acceleration = Vec3::new(0.0, -world.rules.GRAVITY, 0.0);
-    let time = 1.100000000000001;
-    let initial_velocity_1 = (final_position - initial_position - acceleration * time.square() / 2.0) / time;
-    let final_position_1 = initial_position + initial_velocity * time + acceleration * time.sqrt() / 2.0;
-    let final_velocity_1 = initial_velocity + acceleration * time;
-    let final_position_2 = initial_position + final_velocity * time - acceleration * time.sqrt() / 2.0;
-    assert_eq!(initial_velocity_1, Vec3::new(0.0,  15.92986363902893, 34.54312657275008));
-    assert_eq!(final_position_1, Vec3::new(0.0,  4.19185401323295, 39.205851828381384));
-    assert_eq!(final_velocity_1, Vec3::new(0.0,  -17.328907689601337, 35.07455928925282));
-    assert_eq!(final_position_2, Vec3::new(0.0, -0.09388054166470994, 39.205851828381384));
-}
