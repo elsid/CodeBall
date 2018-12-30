@@ -1,4 +1,5 @@
 use crate::model::Robot;
+use crate::model::Rules;
 use crate::my_strategy::vec3::Vec3;
 
 impl Robot {
@@ -20,5 +21,11 @@ impl Robot {
         self.velocity_x = value.x();
         self.velocity_y = value.y();
         self.velocity_z = value.z();
+    }
+
+    pub fn jump(&mut self, jump_speed: f64, rules: &Rules) {
+        self.radius = rules.ROBOT_MIN_RADIUS
+            + (rules.ROBOT_MAX_RADIUS - rules.ROBOT_MIN_RADIUS)
+            * jump_speed / rules.ROBOT_MAX_JUMP_SPEED;
     }
 }

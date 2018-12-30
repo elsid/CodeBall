@@ -60,8 +60,9 @@ impl RobotExt {
         self.ball_collision_type
     }
 
-    fn set_radius(&mut self, value: f64) {
-        self.base.radius = value;
+    pub fn jump(&mut self, jump_speed: f64, rules: &Rules) {
+        self.base.jump(jump_speed, rules);
+        self.radius_change_speed = jump_speed;
     }
 }
 
@@ -292,11 +293,7 @@ impl Simulator {
                 }
             }
             robot.shift(time_interval, self.rules.GRAVITY, self.rules.MAX_ENTITY_SPEED);
-            let robot_radius = self.rules.ROBOT_MIN_RADIUS
-                + (self.rules.ROBOT_MAX_RADIUS - self.rules.ROBOT_MIN_RADIUS)
-                * robot.action.jump_speed / self.rules.ROBOT_MAX_JUMP_SPEED;
-            robot.set_radius(robot_radius);
-            robot.radius_change_speed = robot.action.jump_speed;
+            robot.jump(robot.action.jump_speed, &self.rules);
         }
 
         self.ball.shift(time_interval, self.rules.GRAVITY, self.rules.MAX_ENTITY_SPEED);
