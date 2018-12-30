@@ -66,7 +66,7 @@ impl Vec3 {
     pub fn clamp(&self, value: f64) -> Vec3 {
         let norm = self.norm();
         if norm > value {
-            *self / (norm * value)
+            *self / norm * value
         } else {
             *self
         }
