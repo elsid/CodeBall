@@ -128,7 +128,7 @@ impl Robot {
                     global_simulator.rules(),
                     rng
                 );
-                for point in points {
+                let mut try_target = |point: Vec3| {
                     let target = {
                         let mut robot = global_simulator.me().clone();
                         robot.set_position(point);
@@ -265,6 +265,9 @@ impl Robot {
                             ball_hit_position,
                         };
                     }
+                };
+                for point in points {
+                    try_target(point);
                 }
             }
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
