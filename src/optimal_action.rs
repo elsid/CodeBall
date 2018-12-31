@@ -93,7 +93,7 @@ impl Robot {
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", self.id, self.position(), self.velocity(), world.game.ball.position(), world.game.ball.velocity());
         let initial_simulator = Simulator::new(world, self.id);
         let mut global_simulator = initial_simulator.clone();
-        global_simulator.me_mut().set_velocity(Vec3::default());
+        global_simulator.set_ignore_me(true);
         let default_action = Action::default();
         let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 4;
         let far_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 30;
