@@ -169,6 +169,7 @@ pub struct Simulator {
     current_time: f64,
     score: i32,
     me_index: usize,
+    ignore_me: bool,
 }
 
 impl Simulator {
@@ -213,6 +214,7 @@ impl Simulator {
             current_time: 0.0,
             score: 0,
             me_index,
+            ignore_me: false,
         }
     }
 
@@ -260,6 +262,10 @@ impl Simulator {
             .unwrap()
     }
 
+    pub fn set_ignore_me(&mut self, value: bool) {
+        self.ignore_me = value;
+    }
+
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize, rng: &mut XorShiftRng) {
         let micro_tick_time_interval = time_interval / micro_ticks_per_tick as f64;
         for robot in self.robots.iter_mut() {
@@ -276,6 +282,9 @@ impl Simulator {
         rng.shuffle(&mut self.robots[..]);
 
         for robot in self.robots.iter_mut() {
+            if robot.is_me && self.ignore_me {
+                continue;
+            }
             if let Some(touch_normal) = robot.touch_normal {
                 let target_velocity = robot.action.target_velocity()
                     .clamp(self.rules.ROBOT_MAX_GROUND_SPEED);
@@ -299,7 +308,13 @@ impl Simulator {
         self.ball.shift(time_interval, self.rules.GRAVITY, self.rules.MAX_ENTITY_SPEED);
 
         for i in 0 .. self.robots.len() - 1 {
+            if self.robots[i].is_me && self.ignore_me {
+                continue;
+            }
             for j in i + 1 .. self.robots.len() {
+                if self.robots[j].is_me && self.ignore_me {
+                    continue;
+                }
                 let mut robot_i = self.robots[i].clone();
                 let mut robot_j = self.robots[j].clone();
                 let e = || { rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E) };
@@ -312,6 +327,9 @@ impl Simulator {
         let mut ball = self.ball.clone();
 
         for i in 0 .. self.robots.len() {
+            if self.robots[i].is_me && self.ignore_me {
+                continue;
+            }
             let mut robot = self.robots[i].clone();
             let e = || { rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E) };
             let collision_type = Simulator::collide(e, &mut robot, &mut ball);
