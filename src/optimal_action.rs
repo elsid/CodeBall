@@ -363,24 +363,10 @@ impl Robot {
                 };
             }
         }
-        if cfg!(feature = "enable_render") {
-            for state in optimal_action.history.iter() {
-                render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.ball.position, world.rules.BALL_RADIUS, OPTIMAL_BALL_POSITION));
-                render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.me.position, state.me.radius, OPTIMAL_ME_POSITION));
-                for (i, robot) in state.robots.iter().enumerate() {
-                    render.add_with_tag(Tag::RobotId(self.id), Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len())));
-                }
-            }
-            for (prev, next) in (&optimal_action.history[0..optimal_action.history.len() - 1]).iter()
-                .zip((&optimal_action.history[1..optimal_action.history.len()]).iter()) {
-                render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.ball.position, next.ball.position, 1.0, OPTIMAL_BALL_POSITION));
-                render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.me.position, next.me.position, 1.0, OPTIMAL_ME_POSITION));
-                for (i, (prev_robot, next_robot)) in (prev.robots.iter().zip(next.robots.iter())).enumerate() {
-                    render.add_with_tag(Tag::RobotId(self.id), Object::line(prev_robot.position, next_robot.position, 1.0, get_robot_color(i, prev.robots.len())));
-                }
-            }
-            render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  speed: {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
-        }
+
+        #[cfg(feature = "enable_render")]
+        self.render_optimal_action(&optimal_action, &world.rules, render);
+
         optimal_action.stats.iterations = iterations;
         optimal_action.stats.total_micro_ticks = total_micro_ticks;
         optimal_action
@@ -418,6 +404,31 @@ impl Robot {
             * (1.0 - (self.position().distance(rules.arena.get_my_goal_target()) / rules.arena.max_distance()));
         let time = optimize1d(0.0, max_time, 10, get_distance);
         get_distance(time) < 1.05 * rules.BALL_RADIUS + rules.ROBOT_MIN_RADIUS
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_optimal_action(&self, optimal_action: &OptimalAction, rules: &Rules, render: &mut Render) {
+        self.render_history(&optimal_action.history, rules, render);
+        render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  speed: {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_history(&self, history: &Vec<State>, rules: &Rules, render: &mut Render) {
+        for state in history.iter() {
+            render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.ball.position, rules.BALL_RADIUS, OPTIMAL_BALL_POSITION));
+            render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.me.position, state.me.radius, OPTIMAL_ME_POSITION));
+            for (i, robot) in state.robots.iter().enumerate() {
+                render.add_with_tag(Tag::RobotId(self.id), Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len())));
+            }
+        }
+        for (prev, next) in (&history[0..history.len() - 1]).iter()
+            .zip((&history[1..history.len()]).iter()) {
+            render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.ball.position, next.ball.position, 1.0, OPTIMAL_BALL_POSITION));
+            render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.me.position, next.me.position, 1.0, OPTIMAL_ME_POSITION));
+            for (i, (prev_robot, next_robot)) in (prev.robots.iter().zip(next.robots.iter())).enumerate() {
+                render.add_with_tag(Tag::RobotId(self.id), Object::line(prev_robot.position, next_robot.position, 1.0, get_robot_color(i, prev.robots.len())));
+            }
+        }
     }
 }
 
