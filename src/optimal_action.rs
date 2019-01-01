@@ -374,7 +374,7 @@ impl Robot {
                     render.add_with_tag(Tag::RobotId(self.id), Object::line(prev_robot.position, next_robot.position, 1.0, get_robot_color(i, prev.robots.len())));
                 }
             }
-            render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  velocity.norm(): {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
+            render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  speed: {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
         }
         optimal_action.stats.iterations = iterations;
         optimal_action
