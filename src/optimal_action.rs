@@ -72,6 +72,7 @@ pub struct Stats {
     pub jump_simulation: bool,
     pub far_jump_simulation: bool,
     pub action_score: i32,
+    pub total_micro_ticks: i32,
 }
 
 pub struct OptimalAction {
@@ -102,6 +103,7 @@ impl Robot {
         let simulation_time_depth = world.rules.tick_time_interval() * 90.0;
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
         let max_micro_ticks = 1000;
+        let mut total_micro_ticks = 0;
         let mut next_action_id = 0;
         let mut optimal_action = OptimalAction {
             id: next_action_id,
@@ -266,6 +268,7 @@ impl Robot {
                             ball_hit_position,
                         };
                     }
+                    total_micro_ticks += local_simulator.current_micro_tick();
                 };
                 for point in points {
                     try_target(point);
@@ -275,6 +278,7 @@ impl Robot {
                 global_simulator.tick(time_interval, near_micro_ticks_per_tick, rng);
             }
         }
+        total_micro_ticks += global_simulator.current_micro_tick();
         if self.does_jump_hit_ball(&world.rules, &world.game.ball) {
             let action_id = next_action_id;
 //            next_action_id += 1;
@@ -330,6 +334,7 @@ impl Robot {
                 history.push(State::new(&local_simulator));
                 on_hit_ball(local_simulator.me().ball_collision_type(), local_simulator.me().position(), local_simulator.current_time());
             }
+            total_micro_ticks += local_simulator.current_micro_tick();
             let action_score = get_action_score(
                 &world.rules,
                 &local_simulator,
@@ -377,6 +382,7 @@ impl Robot {
             render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  speed: {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
         }
         optimal_action.stats.iterations = iterations;
+        optimal_action.stats.total_micro_ticks = total_micro_ticks;
         optimal_action
     }
 
