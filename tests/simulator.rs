@@ -2,7 +2,7 @@ use my_strategy::my_strategy::vec3::Vec3;
 use my_strategy::my_strategy::simulator::{Simulator, CollisionType};
 use my_strategy::my_strategy::entity::Entity;
 use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
-use my_strategy::my_strategy::common::{IsBetween, Square};
+use my_strategy::my_strategy::common::IsBetween;
 use my_strategy::examples::example_world;
 
 #[test]
