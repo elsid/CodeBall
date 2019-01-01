@@ -69,6 +69,10 @@ impl RobotExt {
         self.is_me
     }
 
+    pub fn is_teammate(&self) -> bool {
+        self.base.is_teammate
+    }
+
     pub fn ball_collision_type(&self) -> CollisionType {
         self.ball_collision_type
     }
@@ -243,9 +247,9 @@ impl Simulator {
         &self.robots
     }
 
-//    pub fn robots_mut(&mut self) -> &mut Vec<RobotExt> {
-//        &mut self.robots
-//    }
+    pub fn robots_mut(&mut self) -> &mut Vec<RobotExt> {
+        &mut self.robots
+    }
 
     pub fn ball(&self) -> &BallExt {
         &self.ball

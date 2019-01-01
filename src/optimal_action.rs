@@ -93,7 +93,13 @@ impl Robot {
         use crate::my_strategy::physics::get_min_distance_between_spheres;
 
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", self.id, self.position(), self.velocity(), world.game.ball.position(), world.game.ball.velocity());
-        let initial_simulator = Simulator::new(world, self.id);
+        let initial_simulator = {
+            let mut s = Simulator::new(world, self.id);
+            s.robots_mut().iter_mut()
+                .filter(|v| !v.is_teammate())
+                .for_each(|v| v.action.set_target_velocity(v.velocity()));
+            s
+        };
         let mut global_simulator = initial_simulator.clone();
         global_simulator.set_ignore_me(true);
         let default_action = Action::default();
