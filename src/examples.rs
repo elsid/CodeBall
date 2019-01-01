@@ -1,5 +1,16 @@
 use crate::model::{Arena, Ball, Game, Player, Robot, Rules};
 use crate::my_strategy::world::World;
+use crate::my_strategy::random::{XorShiftRng, SeedableRng};
+
+pub fn example_rng() -> XorShiftRng {
+    let rules = example_rules();
+    XorShiftRng::from_seed([
+        rules.seed as u32,
+        (rules.seed >> 32) as u32,
+        1841971383,
+        1904458926,
+    ])
+}
 
 pub fn example_world() -> World {
     World::new(example_me(), example_rules(), example_game())
