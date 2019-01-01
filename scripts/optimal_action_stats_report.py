@@ -18,17 +18,18 @@ def main():
     values = {k: [v.get(k) for v in records if v.get(k) is not None] for k in records[0]}
     values['time_to_score'] = [v for v in values['time_to_score'] if v < 2]
     values['jump_simulation'] = [v for v in values['jump_simulation'] if v]
-    row('', 'n', 'q95', 'min', 'max', 'mean', 'median', 'stdev')
+    row('', 'n', 'sum', 'q95', 'min', 'max', 'mean', 'median', 'stdev')
     for k, v in values.items():
         row(
             k,
             len(v),
-            numpy.quantile(v, 0.95),
-            min(v),
-            max(v),
-            statistics.mean(v),
-            statistics.median(v),
-            statistics.stdev(v),
+            sum(v),
+            numpy.quantile(v, 0.95) if v else float('NaN'),
+            min(v) if v else float('NaN'),
+            max(v) if v else float('NaN'),
+            statistics.mean(v) if v else float('NaN'),
+            statistics.median(v) if v else float('NaN'),
+            statistics.stdev(v) if v else float('NaN'),
         )
     print()
     if result:
