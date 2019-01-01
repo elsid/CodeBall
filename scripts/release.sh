@@ -27,6 +27,7 @@ cp src/vec2.rs ${DIR}/src
 cp src/vec3.rs ${DIR}/src
 cp src/world.rs ${DIR}/src
 cp src/optimization.rs ${DIR}/src
+cp src/physics.rs ${DIR}/src
 
 cd ${DIR}/src
 

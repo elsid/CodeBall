@@ -2,7 +2,6 @@ use my_strategy::my_strategy::vec3::Vec3;
 use my_strategy::my_strategy::simulator::{Simulator, CollisionType};
 use my_strategy::my_strategy::entity::Entity;
 use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
-use my_strategy::my_strategy::optimal_action::get_min_distance_between_spheres;
 use my_strategy::my_strategy::common::{IsBetween, Square};
 use my_strategy::examples::example_world;
 
@@ -124,6 +123,8 @@ fn test_simulator_robot_jump_with_half_micro_ticks() {
 
 #[test]
 fn test_simulator_robot_kick_ball() {
+    use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
+
     let world = {
         let mut world = example_world();
         world.game.ball.y = world.rules.BALL_RADIUS + 0.4;

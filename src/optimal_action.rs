@@ -5,7 +5,6 @@ use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::{Simulator, CollisionType};
 use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
-use crate::my_strategy::common::Square;
 use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
 use crate::my_strategy::render::{Render, Color, Object, Tag};
@@ -90,6 +89,8 @@ const OPTIMAL_BALL_POSITION: Color = Color::new(0.0, 0.4, 0.8, 0.5);
 
 impl Robot {
     pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> OptimalAction {
+        use crate::my_strategy::physics::get_min_distance_between_spheres;
+
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", self.id, self.position(), self.velocity(), world.game.ball.position(), world.game.ball.velocity());
         let initial_simulator = Simulator::new(world, self.id);
         let mut global_simulator = initial_simulator.clone();
@@ -380,6 +381,8 @@ impl Robot {
     }
 
     pub fn does_jump_hit_ball(&self, rules: &Rules, ball: &Ball) -> bool {
+        use crate::my_strategy::physics::MoveEquation;
+
         let get_my_position = {
             let equation = MoveEquation {
                 initial_position: self.position(),
@@ -456,28 +459,6 @@ pub fn get_points(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules, rng:
     result
 }
 
-pub fn get_min_distance_between_spheres(ball_y: f64, ball_radius: f64, robot_radius: f64) -> Option<f64> {
-    let a = (ball_radius + robot_radius).square();
-    let b = (ball_y - robot_radius).square();
-    if a >= b {
-        Some((a - b).sqrt())
-    } else {
-        None
-    }
-}
-
 fn get_robot_color(i: usize, n: usize) -> Color {
     Color::new(0.8, 0.2 + (i as f64 / n as f64) * 0.8, 0.2, 0.5)
-}
-
-struct MoveEquation {
-    pub initial_position: Vec3,
-    pub initial_velocity: Vec3,
-    pub acceleration: Vec3,
-}
-
-impl MoveEquation {
-    pub fn get_position(&self, time: f64) -> Vec3 {
-        self.initial_position + self.initial_velocity * time + self.acceleration * time.square() / 2.0
-    }
 }

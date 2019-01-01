@@ -45,6 +45,9 @@ pub mod ball;
 #[path = "world.rs"]
 pub mod world;
 
+#[path = "physics.rs"]
+pub mod physics;
+
 #[path = "simulator.rs"]
 pub mod simulator;
 

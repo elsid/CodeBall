@@ -1,4 +1,5 @@
 use crate::model::Rules;
+use crate::my_strategy::vec3::Vec3;
 
 impl Rules {
     pub fn tick_time_interval(&self) -> f64 {
@@ -12,4 +13,8 @@ impl Rules {
 //    pub fn micro_tick_time_interval(&self) -> f64 {
 //        self.tick_time_interval() / self.MICROTICKS_PER_TICK as f64
 //    }
+
+    pub fn gravity_acceleration(&self) -> Vec3 {
+        Vec3::new(0.0, -self.GRAVITY, 0.0)
+    }
 }
