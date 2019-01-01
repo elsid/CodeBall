@@ -15,6 +15,30 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
 
+    pub const fn i() -> Self {
+        Vec3::only_x(1.0)
+    }
+
+    pub const fn j() -> Self {
+        Vec3::only_y(1.0)
+    }
+
+    pub const fn k() -> Self {
+        Vec3::only_z(1.0)
+    }
+
+    pub const fn only_x(x: f64) -> Self {
+        Vec3 { x, y: 0.0, z: 0.0 }
+    }
+
+    pub const fn only_y(y: f64) -> Self {
+        Vec3 { x: 0.0, y, z: 0.0 }
+    }
+
+    pub const fn only_z(z: f64) -> Self {
+        Vec3 { x: 0.0, y: 0.0, z }
+    }
+
 //    pub fn from_polar(radius: f64, angle: f64) -> Self {
 //        Vec3 { x: radius * angle.cos(), y: radius * angle.sin() }
 //    }
@@ -102,6 +126,14 @@ impl Vec3 {
         Vec3::new(self.x * cos - self.z * sin, self.y, self.z * cos + self.x * sin)
     }
 
+    pub fn absolute_rotation_by_y(&self) -> f64 {
+        self.z.atan2(self.x)
+    }
+
+    pub fn rotation_by_y(&self, other: Vec3) -> f64 {
+        other.absolute_rotation_by_y() - self.absolute_rotation_by_y()
+    }
+
 //    pub fn det(&self, other: Vec3) -> f64 {
 //        self.x * other.y - self.y * other.x
 //    }
@@ -112,6 +144,10 @@ impl Vec3 {
 
     pub fn cos(&self, other: Vec3) -> f64 {
         self.dot(other) / (self.norm() * other.norm())
+    }
+
+    pub fn dot2(&self, other: Vec2) -> f64 {
+        self.x * other.x() + self.y * other.y()
     }
 
     pub fn dot(&self, other: Vec3) -> f64 {
@@ -126,10 +162,10 @@ impl Vec3 {
         *self / self.norm()
     }
 
-//    pub fn left_orthogonal(&self) -> Vec3 {
-//        Vec3 { x: -self.y, y: self.x }
-//    }
-//
+    pub fn left_orthogonal_by_y(&self) -> Vec3 {
+        Vec3 { x: -self.z, y: self.y, z: self.x }
+    }
+
 //    pub fn increased_by(&self, value: f64) -> Vec3 {
 //        let norm = self.norm();
 //        *self * (norm + value) / norm

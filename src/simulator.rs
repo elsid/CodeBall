@@ -44,6 +44,19 @@ pub struct RobotExt {
 }
 
 impl RobotExt {
+    pub fn from_robot(robot: &Robot, rules: &Rules) -> Self {
+        RobotExt {
+            base: robot.clone(),
+            touch_normal: None,
+            radius_change_speed: 0.0,
+            action: Action::default(),
+            mass: rules.ROBOT_MASS,
+            arena_e: rules.ROBOT_ARENA_E,
+            is_me: false,
+            ball_collision_type: CollisionType::None,
+        }
+    }
+
     pub fn id(&self) -> i32 {
         self.base.id
     }
@@ -94,6 +107,14 @@ pub struct BallExt {
 impl BallExt {
     pub fn new(base: Ball, mass: f64, arena_e: f64) -> Self {
         BallExt {base, mass, arena_e}
+    }
+
+    pub fn from_ball(ball: &Ball, rules: &Rules) -> Self {
+        BallExt {
+            base: ball.clone(),
+            mass: rules.BALL_MASS,
+            arena_e: rules.BALL_ARENA_E,
+        }
     }
 
     pub fn base(&self) -> &Ball {
@@ -234,9 +255,9 @@ impl Simulator {
         &self.rules
     }
 
-//    pub fn current_tick(&self) -> i32 {
-//        self.current_tick
-//    }
+    pub fn current_tick(&self) -> i32 {
+        self.current_tick
+    }
 
     pub fn current_micro_tick(&self) -> i32 {
         self.current_micro_tick

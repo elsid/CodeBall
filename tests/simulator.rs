@@ -1,9 +1,9 @@
 use my_strategy::my_strategy::vec3::Vec3;
-use my_strategy::my_strategy::simulator::{Simulator, CollisionType};
+use my_strategy::my_strategy::simulator::{Simulator, CollisionType, RobotExt, BallExt};
 use my_strategy::my_strategy::entity::Entity;
 use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
 use my_strategy::my_strategy::common::IsBetween;
-use my_strategy::examples::example_world;
+use my_strategy::examples::{example_world, example_rules, example_me, example_ball};
 
 #[test]
 fn test_simulator_tick_robot_jump() {
@@ -338,4 +338,43 @@ fn test_simulator_throw_ball_by_neg_x_and_z() {
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(23.451917024130786, 3.123213400000252, -18.627066409350064));
+}
+
+#[test]
+fn test_simulator_collide_jumping_robot_and_ball() {
+    use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
+
+    let rules = example_rules();
+    let mut me = RobotExt::from_robot(&example_me(), &rules);
+    let mut ball = BallExt::from_ball(&example_ball(), &rules);
+    ball.set_position(Vec3::new(0.0, rules.BALL_RADIUS, 0.0));
+    let distance = get_min_distance_between_spheres(
+        ball.position().y(),
+        rules.BALL_RADIUS,
+        rules.ROBOT_MIN_RADIUS
+    ).unwrap();
+    me.set_position(ball.position().with_y(rules.ROBOT_MIN_RADIUS) - Vec3::only_z(distance));
+    me.jump(rules.ROBOT_MAX_JUMP_SPEED, &rules);
+    Simulator::collide(|| rules.mean_e(), &mut me, &mut ball);
+    assert_eq!(ball.velocity().norm(), 14.499999999999998);
+}
+
+#[test]
+fn test_simulator_collide_jumping_and_moving_robot_and_ball() {
+    use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
+
+    let rules = example_rules();
+    let mut me = RobotExt::from_robot(&example_me(), &rules);
+    let mut ball = BallExt::from_ball(&example_ball(), &rules);
+    ball.set_position(Vec3::new(0.0, rules.BALL_RADIUS, 0.0));
+    let distance = get_min_distance_between_spheres(
+        ball.position().y(),
+        rules.BALL_RADIUS,
+        rules.ROBOT_MIN_RADIUS
+    ).unwrap();
+    me.set_position(ball.position().with_y(rules.ROBOT_MIN_RADIUS) - Vec3::only_z(distance));
+    me.set_velocity(Vec3::new(0.0, 0.0, rules.ROBOT_MAX_GROUND_SPEED));
+    me.jump(rules.ROBOT_MAX_JUMP_SPEED, &rules);
+    Simulator::collide(|| rules.mean_e(), &mut me, &mut ball);
+    assert_eq!(ball.velocity().norm(), 41.84146220587983);
 }
