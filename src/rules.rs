@@ -19,6 +19,6 @@ impl Rules {
     }
 
     pub fn ball_distance_limit(&self) -> f64 {
-        self.ROBOT_MAX_RADIUS + self.BALL_RADIUS
+        self.ROBOT_MIN_RADIUS + self.BALL_RADIUS
     }
 }

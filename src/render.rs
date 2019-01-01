@@ -115,7 +115,7 @@ impl Object {
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub enum Tag {
-//    Default,
+    Default,
     RobotId(i32),
 }
 
@@ -141,12 +141,12 @@ impl Render {
         }
     }
 
-//    pub fn add(&mut self, object: Object) -> i32 {
-//        let id = self.next_id;
-//        self.objects.insert(id, Item {tag: Tag::Default, object});
-//        self.next_id += 1;
-//        id
-//    }
+    pub fn add(&mut self, object: Object) -> i32 {
+        let id = self.next_id;
+        self.objects.insert(id, Item {tag: Tag::Default, object});
+        self.next_id += 1;
+        id
+    }
 
     pub fn add_with_tag(&mut self, tag: Tag, object: Object) -> i32 {
         let id = self.next_id;

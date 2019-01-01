@@ -237,7 +237,7 @@ impl Simulator {
             current_tick: 0,
             current_micro_tick: 0,
             current_time: 0.0,
-            score: 0,
+            score: Simulator::check_for_goal(&world.game.ball, &world.rules),
             me_index,
             ignore_me: false,
         }
@@ -311,19 +311,15 @@ impl Simulator {
                 continue;
             }
             if let Some(touch_normal) = robot.touch_normal {
-                let target_velocity = robot.action.target_velocity()
-                    .clamp(self.rules.ROBOT_MAX_GROUND_SPEED);
-                let velocity = target_velocity
-                    - touch_normal * touch_normal.dot(target_velocity);
-                let velocity_change = velocity - robot.velocity();
-                let velocity_change_norm = velocity_change.norm();
-                if velocity_change_norm > 0.0 {
-                    let acceleration = self.rules.ROBOT_ACCELERATION
-                        * touch_normal.y().max(0.0);
-                    let robot_velocity = robot.velocity()
-                        + (velocity_change.normalized() * acceleration * time_interval)
-                        .clamp(velocity_change_norm);
-                    robot.set_velocity(robot_velocity);
+                if let Some(v) = Simulator::adjust_velocity(
+                    time_interval,
+                    robot.velocity(),
+                    robot.action.target_velocity(),
+                    touch_normal,
+                    self.rules.ROBOT_MAX_GROUND_SPEED,
+                    self.rules.ROBOT_ACCELERATION,
+                ) {
+                    robot.set_velocity(v);
                 }
             }
             robot.shift(time_interval, self.rules.GRAVITY, self.rules.MAX_ENTITY_SPEED);
@@ -371,14 +367,26 @@ impl Simulator {
         self.ball = ball;
 
         if self.score == 0 {
-            if self.ball.position().z() > self.rules.arena.depth / 2.0 + self.ball.radius() {
-                self.score = 1;
-            } else if self.ball.position().z() < -(self.rules.arena.depth / 2.0 + self.ball.radius()) {
-                self.score = -1;
-            }
+            self.score = Simulator::check_for_goal(self.ball.base(), &self.rules);
         }
 
         self.current_micro_tick += 1;
+    }
+
+    pub fn adjust_velocity(time_interval: f64, velocity: Vec3, mut target_velocity: Vec3,
+                           touch_normal: Vec3, max_speed: f64, acceleration: f64) -> Option<Vec3> {
+        target_velocity = target_velocity.clamp(max_speed);
+        let new_velocity = target_velocity
+            - touch_normal * touch_normal.dot(target_velocity);
+        let velocity_change = new_velocity - velocity;
+        let velocity_change_norm = velocity_change.norm();
+        if velocity_change_norm > 0.0 {
+            let acceleration = acceleration * touch_normal.y().max(0.0);
+            Some(velocity + (velocity_change / velocity_change_norm * acceleration * time_interval)
+                .clamp(velocity_change_norm))
+        } else {
+            None
+        }
     }
 
     pub fn collide<F>(mut e: F, a: &mut Solid, b: &mut Solid) -> CollisionType
@@ -410,4 +418,52 @@ impl Simulator {
         }
         CollisionType::None
     }
+
+    pub fn check_for_goal(ball: &Ball, rules: &Rules) -> i32 {
+        if ball.z > rules.arena.depth / 2.0 + ball.radius {
+            1
+        } else if ball.z < -(rules.arena.depth / 2.0 + ball.radius) {
+            -1
+        } else {
+            0
+        }
+    }
+}
+
+pub fn integrate_movement(final_position: Vec3, final_speed: f64, max_speed: f64,
+                          acceleration: f64, time_interval: f64, max_time: f64,
+                          position: &mut Vec3, velocity: &mut Vec3) -> f64 {
+
+    let mut iteration = 0;
+    let mut prev_target_speed = max_speed;
+    loop {
+        let time_left = max_time - iteration as f64 * time_interval;
+        if position.distance(final_position) < velocity.norm() * time_interval
+            || time_left <= 0.0 {
+            break;
+        }
+        let to_target = final_position - *position;
+        let time_left_to_position = to_target.norm() / velocity.norm();
+        let approximate_time_left = time_left.min(time_left_to_position) - time_interval;
+        let target_speed = if velocity.norm() - final_speed < acceleration * approximate_time_left {
+            max_speed.min(prev_target_speed)
+        } else {
+            final_speed
+        };
+        let target_velocity = to_target.normalized() * target_speed;
+        if let Some(v) = Simulator::adjust_velocity(
+            time_interval,
+            *velocity,
+            target_velocity,
+            Vec3::j(),
+            max_speed,
+            acceleration
+        ) {
+            *velocity = v;
+        }
+        *position = *position + *velocity * time_interval;
+        iteration += 1;
+        prev_target_speed = target_speed;
+    }
+    iteration as f64 * time_interval
 }

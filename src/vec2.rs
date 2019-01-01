@@ -69,12 +69,12 @@ impl Vec2 {
 //        (other - *self).norm()
 //    }
 
-//    pub fn rotated(&self, angle: f64) -> Vec2 {
-//        let sin = angle.sin();
-//        let cos = angle.cos();
-//        Vec2::new(self.x * cos - self.y * sin, self.y * cos + self.x * sin)
-//    }
-//
+    pub fn rotated(&self, angle: f64) -> Vec2 {
+        let sin = angle.sin();
+        let cos = angle.cos();
+        Vec2::new(self.x * cos - self.y * sin, self.y * cos + self.x * sin)
+    }
+
 //    pub fn det(&self, other: Vec2) -> f64 {
 //        self.x * other.y - self.y * other.x
 //    }

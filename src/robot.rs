@@ -1,6 +1,7 @@
 use crate::model::Robot;
 use crate::model::Rules;
 use crate::my_strategy::vec3::Vec3;
+use crate::my_strategy::common::Clamp;
 
 impl Robot {
     pub fn position(&self) -> Vec3 {
@@ -26,6 +27,6 @@ impl Robot {
     pub fn jump(&mut self, jump_speed: f64, rules: &Rules) {
         self.radius = rules.ROBOT_MIN_RADIUS
             + (rules.ROBOT_MAX_RADIUS - rules.ROBOT_MIN_RADIUS)
-            * jump_speed / rules.ROBOT_MAX_JUMP_SPEED;
+            * jump_speed.clamp(0.0, rules.ROBOT_MAX_JUMP_SPEED) / rules.ROBOT_MAX_JUMP_SPEED;
     }
 }

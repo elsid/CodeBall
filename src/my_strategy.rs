@@ -54,6 +54,9 @@ pub mod physics;
 #[path = "simulator.rs"]
 pub mod simulator;
 
+#[path = "kick.rs"]
+pub mod kick;
+
 #[path = "scenarios.rs"]
 pub mod scenarios;
 
