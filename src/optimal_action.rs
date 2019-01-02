@@ -7,7 +7,9 @@ use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
-use crate::my_strategy::render::{Render, Color, Object, Tag};
+use crate::my_strategy::render::Render;
+#[cfg(feature = "enable_render")]
+use crate::my_strategy::render::Color;
 use crate::my_strategy::optimization::optimize1d;
 
 pub struct BallState {
@@ -85,7 +87,10 @@ pub struct OptimalAction {
     pub ball_hit_position: Option<Vec3>,
 }
 
+#[cfg(feature = "enable_render")]
 const OPTIMAL_ME_POSITION: Color = Color::new(0.0, 0.8, 0.4, 0.5);
+
+#[cfg(feature = "enable_render")]
 const OPTIMAL_BALL_POSITION: Color = Color::new(0.0, 0.4, 0.8, 0.5);
 
 impl Robot {
@@ -414,12 +419,16 @@ impl Robot {
 
     #[cfg(feature = "enable_render")]
     pub fn render_optimal_action(&self, optimal_action: &OptimalAction, rules: &Rules, render: &mut Render) {
+        use crate::my_strategy::render::{Tag, Object};
+
         self.render_history(&optimal_action.history, rules, render);
         render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  speed: {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
     }
 
     #[cfg(feature = "enable_render")]
     pub fn render_history(&self, history: &Vec<State>, rules: &Rules, render: &mut Render) {
+        use crate::my_strategy::render::{Tag, Object};
+
         for state in history.iter() {
             render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.ball.position, rules.BALL_RADIUS, OPTIMAL_BALL_POSITION));
             render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.me.position, state.me.radius, OPTIMAL_ME_POSITION));
@@ -482,6 +491,7 @@ pub fn get_points(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules, rng:
     result
 }
 
+#[cfg(feature = "enable_render")]
 fn get_robot_color(i: usize, n: usize) -> Color {
     Color::new(0.8, 0.2 + (i as f64 / n as f64) * 0.8, 0.2, 0.5)
 }
