@@ -1,5 +1,4 @@
 use crate::model::{Robot, Action, Ball, Rules};
-use crate::my_strategy::random::Rng;
 use crate::my_strategy::world::World;
 use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::{Simulator, CollisionType};
@@ -480,6 +479,8 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
 }
 
 pub fn get_points(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules, rng: &mut XorShiftRng) -> Vec<Vec3> {
+    use crate::my_strategy::random::Rng;
+
     let mut result = Vec::new();
     let ball_position = ball.position().with_y(rules.ROBOT_MAX_RADIUS);
     let to_robot = (robot.position() - ball_position).normalized();
