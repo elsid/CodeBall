@@ -11,5 +11,5 @@ fn test_robot_get_optimal_action() {
 
     assert_eq!(result.action.target_velocity(), Vec3::new(-15.112130922109685, 0.0749066624159364, 25.915591600134114));
     assert_eq!(result.action.jump_speed, 0.0);
-    assert_eq!(result.score, 1075);
+    assert_eq!(result.score, 1079);
 }

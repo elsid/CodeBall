@@ -54,6 +54,9 @@ pub mod physics;
 #[path = "simulator.rs"]
 pub mod simulator;
 
+#[path = "scenarios.rs"]
+pub mod scenarios;
+
 #[path = "optimal_action.rs"]
 pub mod optimal_action;
 

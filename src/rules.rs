@@ -6,15 +6,19 @@ impl Rules {
         1.0 / self.TICKS_PER_SECOND as f64
     }
 
+    pub fn micro_tick_time_interval(&self) -> f64 {
+        self.tick_time_interval() / self.MICROTICKS_PER_TICK as f64
+    }
+
     pub fn mean_e(&self) -> f64 {
         (self.MIN_HIT_E + self.MAX_HIT_E) / 2.0
     }
 
-//    pub fn micro_tick_time_interval(&self) -> f64 {
-//        self.tick_time_interval() / self.MICROTICKS_PER_TICK as f64
-//    }
-
     pub fn gravity_acceleration(&self) -> Vec3 {
         Vec3::new(0.0, -self.GRAVITY, 0.0)
+    }
+
+    pub fn ball_distance_limit(&self) -> f64 {
+        self.ROBOT_MAX_RADIUS + self.BALL_RADIUS
     }
 }
