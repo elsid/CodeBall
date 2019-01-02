@@ -152,7 +152,11 @@ impl Robot {
                     let to_target = target - self.position();
                     let distance_to_target = to_target.norm();
                     let required_speed = if global_simulator.current_time() > 0.0 {
-                        distance_to_target / global_simulator.current_time()
+                        if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * 20.0 * time_interval {
+                            world.rules.ROBOT_MAX_GROUND_SPEED
+                        } else {
+                            distance_to_target / global_simulator.current_time()
+                        }
                     } else {
                         world.rules.ROBOT_MAX_GROUND_SPEED
                     };
@@ -163,11 +167,7 @@ impl Robot {
                     let mut action = Action::default();
                     let mut stats = Stats::default();
                     let velocity = if distance_to_target > 1e-3 {
-                        if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * 20.0 * time_interval {
-                            to_target * world.rules.ROBOT_MAX_GROUND_SPEED / distance_to_target
-                        } else {
-                            to_target * required_speed / distance_to_target
-                        }
+                        to_target.normalized() * required_speed
                     } else {
                         Vec3::default()
                     };
