@@ -60,11 +60,9 @@ impl State {
 
 #[derive(Default, Serialize)]
 pub struct Stats {
-    pub micro_ticks_to_near: i32,
     pub micro_ticks_to_jump: i32,
     pub micro_ticks_to_watch: i32,
     pub micro_ticks_to_end: i32,
-    pub time_to_near: f64,
     pub time_to_jump: f64,
     pub time_to_watch: f64,
     pub time_to_end: f64,
@@ -197,8 +195,6 @@ impl Robot {
                     {
                         log!(world.game.current_tick, "[{}] <{}> move to position {}:{} target={}/{} ball={}/{}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.me().position().distance(target), velocity.norm() * time_interval, local_simulator.me().position().distance(local_simulator.ball().position()), ball_distance_limit + velocity.norm() * time_interval);
                         local_simulator.me_mut().action = action.clone();
-                        stats.micro_ticks_to_near = local_simulator.current_micro_tick();
-                        stats.time_to_near = local_simulator.current_time();
                         while local_simulator.current_time() + time_interval < simulation_time_depth
                             && local_simulator.current_micro_tick() < max_micro_ticks
                             && local_simulator.score() == 0
