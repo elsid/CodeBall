@@ -13,6 +13,7 @@ pub struct RobotState {
 }
 
 pub struct State {
+    pub time: f64,
     pub ball: BallState,
     pub me: RobotState,
     pub robots: Vec<RobotState>,
@@ -36,6 +37,7 @@ impl State {
             .collect();
         robots.sort_by_key(|v| v.id);
         State {
+            time: simulator.current_time(),
             ball: BallState {
                 position: ball.position(),
             },

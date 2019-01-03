@@ -22,12 +22,6 @@ pub struct OptimalAction {
     pub ball_hit_position: Option<Vec3>,
 }
 
-#[cfg(feature = "enable_render")]
-const OPTIMAL_ME_POSITION: Color = Color::new(0.0, 0.8, 0.4, 0.5);
-
-#[cfg(feature = "enable_render")]
-const OPTIMAL_BALL_POSITION: Color = Color::new(0.0, 0.4, 0.8, 0.5);
-
 impl Robot {
     pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> OptimalAction {
         use crate::my_strategy::physics::get_min_distance_between_spheres;
@@ -365,19 +359,27 @@ impl Robot {
     pub fn render_history(&self, history: &Vec<State>, rules: &Rules, render: &mut Render) {
         use crate::my_strategy::render::{Tag, Object};
 
-        for state in history.iter() {
-            render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.ball.position, rules.BALL_RADIUS, OPTIMAL_BALL_POSITION));
-            render.add_with_tag(Tag::RobotId(self.id), Object::sphere(state.me.position, state.me.radius, OPTIMAL_ME_POSITION));
-            for (i, robot) in state.robots.iter().enumerate() {
-                render.add_with_tag(Tag::RobotId(self.id), Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len())));
-            }
+        if history.is_empty() {
+            return;
         }
-        for (prev, next) in (&history[0..history.len() - 1]).iter()
-            .zip((&history[1..history.len()]).iter()) {
-            render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.ball.position, next.ball.position, 1.0, OPTIMAL_BALL_POSITION));
-            render.add_with_tag(Tag::RobotId(self.id), Object::line(prev.me.position, next.me.position, 1.0, OPTIMAL_ME_POSITION));
-            for (i, (prev_robot, next_robot)) in (prev.robots.iter().zip(next.robots.iter())).enumerate() {
-                render.add_with_tag(Tag::RobotId(self.id), Object::line(prev_robot.position, next_robot.position, 1.0, get_robot_color(i, prev.robots.len())));
+
+        let max_time = history.last().unwrap().time;
+
+        for state in history.iter() {
+            let time = state.time / if max_time == 0.0 { 1.0 } else { max_time };
+            render.add_with_tag(
+                Tag::RobotId(self.id),
+                Object::sphere(state.ball.position, rules.BALL_RADIUS, get_ball_color(time))
+            );
+            render.add_with_tag(
+                Tag::RobotId(self.id),
+                Object::sphere(state.me.position, state.me.radius, get_my_color(time))
+            );
+            for (i, robot) in state.robots.iter().enumerate() {
+                render.add_with_tag(
+                    Tag::RobotId(self.id),
+                    Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len(), time))
+                );
             }
         }
     }
@@ -430,6 +432,16 @@ pub fn get_points(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules, rng:
 }
 
 #[cfg(feature = "enable_render")]
-fn get_robot_color(i: usize, n: usize) -> Color {
-    Color::new(0.8, 0.2 + (i as f64 / n as f64) * 0.8, 0.2, 0.5)
+fn get_ball_color(time: f64) -> Color {
+    Color::new(0.0, time, 0.8, 0.5)
+}
+
+#[cfg(feature = "enable_render")]
+fn get_my_color(time: f64) -> Color {
+    Color::new(0.0, 0.8, time, 0.5)
+}
+
+#[cfg(feature = "enable_render")]
+fn get_robot_color(i: usize, n: usize, time: f64) -> Color {
+    Color::new(0.8, 0.2 + (i as f64 / n as f64) * 0.8, time, 0.5)
 }
