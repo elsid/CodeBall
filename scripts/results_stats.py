@@ -7,7 +7,7 @@ import matplotlib.pyplot
 
 
 def main():
-    games = list(collect_data(sys.argv[1:]))
+    games = list(collect_data(sorted(sys.argv[1:])))
     seeds = [v['seed'] for v in games]
     players = dict(
         first=dict(places=[], scores=[]),
@@ -36,10 +36,31 @@ def main():
     print()
     print(*seeds)
     fig, ax = matplotlib.pyplot.subplots()
+    ax.set_title('scores distribution')
     bins = numpy.arange(0, max(max(v['scores']) for v in players.values()))
     for k, v in players.items():
         ax.hist(v['scores'], bins=bins, label=k, alpha=0.5)
         ax.set_xticks(bins)
+        ax.grid(True)
+        ax.legend()
+    _1 = {k: [0] for k in players.keys()}
+    fig, ax = matplotlib.pyplot.subplots()
+    ax.set_title('place 1 dynamic')
+    for g in games:
+        for k, v in _1.items():
+            v.append(v[-1] + (g[k]['place'] == 1))
+    for k, v in _1.items():
+        ax.plot(numpy.arange(0, len(games) + 1, 1), v, label=k)
+        ax.grid(True)
+        ax.legend()
+    scores = {k: [0] for k in players.keys()}
+    fig, ax = matplotlib.pyplot.subplots()
+    ax.set_title('scores dynamic')
+    for g in games:
+        for k, v in scores.items():
+            v.append(v[-1] + g[k]['score'])
+    for k, v in scores.items():
+        ax.plot(numpy.arange(0, len(games) + 1, 1), v, label=k)
         ax.grid(True)
         ax.legend()
     matplotlib.pyplot.show()
