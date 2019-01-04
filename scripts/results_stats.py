@@ -7,13 +7,13 @@ import matplotlib.pyplot
 
 
 def main():
-    records = list(collect_data(sys.argv[1:]))
-    seeds = [v['seed'] for v in records]
+    games = list(collect_data(sys.argv[1:]))
+    seeds = [v['seed'] for v in games]
     players = dict(
         first=dict(places=[], scores=[]),
         second=dict(places=[], scores=[]),
     )
-    for r in records:
+    for r in games:
         for k, p in players.items():
             p['places'].append(r[k]['place'])
             p['scores'].append(r[k]['score'])
@@ -28,6 +28,8 @@ def main():
         stdev_score=[statistics.stdev(v['scores']) for v in players.values()],
         q95_score=[numpy.quantile(v['scores'], 0.95) for v in players.values()],
     )
+    row('games', len(games))
+    print()
     row('', *(list(players.keys()) + ['ratio (second/first)']))
     for k, v in stats.items():
         row(k, *(v + ratio(v)))
