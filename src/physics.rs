@@ -1,5 +1,6 @@
-use crate::model::{Ball, Rules};
+use crate::model::Rules;
 use crate::my_strategy::vec3::Vec3;
+use crate::my_strategy::entity::Entity;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MoveEquation {
@@ -9,10 +10,10 @@ pub struct MoveEquation {
 }
 
 impl MoveEquation {
-    pub fn from_ball(ball: &Ball, rules: &Rules) -> Self {
+    pub fn from_entity(entity: &Entity, rules: &Rules) -> Self {
         MoveEquation {
-            initial_position: ball.position(),
-            initial_velocity: ball.velocity(),
+            initial_position: entity.position(),
+            initial_velocity: entity.velocity(),
             acceleration: rules.gravity_acceleration()
         }
     }
