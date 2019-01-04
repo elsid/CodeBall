@@ -352,7 +352,14 @@ impl Robot {
         use crate::my_strategy::render::{Tag, Object};
 
         self.render_history(&optimal_action.history, rules, render);
-        render.add_with_tag(Tag::RobotId(self.id), Object::text(format!("robot: {}\n  position: {:?}\n  target_speed: {}\n  speed: {}", self.id, self.position(), optimal_action.action.target_velocity().norm(), self.velocity().norm())));
+        render.add_with_tag(Tag::RobotId(self.id), Object::text(
+            format!(
+                "robot: {}\n  position: {:?}\n  speed: {}\n  target_speed: {}\n  jump: {}",
+                self.id, self.position(), self.velocity().norm(),
+                optimal_action.action.target_velocity().norm(),
+                optimal_action.action.jump_speed
+            )
+        ));
     }
 
     #[cfg(feature = "enable_render")]
