@@ -29,6 +29,7 @@ def main():
         q95_score=[numpy.quantile(v['scores'], 0.95) for v in players.values()],
     )
     row('games', len(games))
+    row('unique seeds', len(set(seeds)))
     print()
     row('', *(list(players.keys()) + ['ratio (second/first)']))
     for k, v in stats.items():
