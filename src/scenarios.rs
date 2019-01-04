@@ -33,7 +33,6 @@ pub struct JumpAtPosition<'r> {
     pub ball: &'r Ball,
     pub kick_ball_position: Vec3,
     pub my_max_speed: f64,
-    pub my_jump_speed: f64,
     pub ball_target: Vec3,
     pub max_time: f64,
     pub tick_time_interval: f64,
@@ -45,6 +44,8 @@ pub struct JumpAtPosition<'r> {
 impl JumpAtPosition<'_> {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::optimization::optimize1d;
+        use crate::my_strategy::physics::MoveEquation;
 
         log!(
             ctx.current_tick, "[{}] <{}> jump at position {}:{}",
@@ -63,8 +64,31 @@ impl JumpAtPosition<'_> {
             max_micro_ticks: self.max_micro_ticks,
         }.perform(ctx);
 
+        let get_velocity_distance_after_kick = |jump_speed: f64| {
+            let mut jump_simulator = ctx.simulator.clone();
+            let mut rng = ctx.rng.clone();
+            jump_simulator.me_mut().action.jump_speed = jump_speed;
+            let velocity = jump_simulator.me().velocity();
+            jump_simulator.me_mut().action.set_target_velocity(velocity);
+            jump_simulator.tick(self.tick_time_interval, self.micro_ticks_per_tick_before_jump, &mut rng);
+            MoveEquation::from_entity(jump_simulator.ball(), jump_simulator.rules())
+                .get_closest_possible_distance_to_target(
+                    self.ball_target,
+                    jump_simulator.rules().BALL_RADIUS,
+                    self.max_time + 2.0,
+                    10,
+                )
+        };
+
+        let jump_speed = optimize1d(
+            0.0,
+            ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
+            10,
+            get_velocity_distance_after_kick
+        );
+
         if before_move == ctx.simulator.current_time() {
-            action.jump_speed = self.my_jump_speed;
+            action.jump_speed = jump_speed;
 
             log!(
                 ctx.current_tick, "[{}] <{}> jump now {}:{} kick_ball_position={} ball={}",
@@ -78,7 +102,7 @@ impl JumpAtPosition<'_> {
         Jump {
             target: self.kick_ball_position,
             max_speed: self.my_max_speed,
-            jump_speed: self.my_jump_speed,
+            jump_speed,
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,

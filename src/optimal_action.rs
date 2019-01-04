@@ -112,7 +112,6 @@ impl Robot {
                         ball: global_simulator.ball().base(),
                         kick_ball_position: target,
                         my_max_speed: required_speed,
-                        my_jump_speed: world.rules.ROBOT_MAX_JUMP_SPEED,
                         ball_target: world.rules.arena.get_goal_target(world.rules.BALL_RADIUS),
                         max_time: simulation_time_depth,
                         tick_time_interval: time_interval,
