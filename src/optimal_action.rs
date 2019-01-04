@@ -294,7 +294,7 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
         1.0 - to_goal.norm()
             / Vec2::new(rules.arena.width + 2.0 * rules.arena.goal_depth, rules.arena.depth).norm()
     } else if simulator.score() > 0 {
-        1.0
+        2.0
     } else {
         0.0
     };
