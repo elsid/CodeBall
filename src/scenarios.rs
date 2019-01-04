@@ -302,10 +302,7 @@ impl JumpToBall {
             ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
         );
 
-        if !ctx.simulator.me().base().does_jump_hit_ball(
-            ctx.simulator.rules(),
-            ctx.simulator.ball().base()
-        ) {
+        if !self.does_jump_hit_ball(ctx.simulator.clone(), ctx.rng.clone()) {
             return None;
         }
 
@@ -342,6 +339,39 @@ impl JumpToBall {
         }.perform(ctx);
 
         Some(action)
+    }
+
+    pub fn does_jump_hit_ball(&self, mut simulator: Simulator, mut rng: XorShiftRng) -> bool {
+        use crate::my_strategy::physics::MoveEquation;
+        use crate::my_strategy::optimization::optimize1d;
+
+        simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+
+        simulator.tick(self.tick_time_interval, self.micro_ticks_per_tick_before_jump, &mut rng);
+
+        let my_move_equation = MoveEquation::from_entity(simulator.me(), simulator.rules());
+        let ball_move_equation = MoveEquation::from_entity(simulator.ball(), simulator.rules());
+        let my_min_y = simulator.rules().ROBOT_MIN_RADIUS;
+        let ball_min_y = simulator.rules().BALL_RADIUS;
+
+        let get_my_position = |time| {
+            my_move_equation.get_position(time).with_max_y(my_min_y)
+        };
+
+        let get_ball_position = |time| {
+            ball_move_equation.get_position(time).with_max_y(ball_min_y)
+        };
+
+        let get_distance = |time| {
+            get_my_position(time).distance(get_ball_position(time))
+        };
+
+        let time = optimize1d(0.0, self.max_time, 10, get_distance);
+
+        get_distance(time) < simulator.rules().ROBOT_MAX_RADIUS + simulator.rules().BALL_RADIUS
+            && my_move_equation.get_velocity(time).y() > -self.tick_time_interval * simulator.rules().GRAVITY
+            && my_move_equation.get_position(time).y() < ball_move_equation.get_position(time).y()
+            && ball_move_equation.get_position(time).y() > ball_min_y - self.tick_time_interval * simulator.rules().GRAVITY
     }
 }
 
@@ -465,42 +495,5 @@ impl WatchMeJump {
         ctx.simulator.me_mut().action = stored_action;
 
         action
-    }
-}
-
-impl Robot {
-    pub fn does_jump_hit_ball(&self, rules: &Rules, ball: &Ball) -> bool {
-        use crate::my_strategy::physics::MoveEquation;
-        use crate::my_strategy::optimization::optimize1d;
-
-        let get_my_position = {
-            let equation = MoveEquation {
-                initial_position: self.position(),
-                initial_velocity: self.velocity() + Vec3::new(0.0, rules.ROBOT_MAX_JUMP_SPEED, 0.0),
-                acceleration: Vec3::new(0.0, -rules.GRAVITY, 0.0),
-            };
-            move |time| {
-                let result = equation.get_position(time);
-                result.with_max_y(rules.ROBOT_MIN_RADIUS)
-            }
-        };
-        let get_ball_position = {
-            let equation = MoveEquation {
-                initial_position: ball.position(),
-                initial_velocity: ball.velocity(),
-                acceleration: Vec3::new(0.0, -rules.GRAVITY, 0.0),
-            };
-            move |time| {
-                let result = equation.get_position(time);
-                result.with_max_y(rules.BALL_RADIUS)
-            }
-        };
-        let get_distance = |time| {
-            get_my_position(time).distance(get_ball_position(time))
-        };
-        let max_time = rules.ROBOT_MAX_JUMP_SPEED / rules.GRAVITY
-            * (1.0 - (self.position().distance(rules.arena.get_my_goal_target()) / rules.arena.max_distance()));
-        let time = optimize1d(0.0, max_time, 10, get_distance);
-        get_distance(time) < 1.05 * rules.BALL_RADIUS + rules.ROBOT_MIN_RADIUS
     }
 }
