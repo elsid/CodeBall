@@ -130,7 +130,7 @@ pub fn example_rules() -> Rules {
     Rules {
         max_tick_count: 18000,
         arena: example_arena(),
-        team_size: 1,
+        team_size: 2,
         seed: 42,
         ROBOT_MIN_RADIUS: 1.0,
         ROBOT_MAX_RADIUS: 1.05,
