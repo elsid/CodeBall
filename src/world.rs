@@ -1,4 +1,5 @@
-use crate::model::{Robot, Game, Rules};
+use crate::model::{Robot, Game, Rules, NitroPack};
+use crate::my_strategy::vec3::Vec3;
 
 #[derive(Debug, Clone)]
 pub struct World {
@@ -29,8 +30,15 @@ impl World {
     }
 
     pub fn get_robot(&self, id: i32) -> &Robot {
-        self.game.robots.iter()
-            .find(|v| v.id == id)
-            .unwrap()
+        self.game.robots.iter().find(|v| v.id == id).unwrap()
+    }
+
+    pub fn get_nitro_pack(&self, id: i32) -> &NitroPack {
+        self.game.nitro_packs.iter().find(|v| v.id == id).unwrap()
+    }
+
+    pub fn max_jump_distance(&self, y: f64, normal: Vec3) -> f64 {
+        // TODO: calculate using simulator
+        self.rules.max_robot_jump_height()
     }
 }

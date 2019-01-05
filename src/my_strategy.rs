@@ -52,7 +52,6 @@ pub mod nitro_pack;
 #[path = "world.rs"]
 pub mod world;
 
-#[cfg(feature = "enable_stats")]
 #[path = "stats.rs"]
 pub mod stats;
 
@@ -65,6 +64,12 @@ pub mod simulator;
 #[path = "scenarios.rs"]
 pub mod scenarios;
 
+#[path = "roles.rs"]
+pub mod roles;
+
+#[path = "targets.rs"]
+pub mod targets;
+
 #[path = "orders.rs"]
 pub mod orders;
 
@@ -76,6 +81,7 @@ pub mod my_strategy_impl;
 #[path = "my_test_strategy_impl.rs"]
 pub mod my_test_strategy_impl;
 
+use std::time::Instant;
 use crate::model::{Game, Action, Robot, Rules};
 use crate::strategy::Strategy;
 
@@ -86,15 +92,14 @@ use self::my_test_strategy_impl::MyStrategyImpl;
 use self::my_strategy_impl::MyStrategyImpl;
 
 pub struct MyStrategy {
-//    start_time: Instant,
+    start_time: Instant,
     strategy_impl: Option<MyStrategyImpl>,
 }
 
 impl Strategy for MyStrategy {
     fn act(&mut self, me: &Robot, rules: &Rules, game: &Game, action: &mut Action) {
         if self.strategy_impl.is_none() {
-//            self.strategy_impl = Some(MyStrategyImpl::new(me, rules, game, self.start_time));
-            self.strategy_impl = Some(MyStrategyImpl::new(me, rules, game));
+            self.strategy_impl = Some(MyStrategyImpl::new(me, rules, game, self.start_time));
         }
         self.strategy_impl.as_mut().unwrap().act(me, rules, game, action);
     }
@@ -108,17 +113,16 @@ impl Strategy for MyStrategy {
                 String::new()
             }
         }
+
         #[cfg(not(feature = "enable_render"))]
-        {
-            String::new()
-        }
+        String::new()
     }
 }
 
 impl Default for MyStrategy {
     fn default() -> Self {
         MyStrategy {
-//            start_time: Instant::now(),
+            start_time: Instant::now(),
             strategy_impl: None,
         }
     }

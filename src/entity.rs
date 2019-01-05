@@ -5,4 +5,8 @@ pub trait Entity {
     fn velocity(&self) -> Vec3;
     fn set_position(&mut self, value: Vec3);
     fn set_velocity(&mut self, value: Vec3);
+
+    fn speed(&self) -> f64 {
+        self.velocity().norm()
+    }
 }

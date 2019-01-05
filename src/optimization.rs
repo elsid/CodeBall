@@ -34,3 +34,26 @@ pub fn minimize1d<F>(mut begin: f64, mut end: f64, iterations: usize, function: 
         });
     (begin + end) / 2.0
 }
+
+pub fn minimize2d<F>(initial: &(f64, f64), function_calls: usize, function: F) -> (f64, f64)
+    where F: Fn(f64, f64) -> f64 {
+    use ndarray::prelude::{Array, ArrayView1};
+    use optimize::{NelderMeadBuilder, Minimizer};
+
+    let args = Array::from_vec(vec![
+        initial.0,
+        initial.1,
+    ]);
+
+    let optimizer = NelderMeadBuilder::default()
+        .maxfun(function_calls)
+        .build()
+        .unwrap();
+
+    let result = optimizer.minimize(
+        |x: ArrayView1<f64>| function(x[0], x[1]),
+        args.view()
+    );
+
+    (result[0], result[1])
+}

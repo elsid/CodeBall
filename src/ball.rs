@@ -1,5 +1,6 @@
 use crate::model::Ball;
 use crate::my_strategy::vec3::Vec3;
+use crate::my_strategy::entity::Entity;
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
@@ -66,3 +67,21 @@ impl PartialEq for Ball {
 }
 
 impl Eq for Ball {}
+
+impl Entity for Ball {
+    fn position(&self) -> Vec3 {
+        Ball::position(self)
+    }
+
+    fn velocity(&self) -> Vec3 {
+        Ball::velocity(self)
+    }
+
+    fn set_position(&mut self, value: Vec3) {
+        Ball::set_position(self, value)
+    }
+
+    fn set_velocity(&mut self, value: Vec3) {
+        Ball::set_velocity(self, value)
+    }
+}

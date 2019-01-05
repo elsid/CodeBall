@@ -7,12 +7,12 @@ use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 
 impl Arena {
-    pub fn get_my_goal_target(&self) -> Vec3 {
-        Vec3::new(0.0, self.goal_height / 2.0, -self.depth / 2.0 - self.goal_depth / 2.0)
-    }
-
     pub fn max_distance(&self) -> f64 {
         Vec3::new(self.width, self.depth + 2.0 * self.goal_depth, self.height).norm()
+    }
+
+    pub fn max_z(&self) -> f64 {
+        self.depth + 2.0 * self.goal_depth
     }
 
     pub fn collide(&self, e: &mut Solid) -> Option<Vec3> {
@@ -23,9 +23,9 @@ impl Arena {
         if penetration > 0.0 {
             let e_position = e.position() + normal * penetration;
             e.set_position(e_position);
-            let velocity = normal.dot(e.velocity()) - e.radius_change_speed();
-            if velocity < 0.0 {
-                let e_velocity = e.velocity() - normal * (1.0 + e.arena_e()) * velocity;
+            let speed = normal.dot(e.velocity()) - e.radius_change_speed();
+            if speed < 0.0 {
+                let e_velocity = e.velocity() - normal * (1.0 + e.arena_e()) * speed;
                 e.set_velocity(e_velocity);
                 Some(normal)
             } else {
