@@ -41,7 +41,9 @@ impl Strategy for MyStrategyImpl {
             self.last_tick = game.current_tick;
             self.render.clear();
             self.update_world(me, game);
-            self.generate_actions();
+            if !self.world.is_reset_ticks() {
+                self.generate_actions();
+            }
             self.render.ignore_all();
             for v in self.optimal_action.iter() {
                 self.render.include_tag(Tag::RobotId(v.robot_id));
@@ -52,7 +54,9 @@ impl Strategy for MyStrategyImpl {
         } else {
             self.update_world_me(me);
         }
-        self.apply_action(action);
+        if !self.world.is_reset_ticks() {
+            self.apply_action(action);
+        }
 //        let finish = Instant::now();
 //        let cpu_time_spent = finish - self.tick_start_time;
 //        self.cpu_time_spent += cpu_time_spent;
