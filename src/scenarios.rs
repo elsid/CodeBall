@@ -1,4 +1,4 @@
-use crate::model::{Action, Ball, Robot, Rules};
+use crate::model::{Action, Ball};
 use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec3::Vec3;
@@ -293,8 +293,6 @@ pub struct JumpToBall {
 impl JumpToBall {
     pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::entity::Entity;
-        use crate::my_strategy::optimization::optimize1d;
-        use crate::my_strategy::physics::MoveEquation;
 
         log!(
             ctx.current_tick, "[{}] <{}> jump to ball {}:{}",

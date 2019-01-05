@@ -1,7 +1,7 @@
 use crate::model::{Robot, Action, Ball, Rules};
 use crate::my_strategy::world::World;
 use crate::my_strategy::random::XorShiftRng;
-use crate::my_strategy::simulator::{Simulator, CollisionType};
+use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::simulator::Solid;
@@ -9,7 +9,6 @@ use crate::my_strategy::entity::Entity;
 use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Color;
-use crate::my_strategy::optimization::optimize1d;
 use crate::my_strategy::history::{Stats, State};
 
 pub struct OptimalAction {
