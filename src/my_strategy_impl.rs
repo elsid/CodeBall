@@ -8,7 +8,6 @@ use crate::my_strategy::optimal_action::OptimalAction;
 pub struct MyStrategyImpl {
     world: World,
     rng: XorShiftRng,
-    max_ticks_count: i32,
 //    start_time: Instant,
 //    tick_start_time: Instant,
 //    cpu_time_spent: Duration,
@@ -33,10 +32,6 @@ impl Drop for MyStrategyImpl {
 
 impl Strategy for MyStrategyImpl {
     fn act(&mut self, me: &Robot, _rules: &Rules, game: &Game, action: &mut Action) {
-        use std::process::exit;
-        if game.current_tick >= self.max_ticks_count {
-            exit(1);
-        }
 //        self.tick_start_time = if game.current_tick == 0 {
 //            self.start_time
 //        } else {
@@ -67,8 +62,6 @@ impl Strategy for MyStrategyImpl {
 impl MyStrategyImpl {
 //    pub fn new(me: &Robot, rules: &Rules, game: &Game, start_time: Instant) -> Self {
     pub fn new(me: &Robot, rules: &Rules, game: &Game) -> Self {
-        use std::env;
-        use std::i32;
         let world = World::new(me.clone(), rules.clone(), game.clone());
         log!(game.current_tick, "start");
         MyStrategyImpl {
@@ -79,15 +72,6 @@ impl MyStrategyImpl {
                 1841971383,
                 1904458926,
             ]),
-            max_ticks_count: if let Ok(v) = env::var("MAX_TICKS") {
-                if let Ok(v_v) = v.parse::<i32>() {
-                    v_v
-                } else {
-                    i32::MAX
-                }
-            } else {
-                i32::MAX
-            },
 //            start_time,
 //            tick_start_time: start_time,
 //            cpu_time_spent: Duration::default(),
