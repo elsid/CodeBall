@@ -70,7 +70,7 @@ impl Robot {
                     global_simulator.rules(),
                     rng
                 );
-                let mut try_target = |point: Vec3| {
+                for point in points {
                     let target = {
                         let mut robot = global_simulator.me().clone();
                         robot.set_position(point);
@@ -160,9 +160,6 @@ impl Robot {
                         };
                     }
                     total_micro_ticks += local_simulator.current_micro_tick();
-                };
-                for point in points {
-                    try_target(point);
                 }
             }
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
