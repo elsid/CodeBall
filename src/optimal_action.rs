@@ -22,9 +22,9 @@ pub struct OptimalAction {
 }
 
 impl Robot {
-    pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> OptimalAction {
+    pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> Option<OptimalAction> {
         use crate::my_strategy::physics::get_min_distance_between_spheres;
-        use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall};
+        use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall, DoNothing};
 
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", self.id, self.position(), self.velocity(), world.game.ball.position(), world.game.ball.velocity());
         let initial_simulator = {
@@ -36,7 +36,6 @@ impl Robot {
         };
         let mut global_simulator = initial_simulator.clone();
         global_simulator.set_ignore_me(true);
-        let default_action = Action::default();
         let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 4;
         let far_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 30;
         let time_interval = world.rules.tick_time_interval();
@@ -45,18 +44,10 @@ impl Robot {
         let max_micro_ticks = 1000;
         let mut total_micro_ticks = 0;
         let mut next_action_id = 0;
-        let mut optimal_action = OptimalAction {
-            id: next_action_id,
-            robot_id: self.id,
-            action: default_action,
-            score: 0,
-            history: vec![State::new(&global_simulator)],
-            stats: Stats::default(),
-        };
-        next_action_id += 1;
+        let mut optimal_action: Option<OptimalAction> = None;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
-        while (iterations < 5 || optimal_action.score <= 0) && global_simulator.current_time() + time_interval < simulation_time_depth {
+        while (iterations < 5 || optimal_action.is_none()) && global_simulator.current_time() + time_interval < simulation_time_depth {
             log!(world.game.current_tick, "[{}] try time point {} {}", self.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
@@ -149,15 +140,15 @@ impl Robot {
                     stats.score = local_simulator.score();
                     stats.action_score = action_score;
                     log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
-                    if optimal_action.score < action_score {
-                        optimal_action = OptimalAction {
+                    if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
+                        optimal_action = Some(OptimalAction {
                             id: action_id,
                             robot_id: self.id,
                             action,
                             score: action_score,
                             history,
                             stats,
-                        };
+                        });
                     }
                     total_micro_ticks += local_simulator.current_micro_tick();
                 }
@@ -219,23 +210,80 @@ impl Robot {
                 local_simulator.current_time(), local_simulator.current_micro_tick(), action_score
             );
 
-            if optimal_action.score < action_score {
-                optimal_action = OptimalAction {
+            if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
+                optimal_action = Some(OptimalAction {
                     id: action_id,
                     robot_id: self.id,
                     action: v,
                     score: action_score,
                     history,
                     stats,
-                };
+                });
             }
         }
 
-        #[cfg(feature = "enable_render")]
-        self.render_optimal_action(&optimal_action, &world.rules, render);
+        if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < 0 {
+            let action_id = next_action_id;
+            next_action_id += 1;
+            let mut local_simulator = initial_simulator.clone();
+            let mut history = vec![State::new(&local_simulator)];
+            let mut stats = Stats::default();
+            let mut time_to_ball = None;
 
-        optimal_action.stats.iterations = iterations;
-        optimal_action.stats.total_micro_ticks = total_micro_ticks;
+            let mut ctx = Context {
+                current_tick: world.game.current_tick,
+                robot_id: self.id,
+                action_id,
+                simulator: &mut local_simulator,
+                rng,
+                history: &mut history,
+                stats: &mut stats,
+                time_to_ball: &mut time_to_ball,
+            };
+
+            let action = DoNothing {
+                max_time: simulation_time_depth,
+                tick_time_interval: time_interval,
+                micro_ticks_per_tick: far_micro_ticks_per_tick,
+                max_micro_ticks,
+            }.perform(&mut ctx);
+
+            let action_score = get_action_score(
+                &world.rules,
+                &local_simulator,
+                time_to_ball,
+                simulation_time_depth + time_interval,
+            );
+            stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+            stats.time_to_end = local_simulator.current_time();
+            stats.time_to_score = if local_simulator.score() != 0 {
+                Some(stats.time_to_end)
+            } else {
+                None
+            };
+            stats.score = local_simulator.score();
+            stats.action_score = action_score;
+
+            if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
+                optimal_action = Some(OptimalAction {
+                    id: action_id,
+                    robot_id: self.id,
+                    action,
+                    score: action_score,
+                    history,
+                    stats,
+                });
+            }
+        }
+
+        if let Some(v) = &mut optimal_action {
+            #[cfg(feature = "enable_render")]
+                self.render_optimal_action(v, &world.rules, render);
+
+            v.stats.iterations = iterations;
+            v.stats.total_micro_ticks = total_micro_ticks;
+        }
+
         optimal_action
     }
 

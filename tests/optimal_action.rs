@@ -7,7 +7,7 @@ fn test_robot_get_optimal_action() {
     let world = example_world();
     let mut rng = example_rng();
     let mut render = Render::new();
-    let result = world.me.get_optimal_action(&world, &mut rng, &mut render);
+    let result = world.me.get_optimal_action(&world, &mut rng, &mut render).unwrap();
 
     assert_eq!(result.action.target_velocity(), Vec3::new(-15.112130922109685, 0.0749066624159364, 25.915591600134114));
     assert_eq!(result.action.jump_speed, 0.0);
@@ -16,7 +16,6 @@ fn test_robot_get_optimal_action() {
 
 #[test]
 fn test_robot_get_optimal_action_should_not_jump_on_ball_top() {
-    use my_strategy::my_strategy::world::World;
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::render::Render;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
@@ -41,7 +40,7 @@ fn test_robot_get_optimal_action_should_not_jump_on_ball_top() {
     world.game.ball.y = 5.233161866399729;
     world.game.ball.velocity_y = -12.500000000000554;
 
-    let result = world.me.get_optimal_action(&world, &mut rng, &mut render);
+    let result = world.me.get_optimal_action(&world, &mut rng, &mut render).unwrap();
 
     assert_eq!(result.action.target_velocity(), Vec3::new(15.205946498380044, 0.0904449080449424, 25.860607317056818));
     assert_eq!(result.action.jump_speed, 0.0);
@@ -50,7 +49,6 @@ fn test_robot_get_optimal_action_should_not_jump_on_ball_top() {
 
 #[test]
 fn test_robot_get_optimal_action_far_jump() {
-    use my_strategy::my_strategy::world::World;
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::render::Render;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
@@ -75,7 +73,7 @@ fn test_robot_get_optimal_action_far_jump() {
     world.game.ball.y = 6.0;
     world.game.ball.velocity_y = 0.0;
 
-    let result = world.me.get_optimal_action(&world, &mut rng, &mut render);
+    let result = world.me.get_optimal_action(&world, &mut rng, &mut render).unwrap();
 
     assert_eq!(result.action.target_velocity(), Vec3::new(0.0, 0.0, 30.0));
     assert_eq!(result.action.jump_speed, 15.0);

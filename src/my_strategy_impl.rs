@@ -118,16 +118,23 @@ impl MyStrategyImpl {
                 .find(|v| v.id == action.robot_id)
                 .unwrap()
                 .get_optimal_action(world, rng, render);
-            world.game.robots.iter()
-                .filter(|v| v.is_teammate && v.id != action.robot_id)
-                .map(|v| v.get_optimal_action(world, rng, render))
-                .max_by_key(|v| v.score)
-                .filter(|v| v.score > current_robot_action.score + 100)
-                .or(Some(current_robot_action))
+            if let Some(a) = current_robot_action {
+                world.game.robots.iter()
+                    .filter(|v| v.is_teammate && v.id != action.robot_id)
+                    .filter_map(|v| v.get_optimal_action(world, rng, render))
+                    .max_by_key(|v| v.score)
+                    .filter(|v| v.score > a.score + 100)
+                    .or(Some(a))
+            } else {
+                world.game.robots.iter()
+                    .filter(|v| v.is_teammate && v.id != action.robot_id)
+                    .filter_map(|v| v.get_optimal_action(world, rng, render))
+                    .max_by_key(|v| v.score)
+            }
         } else {
             world.game.robots.iter()
                 .filter(|v| v.is_teammate)
-                .map(|v| v.get_optimal_action(world, rng, render))
+                .filter_map(|v| v.get_optimal_action(world, rng, render))
                 .max_by_key(|v| v.score)
         };
     }

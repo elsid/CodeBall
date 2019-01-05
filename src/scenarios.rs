@@ -497,3 +497,43 @@ impl WatchMeJump {
         action
     }
 }
+
+pub struct DoNothing {
+    pub max_time: f64,
+    pub tick_time_interval: f64,
+    pub micro_ticks_per_tick: usize,
+    pub max_micro_ticks: i32,
+}
+
+impl DoNothing {
+    pub fn perform(&self, ctx: &mut Context) -> Action {
+        let stored_action = ctx.simulator.me().action;
+
+        ctx.simulator.me_mut().action = Action::default();
+
+        let action = ctx.simulator.me().action;
+
+        log!(
+            ctx.current_tick, "[{}] <{}> do nothing {}:{}",
+            ctx.robot_id, ctx.action_id,
+            ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
+        );
+
+        while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
+            && ctx.simulator.current_micro_tick() < self.max_micro_ticks
+            && ctx.simulator.score() == 0 {
+
+            log!(
+                ctx.current_tick, "[{}] <{}> do nothing {}:{}",
+                ctx.robot_id, ctx.action_id,
+                ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
+            );
+
+            ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
+        }
+
+        ctx.simulator.me_mut().action = stored_action;
+
+        action
+    }
+}
