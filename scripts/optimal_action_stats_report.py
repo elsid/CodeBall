@@ -38,9 +38,14 @@ def main():
             row(*[player[k] for k in sorted(result[0][0].keys())])
     print()
     for k, v in values.items():
-        matplotlib.pyplot.figure(k)
-        matplotlib.pyplot.hist(v, bins='auto')
-        matplotlib.pyplot.grid(True)
+        fig, ax = matplotlib.pyplot.subplots()
+        fig.canvas.set_window_title(k)
+        if v and k in ('iteration', 'step', 'total_iterations'):
+            ax.hist(v, bins=numpy.arange(min(v), max(v) + 1, 1))
+            ax.set_xticks(numpy.arange(min(v), max(v) + 1, 1))
+        else:
+            ax.hist(v, bins='auto')
+        ax.grid(True)
     matplotlib.pyplot.show()
 
 
