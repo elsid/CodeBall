@@ -10,13 +10,15 @@ def main():
     games = list(collect_data(sorted(sys.argv[1:])))
     seeds = [v['seed'] for v in games]
     players = dict(
-        first=dict(places=[], scores=[]),
-        second=dict(places=[], scores=[]),
+        first=dict(places=[], scores=[], score_diffs=[]),
+        second=dict(places=[], scores=[], score_diffs=[]),
     )
     for r in games:
         for k, p in players.items():
             p['places'].append(r[k]['place'])
             p['scores'].append(r[k]['score'])
+        players['first']['score_diffs'].append(r['first']['score'] - r['second']['score'])
+        players['second']['score_diffs'].append(r['second']['score'] - r['first']['score'])
     stats = dict(
         _1=[sum(w == 1 for w in v['places']) for v in players.values()],
         _2=[sum(w == 2 for w in v['places']) for v in players.values()],
@@ -62,6 +64,17 @@ def main():
             v.append(v[-1] + g[k]['score'])
     for k, v in scores.items():
         ax.plot(numpy.arange(0, len(games) + 1, 1), v, label=k)
+        ax.grid(True)
+        ax.legend()
+    fig, ax = matplotlib.pyplot.subplots()
+    ax.set_title('scores diffs')
+    bins = numpy.arange(
+        min(min(v['score_diffs']) for v in players.values()),
+        max(max(v['score_diffs']) for v in players.values())
+    )
+    for k, v in players.items():
+        ax.hist(v['score_diffs'], bins=bins, label=k, alpha=0.5)
+        ax.set_xticks(bins)
         ax.grid(True)
         ax.legend()
     matplotlib.pyplot.show()
