@@ -41,7 +41,9 @@ impl Strategy for MyStrategyImpl {
             self.last_tick = game.current_tick;
             self.render.clear();
             self.update_world(me, game);
-            if !self.world.is_reset_ticks() {
+            if self.world.is_reset_ticks() {
+                self.optimal_action = None;
+            } else {
                 self.generate_actions();
             }
             self.render.ignore_all();
