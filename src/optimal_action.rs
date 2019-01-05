@@ -138,6 +138,8 @@ impl Robot {
                     };
                     stats.score = local_simulator.score();
                     stats.action_score = action_score;
+                    stats.iteration = iterations;
+                    stats.current_step = steps[iterations.min(steps.len() - 1)];
                     log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
                     if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
                         optimal_action = Some(OptimalAction {
@@ -279,7 +281,7 @@ impl Robot {
             #[cfg(feature = "enable_render")]
                 self.render_optimal_action(v, &world.rules, render);
 
-            v.stats.iterations = iterations;
+            v.stats.total_iterations = iterations;
             v.stats.total_micro_ticks = total_micro_ticks;
         }
 
