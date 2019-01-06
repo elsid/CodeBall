@@ -113,6 +113,8 @@ impl MoveMeToPosition {
 
         let stored_action = ctx.simulator.me().action;
 
+        ctx.simulator.me_mut().action = Action::default();
+
         let initial_position = ctx.simulator.me().position();
         let to_target = self.target - initial_position;
         let velocity = if to_target.norm() > 1e-3 {
@@ -184,6 +186,8 @@ impl Jump {
 
         let stored_action = ctx.simulator.me().action;
 
+        ctx.simulator.me_mut().action = Action::default();
+
         ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
         ctx.simulator.me_mut().action.set_target_velocity(stored_action.target_velocity());
 
@@ -247,6 +251,8 @@ impl WatchBallMove {
         ctx.stats.time_to_watch = ctx.simulator.current_time();
 
         let stored_action = ctx.simulator.me().action;
+
+        ctx.simulator.me_mut().action = Action::default();
 
         if self.stop {
             ctx.simulator.me_mut().action.jump_speed = 0.0;
@@ -392,6 +398,8 @@ impl FarJump {
 
         let stored_action = ctx.simulator.me().action;
 
+        ctx.simulator.me_mut().action = Action::default();
+
         ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
 
         let velocity = ctx.simulator.me().velocity();
@@ -463,6 +471,8 @@ impl WatchMeJump {
         ctx.stats.time_to_watch = ctx.simulator.current_time();
 
         let stored_action = ctx.simulator.me().action;
+
+        ctx.simulator.me_mut().action = Action::default();
 
         ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
 
