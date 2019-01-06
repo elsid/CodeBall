@@ -60,11 +60,21 @@ pub mod scenarios;
 #[path = "optimal_action.rs"]
 pub mod optimal_action;
 
+#[cfg(not(feature = "use_test_strategy"))]
 #[path = "my_strategy_impl.rs"]
 pub mod my_strategy_impl;
 
+#[cfg(feature = "use_test_strategy")]
+#[path = "my_test_strategy_impl.rs"]
+pub mod my_test_strategy_impl;
+
 use crate::model::{Game, Action, Robot, Rules};
 use crate::strategy::Strategy;
+
+#[cfg(feature = "use_test_strategy")]
+use self::my_test_strategy_impl::MyStrategyImpl;
+
+#[cfg(not(feature = "use_test_strategy"))]
 use self::my_strategy_impl::MyStrategyImpl;
 
 pub struct MyStrategy {

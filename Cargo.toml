@@ -21,6 +21,7 @@ enable_log = []
 dump_result = []
 dump_stats = []
 enable_render = []
+use_test_strategy = []
 
 [[bench]]
 name = "simulator"
