@@ -370,10 +370,12 @@ impl Simulator {
 
         self.ball = ball;
 
-        if self.ball.position().z() > self.rules.arena.depth / 2.0 + self.ball.radius() {
-            self.score = 1;
-        } else if self.ball.position().z() < -(self.rules.arena.depth / 2.0 + self.ball.radius()) {
-            self.score = -1;
+        if self.score == 0 {
+            if self.ball.position().z() > self.rules.arena.depth / 2.0 + self.ball.radius() {
+                self.score = 1;
+            } else if self.ball.position().z() < -(self.rules.arena.depth / 2.0 + self.ball.radius()) {
+                self.score = -1;
+            }
         }
 
         self.current_micro_tick += 1;
