@@ -145,8 +145,7 @@ impl Arena {
     }
 
     pub fn collide_goal_back_corners(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
-        assert_eq!(self.bottom_radius, self.goal_top_radius);
-        if position.z() >= (self.depth / 2.0) + self.goal_side_radius {
+        if position.z() >= (self.depth / 2.0) + self.goal_depth - self.bottom_radius {
             Sphere::new(
                 Vec3::new(
                     position.x().clamp(
