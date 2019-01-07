@@ -31,13 +31,32 @@ impl MoveEquation {
     pub fn get_max_y(&self) -> f64 {
         self.get_position(-self.initial_velocity.y() / self.acceleration.y()).y()
     }
+
+    pub fn get_time_to_target(&self, target: Vec3, min_y: f64, max_time: f64, min_distance: f64, iterations: usize) -> f64 {
+        use crate::my_strategy::optimization::optimize1d;
+
+        let get_distance_to_target_penalty = |time: f64| {
+            let position = self.get_position(time);
+            (position.with_max_y(min_y).distance(target) - min_distance).abs()
+                + min_y - position.y().min(min_y)
+        };
+
+        optimize1d(0.0, max_time, iterations, get_distance_to_target_penalty)
+    }
+
+    pub fn get_closest_possible_distance_to_target(&self, target: Vec3, min_y: f64, max_time: f64,
+                                                   iterations: usize) -> f64 {
+        self.get_position(
+            self.get_time_to_target(target, min_y, max_time, 0.0, iterations)
+        ).distance(target)
+    }
 }
 
-pub fn get_min_distance_between_spheres(ball_y: f64, ball_radius: f64, robot_radius: f64) -> Option<f64> {
+pub fn get_min_distance_between_spheres(bigger_y: f64, bigger_radius: f64, smaller_radius: f64) -> Option<f64> {
     use crate::my_strategy::common::Square;
 
-    let a = (ball_radius + robot_radius).square();
-    let b = (ball_y - robot_radius).square();
+    let a = (bigger_radius + smaller_radius).square();
+    let b = (bigger_y - smaller_radius).square();
     if a >= b {
         Some((a - b).sqrt())
     } else {

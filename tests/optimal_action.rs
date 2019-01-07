@@ -9,10 +9,10 @@ fn test_robot_get_optimal_action() {
     let mut render = Render::new();
     let result = world.me.get_optimal_action(&world, &mut rng, &mut render).unwrap();
 
-    assert_eq!(result.score, 979);
-    assert_eq!(result.stats.time_to_jump, 0.7500000000000007);
+    assert_eq!(result.score, 1001);
+    assert_eq!(result.stats.time_to_jump, 0.7666666666666674);
     assert_eq!(result.action.jump_speed, 0.0);
-    assert_eq!(result.action.target_velocity(), Vec3::new(-15.388633156574787, 0.0, 25.752475018381578));
+    assert_eq!(result.action.target_velocity(), Vec3::new(-14.77801318559478, 0.0, 25.18689142161806));
 }
 
 #[test]
@@ -43,9 +43,9 @@ fn test_robot_get_optimal_action_should_not_jump_on_ball_top() {
 
     let result = world.me.get_optimal_action(&world, &mut rng, &mut render).unwrap();
 
-    assert_eq!(result.action.target_velocity(), Vec3::new(16.041932197509777, 0.0, 25.350668854499663));
+    assert_eq!(result.action.target_velocity(), Vec3::new(15.323357554179575, 0.0, 25.69523949980441));
     assert_eq!(result.action.jump_speed, 0.0);
-    assert_eq!(result.score, 1148);
+    assert_eq!(result.score, 1211);
 }
 
 #[test]

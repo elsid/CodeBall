@@ -21,7 +21,6 @@ pub struct OptimalAction {
 
 impl Robot {
     pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> Option<OptimalAction> {
-        use crate::my_strategy::physics::get_min_distance_between_spheres;
         use crate::my_strategy::scenarios::{Context, JumpToBall, DoNothing, PassBallToPosition};
 
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", self.id, self.position(), self.velocity(), world.game.ball.position(), world.game.ball.velocity());
@@ -45,169 +44,171 @@ impl Robot {
         let mut optimal_action: Option<OptimalAction> = None;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
-        while (iterations < 5 || optimal_action.is_none()) && global_simulator.current_time() + time_interval < simulation_time_depth {
+        while global_simulator.current_time() + time_interval < simulation_time_depth {
             log!(world.game.current_tick, "[{}] try time point {} {}", self.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
-            if get_min_distance_between_spheres(ball_y, ball_radius, world.rules.ROBOT_MIN_RADIUS).is_some() {
-                log!(world.game.current_tick, "[{}] use time point {} {}",
-                    self.id, global_simulator.current_micro_tick(), global_simulator.current_time());
-                iterations += 1;
-                let mut local_simulator = initial_simulator.clone();
-                let mut stats = Stats::default();
-                let mut history = vec![State::new(&local_simulator)];
-                let action_id = next_action_id;
-                next_action_id += 1;
-                let distance_to_ball = local_simulator.me().position().distance(local_simulator.ball().position());
-                let before_micro_ticks_per_tick = if distance_to_ball > ball_distance_limit {
-                    log!(world.game.current_tick, "[{}] <{}> far", self.id, action_id);
-                    far_micro_ticks_per_tick
-                } else {
-                    log!(world.game.current_tick, "[{}] <{}> near", self.id, action_id);
-                    near_micro_ticks_per_tick
-                };
-                let mut time_to_ball = None;
-                let mut ctx = Context {
-                    current_tick: world.game.current_tick,
-                    robot_id: self.id,
+            log!(world.game.current_tick, "[{}] use time point {} {}",
+                self.id, global_simulator.current_micro_tick(), global_simulator.current_time());
+            iterations += 1;
+            let mut local_simulator = initial_simulator.clone();
+            let mut stats = Stats::default();
+            let mut history = vec![State::new(&local_simulator)];
+            let action_id = next_action_id;
+            next_action_id += 1;
+            let distance_to_ball = local_simulator.me().position().distance(local_simulator.ball().position());
+            let before_micro_ticks_per_tick = if distance_to_ball > ball_distance_limit {
+                log!(world.game.current_tick, "[{}] <{}> far", self.id, action_id);
+                far_micro_ticks_per_tick
+            } else {
+                log!(world.game.current_tick, "[{}] <{}> near", self.id, action_id);
+                near_micro_ticks_per_tick
+            };
+            let mut time_to_ball = None;
+            let mut ctx = Context {
+                current_tick: world.game.current_tick,
+                robot_id: self.id,
+                action_id,
+                simulator: &mut local_simulator,
+                rng,
+                history: Some(&mut history),
+                stats: Some(&mut stats),
+                time_to_ball: Some(&mut time_to_ball),
+            };
+            let action = PassBallToPosition {
+                ball: global_simulator.ball().base(),
+                ball_target: world.rules.arena.get_goal_target(world.rules.BALL_RADIUS),
+                kick_ball_time: global_simulator.current_time(),
+                max_time: simulation_time_depth,
+                max_iter: 30,
+                tick_time_interval: time_interval,
+                micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
+                micro_ticks_per_tick_after_jump: far_micro_ticks_per_tick,
+                max_micro_ticks,
+            }.perform(&mut ctx);
+            if let Some(v) = action {
+                let action_score = get_action_score(
+                    &world.rules,
+                    &local_simulator,
+                    time_to_ball,
+                    simulation_time_depth + time_interval,
+                );
+                log!(
+                    world.game.current_tick,
+                    "[{}] <{}> suggest action {}:{} score={} speed={} jump={}",
+                    self.id,
                     action_id,
-                    simulator: &mut local_simulator,
-                    rng,
-                    history: &mut history,
-                    stats: &mut stats,
-                    time_to_ball: &mut time_to_ball,
+                    local_simulator.current_time(),
+                    local_simulator.current_micro_tick(),
+                    action_score,
+                    v.target_velocity().norm(),
+                    v.jump_speed
+                );
+                stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+                stats.time_to_end = local_simulator.current_time();
+                stats.time_to_score = if local_simulator.score() != 0 {
+                    Some(stats.time_to_end)
+                } else {
+                    None
                 };
-                let action = PassBallToPosition {
-                    ball: global_simulator.ball().base(),
-                    ball_target: world.rules.arena.get_goal_target(world.rules.BALL_RADIUS),
-                    kick_ball_time: global_simulator.current_time(),
-                    max_time: simulation_time_depth,
-                    max_iter: 30,
-                    tick_time_interval: time_interval,
-                    micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
-                    micro_ticks_per_tick_after_jump: far_micro_ticks_per_tick,
-                    max_micro_ticks,
-                }.perform(&mut ctx);
-                if let Some(v) = action {
-                    let action_score = get_action_score(
-                        &world.rules,
-                        &local_simulator,
-                        time_to_ball,
-                        simulation_time_depth + time_interval,
-                    );
-                    log!(
-                        world.game.current_tick,
-                        "[{}] <{}> suggest action {}:{} score={} speed={} jump={}",
-                        self.id,
-                        action_id,
-                        local_simulator.current_time(),
-                        local_simulator.current_micro_tick(),
-                        action_score,
-                        v.target_velocity().norm(),
-                        v.jump_speed
-                    );
-                    stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-                    stats.time_to_end = local_simulator.current_time();
-                    stats.time_to_score = if local_simulator.score() != 0 {
-                        Some(stats.time_to_end)
-                    } else {
-                        None
-                    };
-                    stats.score = local_simulator.score();
-                    stats.action_score = action_score;
-                    stats.iteration = iterations;
-                    stats.current_step = steps[iterations.min(steps.len() - 1)];
+                stats.score = local_simulator.score();
+                stats.action_score = action_score;
+                stats.iteration = iterations;
+                stats.current_step = steps[iterations.min(steps.len() - 1)];
 
-                    log!(
-                        world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}",
-                        self.id, action_id,
-                        local_simulator.current_time(), local_simulator.current_micro_tick(),
-                        action_score, v.target_velocity().norm()
-                    );
+                log!(
+                    world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}",
+                    self.id, action_id,
+                    local_simulator.current_time(), local_simulator.current_micro_tick(),
+                    action_score, v.target_velocity().norm()
+                );
 
-                    if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
-                        optimal_action = Some(OptimalAction {
-                            id: action_id,
-                            robot_id: self.id,
-                            action: v,
-                            score: action_score,
-                            history,
-                            stats,
-                        });
-                    }
+                if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
+                    optimal_action = Some(OptimalAction {
+                        id: action_id,
+                        robot_id: self.id,
+                        action: v,
+                        score: action_score,
+                        history,
+                        stats,
+                    });
                 }
-                total_micro_ticks += local_simulator.current_micro_tick();
             }
+
+            total_micro_ticks += local_simulator.current_micro_tick();
+
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
                 global_simulator.tick(time_interval, near_micro_ticks_per_tick, rng);
             }
         }
         total_micro_ticks += global_simulator.current_micro_tick();
 
-        let action_id = next_action_id;
-        next_action_id += 1;
-        let mut local_simulator = initial_simulator.clone();
-        let mut history = vec![State::new(&local_simulator)];
-        let mut stats = Stats::default();
-        let mut time_to_ball = None;
+//        {
+//            let action_id = next_action_id;
+//            next_action_id += 1;
+//            let mut local_simulator = initial_simulator.clone();
+//            let mut history = vec![State::new(&local_simulator)];
+//            let mut stats = Stats::default();
+//            let mut time_to_ball = None;
+//
+//            let mut ctx = Context {
+//                current_tick: world.game.current_tick,
+//                robot_id: self.id,
+//                action_id,
+//                simulator: &mut local_simulator,
+//                rng,
+//                history: Some(&mut history),
+//                stats: Some(&mut stats),
+//                time_to_ball: Some(&mut time_to_ball),
+//            };
+//
+//            let action = JumpToBall {
+//                max_time: simulation_time_depth,
+//                tick_time_interval: time_interval,
+//                micro_ticks_per_tick_before_jump: near_micro_ticks_per_tick,
+//                micro_ticks_per_tick_after_jump: far_micro_ticks_per_tick,
+//                max_micro_ticks,
+//            }.perform(&mut ctx);
+//
+//            total_micro_ticks += local_simulator.current_micro_tick();
+//
+//            if let Some(v) = action {
+//                let action_score = get_action_score(
+//                    &world.rules,
+//                    &local_simulator,
+//                    time_to_ball,
+//                    simulation_time_depth + time_interval,
+//                );
+//                stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+//                stats.time_to_end = local_simulator.current_time();
+//                stats.time_to_score = if local_simulator.score() != 0 {
+//                    Some(stats.time_to_end)
+//                } else {
+//                    None
+//                };
+//                stats.score = local_simulator.score();
+//                stats.action_score = action_score;
+//
+//                log!(
+//                    world.game.current_tick, "[{}] <{}> suggest action far jump {}:{} score={}",
+//                    self.id, action_id,
+//                    local_simulator.current_time(), local_simulator.current_micro_tick(), action_score
+//                );
+//
+//                if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
+//                    optimal_action = Some(OptimalAction {
+//                        id: action_id,
+//                        robot_id: self.id,
+//                        action: v,
+//                        score: action_score,
+//                        history,
+//                        stats,
+//                    });
+//                }
+//            }
+//        }
 
-        let mut ctx = Context {
-            current_tick: world.game.current_tick,
-            robot_id: self.id,
-            action_id,
-            simulator: &mut local_simulator,
-            rng,
-            history: &mut history,
-            stats: &mut stats,
-            time_to_ball: &mut time_to_ball,
-        };
-
-        let action = JumpToBall {
-            max_time: simulation_time_depth,
-            tick_time_interval: time_interval,
-            micro_ticks_per_tick_before_jump: near_micro_ticks_per_tick,
-            micro_ticks_per_tick_after_jump: far_micro_ticks_per_tick,
-            max_micro_ticks,
-        }.perform(&mut ctx);
-
-        total_micro_ticks += local_simulator.current_micro_tick();
-
-        if let Some(v) = action {
-            let action_score = get_action_score(
-                &world.rules,
-                &local_simulator,
-                time_to_ball,
-                simulation_time_depth + time_interval,
-            );
-            stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-            stats.time_to_end = local_simulator.current_time();
-            stats.time_to_score = if local_simulator.score() != 0 {
-                Some(stats.time_to_end)
-            } else {
-                None
-            };
-            stats.score = local_simulator.score();
-            stats.action_score = action_score;
-
-            log!(
-                world.game.current_tick, "[{}] <{}> suggest action far jump {}:{} score={}",
-                self.id, action_id,
-                local_simulator.current_time(), local_simulator.current_micro_tick(), action_score
-            );
-
-            if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
-                optimal_action = Some(OptimalAction {
-                    id: action_id,
-                    robot_id: self.id,
-                    action: v,
-                    score: action_score,
-                    history,
-                    stats,
-                });
-            }
-        }
-
-        if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < 0 {
+        {
             let action_id = next_action_id;
             next_action_id += 1;
             let mut local_simulator = initial_simulator.clone();
@@ -221,9 +222,9 @@ impl Robot {
                 action_id,
                 simulator: &mut local_simulator,
                 rng,
-                history: &mut history,
-                stats: &mut stats,
-                time_to_ball: &mut time_to_ball,
+                history: Some(&mut history),
+                stats: Some(&mut stats),
+                time_to_ball: Some(&mut time_to_ball),
             };
 
             let action = DoNothing {

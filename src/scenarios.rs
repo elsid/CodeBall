@@ -10,9 +10,9 @@ pub struct Context<'r> {
     pub action_id: i32,
     pub simulator: &'r mut Simulator,
     pub rng: &'r mut XorShiftRng,
-    pub history: &'r mut Vec<State>,
-    pub stats: &'r mut Stats,
-    pub time_to_ball: &'r mut Option<f64>,
+    pub history: Option<&'r mut Vec<State>>,
+    pub stats: Option<&'r mut Stats>,
+    pub time_to_ball: Option<&'r mut Option<f64>>,
 }
 
 impl Context<'_> {
@@ -21,11 +21,15 @@ impl Context<'_> {
 
         self.simulator.tick(time_interval, micro_ticks_per_tick, self.rng);
 
-        if self.simulator.me().ball_collision_type() != CollisionType::None && self.time_to_ball.is_none() {
-            *self.time_to_ball = Some(self.simulator.current_time());
+        if let Some(time_to_ball) = &mut self.time_to_ball {
+            if self.simulator.me().ball_collision_type() != CollisionType::None && time_to_ball.is_none() {
+                **time_to_ball = Some(self.simulator.current_time());
+            }
         }
 
-        self.history.push(State::new(&self.simulator));
+        if let Some(history) = &mut self.history {
+            history.push(State::new(&self.simulator));
+        }
     }
 }
 
@@ -180,8 +184,10 @@ impl Jump {
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::CollisionType;
 
-        ctx.stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_jump = ctx.simulator.current_time();
+        if let Some(stats) = &mut ctx.stats {
+            stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
+            stats.time_to_jump = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 
@@ -246,8 +252,10 @@ impl WatchBallMove {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
 
-        ctx.stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_watch = ctx.simulator.current_time();
+        if let Some(stats) = &mut ctx.stats {
+            stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
+            stats.time_to_watch = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 
@@ -391,9 +399,11 @@ impl FarJump {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
 
-        ctx.stats.far_jump_simulation = true;
-        ctx.stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_jump = ctx.simulator.current_time();
+        if let Some(stats) = &mut ctx.stats {
+            stats.far_jump_simulation = true;
+            stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
+            stats.time_to_jump = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 
@@ -466,8 +476,10 @@ impl WatchMeJump {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
 
-        ctx.stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_watch = ctx.simulator.current_time();
+        if let Some(stats) = &mut ctx.stats {
+            stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
+            stats.time_to_watch = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 
@@ -571,78 +583,244 @@ impl PassBallToPosition<'_> {
             ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
         );
 
-        if let Some(distance) = get_min_distance_between_spheres(
-            self.ball.y,
-            ctx.simulator.rules().BALL_RADIUS,
-            ctx.simulator.rules().ROBOT_MIN_RADIUS
-        ) {
-            let kick = get_optimal_kick(
-                self.ball_target,
-                distance,
-                self.kick_ball_time,
-                self.ball,
-                ctx.simulator.me().base(),
-                ctx.simulator.rules(),
-                self.max_time,
-                self.max_iter,
-            );
-
-            let before_move = ctx.simulator.current_time();
-
-            let mut action = MoveMeToPosition {
-                target: kick.kick_ball_target.position,
-                final_speed: kick.final_speed,
-                max_time: self.max_time,
-                tick_time_interval: self.tick_time_interval,
-                micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
-                max_micro_ticks: self.max_micro_ticks,
-            }.perform(ctx);
-
-            let get_velocity_distance_after_kick = |jump_speed: f64| {
-                let mut jump_simulator = ctx.simulator.clone();
-                let mut rng = ctx.rng.clone();
-                jump_simulator.me_mut().action.jump_speed = jump_speed;
-                let velocity = jump_simulator.me().velocity();
-                jump_simulator.me_mut().action.set_target_velocity(velocity);
-                jump_simulator.tick(self.tick_time_interval, self.micro_ticks_per_tick_before_jump, &mut rng);
-                jump_simulator.ball().velocity().distance(kick.ball_movement.move_equation.initial_velocity)
-            };
-
-            let jump_speed = optimize1d(
-                0.0,
-                ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
-                10,
-                get_velocity_distance_after_kick
-            );
-
-            if before_move == ctx.simulator.current_time() {
-                action.jump_speed = jump_speed;
-            }
-
-            KickBall {
-                jump_speed,
-                max_time: self.max_time,
-                tick_time_interval: self.tick_time_interval,
-                micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
-                max_micro_ticks: self.max_micro_ticks,
-            }.perform(ctx);
-
-            if ctx.simulator.me().ball_collision_type() == CollisionType::None {
-                return None;
-            }
-
-            WatchBallMoveToPosition {
-                target: self.ball_target,
-                max_time: self.max_time,
-                tick_time_interval: self.tick_time_interval,
-                micro_ticks_per_tick: self.micro_ticks_per_tick_after_jump,
-                max_micro_ticks: self.max_micro_ticks,
-            }.perform(ctx);
-
-            Some(action)
-        } else {
-            None
+        if self.ball.y > ctx.simulator.rules().max_robot_jump_height() {
+            return None;
         }
+
+        let kick = get_optimal_kick(
+            self.ball_target,
+            self.kick_ball_time,
+            self.ball,
+            ctx.simulator.me().base(),
+            ctx.simulator.rules(),
+            self.max_time,
+            self.max_iter,
+        );
+
+        let before_move = ctx.simulator.current_time();
+
+        let mut action = MoveMeToPosition {
+            target: kick.jump_target.position,
+            final_speed: kick.params.final_speed,
+            max_time: self.max_time,
+            tick_time_interval: self.tick_time_interval,
+            micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
+            max_micro_ticks: self.max_micro_ticks,
+        }.perform(ctx);
+
+//        let get_velocity_distance_after_kick = |jump_speed: f64| {
+//            use crate::my_strategy::physics::MoveEquation;
+//
+//            let mut jump_simulator = ctx.simulator.clone();
+//            let mut rng = ctx.rng.clone();
+//            let mut jump_ctx = Context {
+//                current_tick: ctx.current_tick,
+//                robot_id: ctx.robot_id,
+//                action_id: ctx.action_id,
+//                simulator: &mut jump_simulator,
+//                rng: &mut rng,
+//                history: None,
+//                stats: None,
+//                time_to_ball: None,
+//            };
+//
+//            JumpUntil {
+//                jump_speed,
+//                max_time: self.max_time,
+//                tick_time_interval: self.tick_time_interval,
+//                micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
+//                max_micro_ticks: self.max_micro_ticks,
+//                predicate: |simulator| simulator.me().ball_collision_type() == CollisionType::None,
+//            }.perform(&mut jump_ctx);
+//
+//            JumpWhile {
+//                jump_speed,
+//                max_time: self.max_time,
+//                tick_time_interval: self.tick_time_interval,
+//                micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
+//                max_micro_ticks: self.max_micro_ticks,
+//                predicate: |simulator| simulator.me().ball_collision_type() != CollisionType::None,
+//            }.perform(&mut jump_ctx);
+//
+//            let move_equation = MoveEquation::from_entity(
+//                jump_ctx.simulator.ball(),
+//                jump_ctx.simulator.rules()
+//            );
+//
+//            move_equation.get_closest_possible_distance_to_target(
+//                self.ball_target,
+//                jump_ctx.simulator.rules().BALL_RADIUS,
+//                self.max_time,
+//                10,
+//            )
+//        };
+//
+//        let jump_speed = optimize1d(
+//            0.0,
+//            ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
+//            10,
+//            get_velocity_distance_after_kick
+//        );
+
+        let jump_speed = kick.params.jump_speed;
+
+        if before_move == ctx.simulator.current_time() {
+            action.jump_speed = jump_speed;
+        }
+
+        JumpUntil {
+            jump_speed,
+            max_time: self.max_time,
+            tick_time_interval: self.tick_time_interval,
+            micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
+            max_micro_ticks: self.max_micro_ticks,
+            predicate: |simulator| simulator.me().ball_collision_type() == CollisionType::None,
+        }.perform(ctx);
+
+        if ctx.simulator.me().ball_collision_type() == CollisionType::None {
+            return None;
+        }
+
+        JumpWhile {
+            jump_speed,
+            max_time: self.max_time,
+            tick_time_interval: self.tick_time_interval,
+            micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
+            max_micro_ticks: self.max_micro_ticks,
+            predicate: |simulator| simulator.me().ball_collision_type() != CollisionType::None,
+        }.perform(ctx);
+
+        WatchBallMoveToPosition {
+            target: self.ball_target,
+            max_time: self.max_time,
+            tick_time_interval: self.tick_time_interval,
+            micro_ticks_per_tick: self.micro_ticks_per_tick_after_jump,
+            max_micro_ticks: self.max_micro_ticks,
+        }.perform(ctx);
+
+        Some(action)
+    }
+}
+
+pub struct JumpUntil<F>
+    where F: Fn(&Simulator) -> bool {
+
+    pub jump_speed: f64,
+    pub max_time: f64,
+    pub tick_time_interval: f64,
+    pub micro_ticks_per_tick: usize,
+    pub max_micro_ticks: i32,
+    pub predicate: F,
+}
+
+impl<F> JumpUntil<F>
+    where F: Fn(&Simulator) -> bool {
+
+    pub fn perform(&self, ctx: &mut Context) -> Action {
+        use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::simulator::CollisionType;
+
+        if let Some(stats) = &mut ctx.stats {
+            stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
+            stats.time_to_jump = ctx.simulator.current_time();
+        }
+
+        let stored_action = ctx.simulator.me().action;
+
+        ctx.simulator.me_mut().action = Action::default();
+        ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
+        ctx.simulator.me_mut().action.set_target_velocity(stored_action.target_velocity());
+
+        let action = ctx.simulator.me().action;
+
+        log!(
+            ctx.current_tick, "[{}] <{}> jump until collide with ball {}:{}",
+            ctx.robot_id, ctx.action_id,
+            ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
+        );
+
+        ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
+
+        log!(
+            ctx.current_tick, "[{}] <{}> jump until collide with ball {}:{}",
+            ctx.robot_id, ctx.action_id,
+            ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
+        );
+
+        while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
+            && ctx.simulator.current_micro_tick() < self.max_micro_ticks
+            && ctx.simulator.score() == 0
+            && (self.predicate)(&ctx.simulator) {
+
+            ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
+
+            log!(
+                ctx.current_tick, "[{}] <{}> jump until collide with ball {}:{}",
+                ctx.robot_id, ctx.action_id,
+                ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
+            );
+        }
+
+        ctx.simulator.me_mut().action = stored_action;
+
+        action
+    }
+}
+
+pub struct JumpWhile<F>
+    where F: Fn(&Simulator) -> bool {
+
+    pub jump_speed: f64,
+    pub max_time: f64,
+    pub tick_time_interval: f64,
+    pub micro_ticks_per_tick: usize,
+    pub max_micro_ticks: i32,
+    pub predicate: F,
+}
+
+impl<F> JumpWhile<F>
+    where F: Fn(&Simulator) -> bool {
+
+    pub fn perform(&self, ctx: &mut Context) -> Action {
+        use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::simulator::CollisionType;
+
+        if let Some(stats) = &mut ctx.stats {
+            stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
+            stats.time_to_jump = ctx.simulator.current_time();
+        }
+
+        let stored_action = ctx.simulator.me().action;
+
+        ctx.simulator.me_mut().action = Action::default();
+        ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
+        ctx.simulator.me_mut().action.set_target_velocity(stored_action.target_velocity());
+
+        let action = ctx.simulator.me().action;
+
+        log!(
+            ctx.current_tick, "[{}] <{}> jump until collide with ball {}:{}",
+            ctx.robot_id, ctx.action_id,
+            ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
+        );
+
+        while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
+            && ctx.simulator.current_micro_tick() < self.max_micro_ticks
+            && ctx.simulator.score() == 0
+            && (self.predicate)(&ctx.simulator) {
+
+            ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
+
+            log!(
+                ctx.current_tick, "[{}] <{}> jump until collide with ball {}:{}",
+                ctx.robot_id, ctx.action_id,
+                ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
+            );
+        }
+
+        ctx.simulator.me_mut().action = stored_action;
+
+        action
     }
 }
 
@@ -652,38 +830,6 @@ pub struct KickBall {
     pub tick_time_interval: f64,
     pub micro_ticks_per_tick: usize,
     pub max_micro_ticks: i32,
-}
-
-impl KickBall {
-    pub fn perform(&self, ctx: &mut Context) {
-        use crate::my_strategy::entity::Entity;
-
-        ctx.stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_jump = ctx.simulator.current_time();
-
-        log!(
-            ctx.current_tick, "[{}] <{}> kick ball {}:{}",
-            ctx.robot_id, ctx.action_id,
-            ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
-        );
-
-        if ctx.simulator.current_time() + self.tick_time_interval >= self.max_time
-            || ctx.simulator.current_micro_tick() >= self.max_micro_ticks
-            || ctx.simulator.score() != 0 {
-
-            return;
-        }
-
-        let stored_action = ctx.simulator.me().action;
-
-        ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
-        let velocity = ctx.simulator.me().velocity();
-        ctx.simulator.me_mut().action.set_target_velocity(velocity);
-
-        ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
-
-        ctx.simulator.me_mut().action = stored_action;
-    }
 }
 
 pub struct WatchBallMoveToPosition {
@@ -698,8 +844,10 @@ impl WatchBallMoveToPosition {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
 
-        ctx.stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_watch = ctx.simulator.current_time();
+        if let Some(stats) = &mut ctx.stats {
+            stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
+            stats.time_to_watch = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 

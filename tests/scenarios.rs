@@ -19,7 +19,7 @@ fn test_pass_ball_to_position() {
         };
         ball_simulator.ball().base().clone()
     };
-    let target = Vec3::new(-4.0, 2.0, 21.0);
+    let target = Vec3::new(0.0, 7.0, 42.0);
     let mut simulator = Simulator::new(&world, robot.id);
     let mut history = Vec::new();
     let mut stats = Stats::default();
@@ -31,9 +31,9 @@ fn test_pass_ball_to_position() {
         action_id: 0,
         simulator: &mut simulator,
         rng: &mut rng,
-        history: &mut history,
-        stats: &mut stats,
-        time_to_ball: &mut time_to_ball,
+        history: Some(&mut history),
+        stats: Some(&mut stats),
+        time_to_ball: Some(&mut time_to_ball),
     };
 
     let result = PassBallToPosition {

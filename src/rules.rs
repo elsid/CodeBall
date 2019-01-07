@@ -21,4 +21,13 @@ impl Rules {
     pub fn ball_distance_limit(&self) -> f64 {
         self.ROBOT_MIN_RADIUS + self.BALL_RADIUS
     }
+
+    pub fn max_robot_jump_height(&self) -> f64 {
+        use crate::my_strategy::common::Square;
+
+        let time = self.ROBOT_MAX_JUMP_SPEED / self.GRAVITY;
+        self.ROBOT_MAX_RADIUS
+            + self.ROBOT_MAX_JUMP_SPEED * time
+            - self.GRAVITY * time.square() / 2.0
+    }
 }

@@ -2,13 +2,13 @@
 fn test_get_kick_ball_position() {
     use my_strategy::examples::{example_ball, example_rules};
     use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
-    use my_strategy::my_strategy::kick::get_kick_ball_position;
+    use my_strategy::my_strategy::kick::get_jump_position;
 
     let mut ball = example_ball();
     let rules = example_rules();
     ball.y = 2.0;
     assert_eq!(
-        get_kick_ball_position(
+        get_jump_position(
             0.0,
             get_min_distance_between_spheres(ball.y, rules.BALL_RADIUS, rules.ROBOT_MIN_RADIUS).unwrap(),
             ball.position(),
@@ -18,7 +18,7 @@ fn test_get_kick_ball_position() {
     );
     ball.y = 3.0;
     assert_eq!(
-        get_kick_ball_position(
+        get_jump_position(
             1.0,
             get_min_distance_between_spheres(ball.y, rules.BALL_RADIUS, rules.ROBOT_MIN_RADIUS).unwrap(),
             ball.position(),
@@ -28,7 +28,7 @@ fn test_get_kick_ball_position() {
     );
     ball.y = 4.0;
     assert_eq!(
-        get_kick_ball_position(
+        get_jump_position(
             2.0,
             get_min_distance_between_spheres(ball.y, rules.BALL_RADIUS, rules.ROBOT_MIN_RADIUS).unwrap(),
             ball.position(),
@@ -41,13 +41,13 @@ fn test_get_kick_ball_position() {
 #[test]
 fn test_get_kick_ball_target_with_speed_increase() {
     use my_strategy::examples::{example_ball, example_me, example_rules};
-    use my_strategy::my_strategy::kick::get_kick_ball_target;
+    use my_strategy::my_strategy::kick::get_jump_target;
 
     let robot = example_me();
     let ball = example_ball();
     let rules = example_rules();
     let kick_ball_position = ball.position().with_y(robot.position().y());
-    let result = get_kick_ball_target(
+    let result = get_jump_target(
         robot.position(),
         robot.velocity(),
         30.0,
@@ -65,7 +65,7 @@ fn test_get_kick_ball_target_with_speed_increase() {
 #[test]
 fn test_get_kick_ball_target_with_speed_decrease() {
     use my_strategy::examples::{example_ball, example_me, example_rules};
-    use my_strategy::my_strategy::kick::get_kick_ball_target;
+    use my_strategy::my_strategy::kick::get_jump_target;
 
     let mut robot = example_me();
     let ball = example_ball();
@@ -75,7 +75,7 @@ fn test_get_kick_ball_target_with_speed_decrease() {
             * rules.ROBOT_MAX_GROUND_SPEED
     );
     let kick_ball_position = ball.position().with_y(robot.position().y());
-    let result = get_kick_ball_target(
+    let result = get_jump_target(
         robot.position(),
         robot.velocity(),
         20.0,
@@ -93,7 +93,7 @@ fn test_get_kick_ball_target_with_speed_decrease() {
 #[test]
 fn test_get_kick_ball_target_with_time_limit() {
     use my_strategy::examples::{example_ball, example_me, example_rules};
-    use my_strategy::my_strategy::kick::get_kick_ball_target;
+    use my_strategy::my_strategy::kick::get_jump_target;
 
     let mut robot = example_me();
     let ball = example_ball();
@@ -103,7 +103,7 @@ fn test_get_kick_ball_target_with_time_limit() {
             * rules.ROBOT_MAX_GROUND_SPEED
     );
     let kick_ball_position = ball.position().with_y(robot.position().y());
-    let result = get_kick_ball_target(
+    let result = get_jump_target(
         robot.position(),
         robot.velocity(),
         30.0,
@@ -117,44 +117,45 @@ fn test_get_kick_ball_target_with_time_limit() {
 }
 
 #[test]
-fn test_get_ball_target() {
+fn test_get_ball_movement() {
     use my_strategy::examples::{example_ball, example_me, example_rules};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
-    use my_strategy::my_strategy::kick::{get_kick_ball_position, get_kick_ball_target, get_ball_movement};
+    use my_strategy::my_strategy::kick::{get_jump_position, get_jump_target, get_ball_movement};
 
     let mut ball = example_ball();
-    ball.y = 3.254651000000122;
-    ball.velocity_y = 9.815499999999878;
+    ball.y = 3.5651676666668153;
+    ball.velocity_y = 8.815499999999721;
     let robot = example_me();
     let rules = example_rules();
     let angle = -1.6;
-    let distance = get_min_distance_between_spheres(ball.y, rules.BALL_RADIUS, rules.ROBOT_MIN_RADIUS).unwrap();
-    let kick_ball_position = get_kick_ball_position(angle, distance, ball.position(), &rules);
+    let distance = 1.6;
+    let jump_position = get_jump_position(angle, distance, ball.position(), &rules);
     let max_time = 3.0;
-    let kick_ball_target = get_kick_ball_target(
+    let jump_target = get_jump_target(
         robot.position(),
         robot.velocity(),
-        rules.ROBOT_MAX_GROUND_SPEED,
-        kick_ball_position,
+        30.0,
+        jump_position,
         &rules,
         max_time,
     );
-    assert!(kick_ball_target.time < 2.0, format!("{}", kick_ball_target.time));
-    let jump_speed = rules.ROBOT_MAX_JUMP_SPEED;
+    assert_eq!(jump_target.time / rules.tick_time_interval(), 45.78);
+    let jump_speed = 14.4;
+    let target = Vec3::new(0.0, 7.0, 42.0);
     let result = get_ball_movement(
-        rules.arena.get_goal_target(rules.BALL_RADIUS),
+        target,
         jump_speed,
-        &kick_ball_target,
+        &jump_target,
         &robot,
         &ball,
         &rules,
         max_time,
     );
-    assert_eq!(result.time_to_target, 1.8662978943833592);
+    assert_eq!(result.time_to_target, 2.227630778708753);
     assert_eq!(
         result.move_equation.get_position(result.time_to_target),
-        Vec3::new(0.8051418515723323, 1.9492903216222501, 28.670753286418115)
+        Vec3::new(1.1483946162964405, 7.933926622071425, 37.57295774065914)
     );
 }
 
@@ -162,8 +163,8 @@ fn test_get_ball_target() {
 fn test_get_optimal_kick() {
     use my_strategy::examples::{example_ball, example_me, example_rules};
     use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::kick::{KickParams, get_optimal_kick};
     use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
-    use my_strategy::my_strategy::kick::get_optimal_kick;
 
     let rules = example_rules();
     let time = 46.0 * rules.tick_time_interval();
@@ -171,13 +172,11 @@ fn test_get_optimal_kick() {
     ball.y = 3.5651676666668153;
     ball.velocity_y = 8.815499999999721;
     let robot = example_me();
-    let distance = get_min_distance_between_spheres(ball.y, rules.BALL_RADIUS, rules.ROBOT_MIN_RADIUS).unwrap();
     let max_time = 3.0;
-    let max_iter= 30;
-    let target = Vec3::new(-4.0, 2.0, 21.0);
+    let max_iter = 30;
+    let target = Vec3::new(0.0, 7.0, 42.0);
     let result = get_optimal_kick(
         target,
-        distance,
         time,
         &ball,
         &robot,
@@ -186,12 +185,21 @@ fn test_get_optimal_kick() {
         max_iter,
     );
     assert_eq!(
-        result.ball_movement.move_equation
-            .get_position(result.ball_movement.time_to_target).distance(target),
-        0.6298453248146962
+        result.params,
+        KickParams {
+            angle: -1.569135955309053,
+            distance: 1.6419577587310836,
+            final_speed: 29.97720305173167,
+            jump_speed: 15.0,
+        }
     );
     assert_eq!(
-        result.kick_ball_target.position.distance(ball.position()),
-        3.00244109611291
+        result.ball_movement.move_equation
+            .get_position(result.ball_movement.time_to_target).distance(target),
+        2.9117982814505172
+    );
+    assert_eq!(
+        result.jump_target.position.distance(ball.position()),
+        3.0075705162207376
     );
 }
