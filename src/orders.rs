@@ -286,10 +286,10 @@ impl Order {
 
     #[cfg(feature = "enable_render")]
     pub fn render(&self, robot: &Robot, rules: &Rules, render: &mut Render) {
-        use crate::my_strategy::render::{Tag, Object};
+        use crate::my_strategy::render::Object;
 
         Self::render_history(robot, &self.history, rules, render);
-        render.add_with_tag(Tag::RobotId(robot.id), Object::text(
+        render.add(Object::text(
             format!(
                 "robot: {}\n  position: {:?}\n  speed: {}\n  target_speed: {}\n  jump: {}",
                 robot.id, robot.position(), robot.velocity().norm(),
@@ -301,7 +301,7 @@ impl Order {
 
     #[cfg(feature = "enable_render")]
     pub fn render_history(robot: &Robot, history: &Vec<State>, rules: &Rules, render: &mut Render) {
-        use crate::my_strategy::render::{Tag, Object};
+        use crate::my_strategy::render::Object;
 
         if history.is_empty() {
             return;
@@ -311,17 +311,14 @@ impl Order {
 
         for state in history.iter() {
             let time = state.time / if max_time == 0.0 { 1.0 } else { max_time };
-            render.add_with_tag(
-                Tag::RobotId(robot.id),
+            render.add(
                 Object::sphere(state.ball.position, rules.BALL_RADIUS, get_ball_color(time))
             );
-            render.add_with_tag(
-                Tag::RobotId(robot.id),
+            render.add(
                 Object::sphere(state.me.position, state.me.radius, get_my_color(time))
             );
             for (i, robot) in state.robots.iter().enumerate() {
-                render.add_with_tag(
-                    Tag::RobotId(robot.id),
+                render.add(
                     Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len(), time))
                 );
             }

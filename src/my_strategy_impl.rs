@@ -2,7 +2,7 @@ use crate::model::{Game, Action, Robot, Rules};
 use crate::strategy::Strategy;
 use crate::my_strategy::random::{XorShiftRng, SeedableRng};
 use crate::my_strategy::world::World;
-use crate::my_strategy::render::{Render, Tag};
+use crate::my_strategy::render::Render;
 use crate::my_strategy::orders::Order;
 
 pub struct MyStrategyImpl {
@@ -39,23 +39,18 @@ impl Strategy for MyStrategyImpl {
 //        };
         if self.last_tick != game.current_tick {
             self.last_tick = game.current_tick;
-            self.render.clear();
             self.update_world(me, game);
             if self.world.is_reset_ticks() {
                 self.order = None;
             } else {
                 self.give_orders();
             }
-            self.render.ignore_all();
             #[cfg(feature = "dump_stats")]
             for v in self.order.iter() {
                 println!("{}", serde_json::to_string(&v.stats).unwrap());
             }
             #[cfg(feature = "enable_render")]
-            for v in self.order.iter() {
-                self.render.include_tag(Tag::RobotId(v.robot_id));
-                v.render(self.world.get_robot(v.robot_id), &self.world.rules, &mut self.render);
-            }
+            self.render();
         } else {
             self.update_world_me(me);
         }
@@ -90,7 +85,7 @@ impl MyStrategyImpl {
         }
     }
 
-    pub fn render(&self) -> &Render {
+    pub fn get_render(&self) -> &Render {
         &self.render
     }
 
@@ -145,6 +140,13 @@ impl MyStrategyImpl {
             * self.world.rules.ROBOT_MAX_GROUND_SPEED;
         action.set_target_velocity(velocity);
         log!(self.world.game.current_tick, "[{}] apply default action {:?}", self.world.me.id, action);
+    }
+
+    #[cfg(feature = "enable_render")]
+    fn render(&mut self) {
+        for v in self.order.iter() {
+            v.render(self.world.get_robot(v.robot_id), &self.world.rules, &mut self.render);
+        }
     }
 
 //    fn real_time_spent(&self) -> Duration {

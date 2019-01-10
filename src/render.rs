@@ -1,4 +1,3 @@
-use std::collections::{HashMap, BTreeSet};
 use serde::Serialize;
 use crate::my_strategy::vec3::Vec3;
 
@@ -99,90 +98,19 @@ impl Object {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
-pub enum Tag {
-//    Default,
-    RobotId(i32),
-}
-
-struct Item {
-    tag: Tag,
-    object: Object,
-}
-
 pub struct Render {
-    objects: HashMap<i32, Item>,
-    include: BTreeSet<Tag>,
-    exclude: BTreeSet<Tag>,
-    next_id: i32,
+    objects: Vec<Object>,
 }
 
 impl Render {
     pub fn new() -> Self {
         Render {
-            objects: HashMap::new(),
-            include: BTreeSet::new(),
-            exclude: BTreeSet::new(),
-            next_id: 0,
+            objects: Vec::new(),
         }
     }
 
-//    pub fn add(&mut self, object: Object) -> i32 {
-//        let id = self.next_id;
-//        self.objects.insert(id, Item {tag: Tag::Default, object});
-//        self.next_id += 1;
-//        id
-//    }
-
-    pub fn add_with_tag(&mut self, tag: Tag, object: Object) -> i32 {
-        let id = self.next_id;
-        self.objects.insert(id, Item {tag, object});
-        self.next_id += 1;
-        id
-    }
-
-//    pub fn get(&mut self, id: i32) -> Option<&Object> {
-//        self.objects.get(&id).map(|v| &v.object)
-//    }
-//
-//    pub fn get_mut(&mut self, id: i32) -> Option<&mut Object> {
-//        self.objects.get_mut(&id).map(|v| &mut v.object)
-//    }
-
-//    pub fn get_sphere(&mut self, id: i32) -> Option<&Sphere> {
-//        if let Some(Object::Sphere(ref v)) = self.get(id) {
-//            Some(&v)
-//        } else {
-//            None
-//        }
-//    }
-
-//    pub fn get_sphere_mut(&mut self, id: i32) -> Option<&mut Sphere> {
-//        if let Some(Object::Sphere(ref mut v)) = self.get_mut(id) {
-//            Some(v)
-//        } else {
-//            None
-//        }
-//    }
-
-    pub fn include_tag(&mut self, tag: Tag) {
-        self.exclude.remove(&tag);
-        self.include.insert(tag);
-    }
-
-//    pub fn exclude_tag(&mut self, tag: Tag) {
-//        self.include.remove(&tag);
-//        self.exclude.insert(tag);
-//    }
-
-//    pub fn ignore_tag(&mut self, tag: Tag) {
-//        self.include.remove(&tag);
-//        self.exclude.remove(&tag);
-//    }
-
-    pub fn ignore_all(&mut self) {
-        self.include.clear();
-        self.exclude.clear();
+    pub fn add(&mut self, object: Object) {
+        self.objects.push(object);
     }
 
     pub fn clear(&mut self) {
@@ -193,13 +121,6 @@ impl Render {
 impl Serialize for Render {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where S: serde::Serializer {
-        serializer.collect_seq(
-        self.objects.iter()
-                .filter(|(_, v)| {
-                    self.include.contains(&v.tag)
-                        || (self.include.is_empty() && !self.exclude.contains(&v.tag))
-                })
-                .map(|(_, v)| &v.object)
-        )
+        serializer.collect_seq(self.objects.iter())
     }
 }
