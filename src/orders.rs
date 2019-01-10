@@ -7,7 +7,7 @@ use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
 #[cfg(feature = "enable_render")]
-use crate::my_strategy::render::Color;
+use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
@@ -334,44 +334,24 @@ impl Order {
     }
 
     #[cfg(feature = "enable_render")]
-    pub fn render(&self, robot: &Robot, rules: &Rules, render: &mut Render) {
-        use crate::my_strategy::render::Object;
+    pub fn render(&self, render: &mut Render) {
+        render_history(&self.history, render);
+    }
+}
 
-        Self::render_history(robot, &self.history, rules, render);
-        render.add(Object::text(
-            format!(
-                "robot: {}\n  position: {:?}\n  speed: {}\n  target_speed: {}\n  jump: {}",
-                robot.id, robot.position(), robot.velocity().norm(),
-                self.action.target_velocity().norm(),
-                self.action.jump_speed
-            )
-        ));
+#[cfg(feature = "enable_render")]
+pub fn render_history(history: &Vec<Simulator>, render: &mut Render) {
+    if history.is_empty() {
+        return;
     }
 
-    #[cfg(feature = "enable_render")]
-    pub fn render_history(robot: &Robot, history: &Vec<Simulator>, rules: &Rules, render: &mut Render) {
-        use crate::my_strategy::render::Object;
+    let max_time = history.last().unwrap().current_time();
 
-        if history.is_empty() {
-            return;
-        }
-
-        let max_time = history.last().unwrap().current_time();
-
-        for state in history.iter() {
-            let time = state.current_time() / if max_time == 0.0 { 1.0 } else { max_time };
-            render.add(
-                Object::sphere(state.ball().position(), rules.BALL_RADIUS, get_ball_color(time))
-            );
-            render.add(
-                Object::sphere(state.me().position(), state.me().radius(), get_my_color(time))
-            );
-            for (i, robot) in state.robots().iter().enumerate() {
-                render.add(
-                    Object::sphere(robot.position(), robot.radius(), get_robot_color(i, state.robots().len(), time))
-                );
-            }
-        }
+    for state in history.iter() {
+        state.render(
+            state.current_time() / if max_time == 0.0 { 1.0 } else { max_time },
+            render,
+        );
     }
 }
 
@@ -419,19 +399,4 @@ pub fn get_points(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules, rng:
         result.push(ball_position + to_robot.rotated_by_y(angle) * distance);
     }
     result
-}
-
-#[cfg(feature = "enable_render")]
-fn get_ball_color(time: f64) -> Color {
-    Color::new(0.0, time, 0.8, 0.5)
-}
-
-#[cfg(feature = "enable_render")]
-fn get_my_color(time: f64) -> Color {
-    Color::new(0.0, 0.8, time, 0.5)
-}
-
-#[cfg(feature = "enable_render")]
-fn get_robot_color(i: usize, n: usize, time: f64) -> Color {
-    Color::new(0.8, 0.2 + (i as f64 / n as f64) * 0.8, time, 0.5)
 }

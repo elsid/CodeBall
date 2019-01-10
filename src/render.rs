@@ -1,6 +1,8 @@
 use serde::Serialize;
 use crate::my_strategy::vec3::Vec3;
 
+pub const VELOCITY_FACTOR: f64 = 0.5;
+
 #[derive(Clone, Copy)]
 pub struct Color {
     pub r: f64,

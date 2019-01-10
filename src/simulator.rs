@@ -5,6 +5,9 @@ use crate::my_strategy::random::{Rng, XorShiftRng};
 use crate::my_strategy::world::World;
 use crate::my_strategy::entity::Entity;
 
+#[cfg(feature = "enable_render")]
+use crate::my_strategy::render::{Render, Color};
+
 trait Shiftable : Entity {
     fn shift(&mut self, time_interval: f64, gravity: f64, max_entity_speed: f64) {
         let clamped_velocity = self.velocity().clamp(max_entity_speed);
@@ -77,9 +80,46 @@ impl RobotExt {
         self.ball_collision_type
     }
 
+    pub fn action(&self) -> &Action {
+        &self.action
+    }
+
     pub fn jump(&mut self, jump_speed: f64, rules: &Rules) {
         self.base.jump(jump_speed, rules);
         self.radius_change_speed = jump_speed;
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render(&self, relative_time: f64, relative_number: f64, render: &mut Render) {
+        self.render_base(render);
+        self.render_position(relative_time, relative_number, render);
+        self.render_action(render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_position(&self, relative_time: f64, relative_number: f64, render: &mut Render) {
+        use crate::my_strategy::render::Object;
+
+        render.add(Object::sphere(
+            self.position(),
+            self.radius(),
+            Self::get_color(relative_number, relative_time)
+        ));
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_action(&self, render: &mut Render) {
+        self.action().render(self.base(), render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_base(&self, render: &mut Render) {
+        self.base().render_velocity(render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn get_color(relative_number: f64, relative_time: f64) -> Color {
+        Color::new(0.8, 0.2 + relative_number * 0.6, 0.2 + relative_time * 0.6, 0.4)
     }
 }
 
@@ -123,6 +163,33 @@ impl BallExt {
 
     pub fn base(&self) -> &Ball {
         &self.base
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render(&self, relative_time: f64, render: &mut Render) {
+        self.render_base(render);
+        self.render_position(relative_time, render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_position(&self, relative_time: f64, render: &mut Render) {
+        use crate::my_strategy::render::Object;
+
+        render.add(Object::sphere(
+            self.position(),
+            self.radius(),
+            Self::get_color(relative_time)
+        ));
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_base(&self, render: &mut Render) {
+        self.base().render_velocity(render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn get_color(relative_time: f64) -> Color {
+        Color::new(0.0, 0.2 + relative_time * 0.6, 0.8, 0.4)
     }
 }
 
@@ -410,4 +477,30 @@ impl Simulator {
         }
         CollisionType::None
     }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render(&self, relative_time: f64, render: &mut Render) {
+        self.render_robots(relative_time, render);
+        self.render_ball(relative_time, render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_robots(&self, relative_time: f64, render: &mut Render) {
+        let mut robots: Vec<&RobotExt> = self.robots.iter().collect::<Vec<_>>();
+        robots.sort_by_key(|v| v.id());
+
+        for (i, robot) in robots.iter().enumerate() {
+            robot.render(
+                relative_time,
+                i as f64 / robots.len() as f64,
+                render,
+            );
+        }
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_ball(&self, relative_time: f64, render: &mut Render) {
+        self.ball.render(relative_time, render);
+    }
 }
+

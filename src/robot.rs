@@ -2,6 +2,9 @@ use crate::model::Robot;
 use crate::model::Rules;
 use crate::my_strategy::vec3::Vec3;
 
+#[cfg(feature = "enable_render")]
+use crate::my_strategy::render::Render;
+
 impl Robot {
     pub fn position(&self) -> Vec3 {
         Vec3::new(self.x, self.y, self.z)
@@ -27,5 +30,32 @@ impl Robot {
         self.radius = rules.ROBOT_MIN_RADIUS
             + (rules.ROBOT_MAX_RADIUS - rules.ROBOT_MIN_RADIUS)
             * jump_speed / rules.ROBOT_MAX_JUMP_SPEED;
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render(&self, render: &mut Render) {
+        self.render_velocity(render);
+        self.render_text(render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_velocity(&self, render: &mut Render) {
+        use crate::my_strategy::render::{Object, Color, VELOCITY_FACTOR};
+
+        render.add(Object::line(
+            self.position(),
+            self.position() + self.velocity() * VELOCITY_FACTOR,
+            3.0,
+            Color::new(0.0, 0.6, 0.0, 1.0),
+        ));
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_text(&self, render: &mut Render) {
+        use crate::my_strategy::render::Object;
+
+        render.add(Object::text(
+            format!("robot: {}\n  speed: {}", self.id, self.velocity().norm())
+        ));
     }
 }

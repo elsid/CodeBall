@@ -141,9 +141,26 @@ impl MyStrategyImpl {
 
     #[cfg(feature = "enable_render")]
     fn render(&mut self) {
-        for v in self.order.iter() {
-            v.render(self.world.get_robot(v.robot_id), &self.world.rules, &mut self.render);
+        self.render.clear();
+
+        let mut robots: Vec<&Robot> = self.world.game.robots.iter().map(|v| v).collect();
+        robots.sort_by_key(|v| v.id);
+
+        let render = &mut self.render;
+
+        for robot in robots {
+            robot.render(render);
+
+            let order = self.order.iter()
+                .find(|v| v.robot_id == robot.id)
+                .map(|v| &v.order);
+
+            if let Some(order) = order {
+                order.render(&robot, render);
+            }
         }
+
+        self.world.game.ball.render(render);
     }
 
 //    fn real_time_spent(&self) -> Duration {
