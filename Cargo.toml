@@ -18,7 +18,6 @@ criterion = "0.2.5"
 
 [features]
 enable_log = []
-dump_result = []
 enable_stats = []
 enable_render = []
 use_test_strategy = []
