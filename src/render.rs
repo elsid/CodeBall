@@ -41,13 +41,6 @@ impl Sphere {
             a: color.a,
         }
     }
-
-//    pub fn set_color(&mut self, color: Color) {
-//        self.r = color.r;
-//        self.g = color.g;
-//        self.b = color.b;
-//        self.a = color.a;
-//    }
 }
 
 type Text = String;
@@ -83,13 +76,6 @@ impl Line {
             a: color.a,
         }
     }
-
-//    pub fn set_color(&mut self, color: Color) {
-//        self.r = color.r;
-//        self.g = color.g;
-//        self.b = color.b;
-//        self.a = color.a;
-//    }
 }
 
 #[derive(Serialize)]
