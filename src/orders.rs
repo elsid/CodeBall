@@ -403,7 +403,7 @@ pub fn get_points(ball: &Ball, robot: &Robot, rules: &Rules, rng: &mut XorShiftR
     let mut result = Vec::new();
     let ball_position = ball.position().with_y(rules.ROBOT_MAX_RADIUS);
     let to_robot = (robot.position() - ball_position).normalized();
-    for _ in 0..3 {
+    for _ in 0..5 {
         let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
         result.push(ball_position + to_robot.rotated_by_y(angle) * distance);
     }
