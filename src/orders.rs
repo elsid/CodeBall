@@ -4,7 +4,6 @@ use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
-use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
