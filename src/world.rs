@@ -27,4 +27,10 @@ impl World {
     pub fn is_reset_ticks(&self) -> bool {
         self.reset_ticks_left > 0
     }
+
+    pub fn get_robot(&self, id: i32) -> &Robot {
+        self.game.robots.iter()
+            .find(|v| v.id == id)
+            .unwrap()
+    }
 }

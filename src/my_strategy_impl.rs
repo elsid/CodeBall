@@ -47,11 +47,14 @@ impl Strategy for MyStrategyImpl {
                 self.give_orders();
             }
             self.render.ignore_all();
+            #[cfg(feature = "dump_stats")]
+            for v in self.order.iter() {
+                println!("{}", serde_json::to_string(&v.stats).unwrap());
+            }
+            #[cfg(feature = "enable_render")]
             for v in self.order.iter() {
                 self.render.include_tag(Tag::RobotId(v.robot_id));
-                if cfg!(feature = "dump_stats") {
-                    println!("{}", serde_json::to_string(&v.stats).unwrap());
-                }
+                v.render(self.world.get_robot(v.robot_id), &self.world.rules, &mut self.render);
             }
         } else {
             self.update_world_me(me);
@@ -102,29 +105,28 @@ impl MyStrategyImpl {
     fn give_orders(&mut self) {
         let world = &self.world;
         let rng = &mut self.rng;
-        let render= &mut self.render;
         self.order = if let Some(action) = &self.order {
             let robot = world.game.robots.iter()
                 .find(|v| v.id == action.robot_id)
                 .unwrap();
-            let current_robot_action = Order::new(robot, world, rng, render);
+            let current_robot_action = Order::new(robot, world, rng);
             if let Some(a) = current_robot_action {
                 world.game.robots.iter()
                     .filter(|v| v.is_teammate && v.id != action.robot_id)
-                    .filter_map(|v| Order::new(v, world, rng, render))
+                    .filter_map(|v| Order::new(v, world, rng))
                     .max_by_key(|v| v.score)
                     .filter(|v| v.score > a.score + 100)
                     .or(Some(a))
             } else {
                 world.game.robots.iter()
                     .filter(|v| v.is_teammate && v.id != action.robot_id)
-                    .filter_map(|v| Order::new(v, world, rng, render))
+                    .filter_map(|v| Order::new(v, world, rng))
                     .max_by_key(|v| v.score)
             }
         } else {
             world.game.robots.iter()
                 .filter(|v| v.is_teammate)
-                .filter_map(|v| Order::new(v, world, rng, render))
+                .filter_map(|v| Order::new(v, world, rng))
                 .max_by_key(|v| v.score)
         };
     }

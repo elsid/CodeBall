@@ -6,7 +6,6 @@ use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
-use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Color;
 use crate::my_strategy::history::{Stats, State};
@@ -21,7 +20,7 @@ pub struct Order {
 }
 
 impl Order {
-    pub fn new(robot: &Robot, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> Option<Order> {
+    pub fn new(robot: &Robot, world: &World, rng: &mut XorShiftRng) -> Option<Order> {
         use crate::my_strategy::physics::get_min_distance_between_spheres;
         use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall, DoNothing};
 
@@ -278,9 +277,6 @@ impl Order {
         }
 
         if let Some(v) = &mut order {
-            #[cfg(feature = "enable_render")]
-            v.render(robot, &world.rules, render);
-
             v.stats.total_iterations = iterations;
             v.stats.total_micro_ticks = total_micro_ticks;
         }
