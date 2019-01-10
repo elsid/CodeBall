@@ -357,7 +357,7 @@ impl JumpToBall {
 
     pub fn does_jump_hit_ball(&self, mut simulator: Simulator, mut rng: XorShiftRng) -> bool {
         use crate::my_strategy::physics::MoveEquation;
-        use crate::my_strategy::optimization::optimize1d;
+        use crate::my_strategy::optimization::minimize1d;
 
         simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
 
@@ -380,7 +380,7 @@ impl JumpToBall {
             get_my_position(time).distance(get_ball_position(time))
         };
 
-        let time = optimize1d(0.0, self.max_time, 10, get_distance);
+        let time = minimize1d(0.0, self.max_time, 10, get_distance);
 
         get_distance(time) < simulator.rules().ROBOT_MAX_RADIUS + simulator.rules().BALL_RADIUS
             && my_move_equation.get_velocity(time).y() > -self.tick_time_interval * simulator.rules().GRAVITY

@@ -1,4 +1,4 @@
-pub fn optimize1d<F>(mut begin: f64, mut end: f64, iterations: usize, function: F) -> f64
+pub fn minimize1d<F>(mut begin: f64, mut end: f64, iterations: usize, function: F) -> f64
     where F: Fn(f64) -> f64
 {
     let mut x1 = 0.0;
