@@ -2,7 +2,7 @@ use crate::model::{Action, Ball};
 use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec3::Vec3;
-use crate::my_strategy::history::{State, Stats};
+use crate::my_strategy::history::Stats;
 
 pub struct Context<'r> {
     pub current_tick: i32,
@@ -10,7 +10,7 @@ pub struct Context<'r> {
     pub action_id: i32,
     pub simulator: &'r mut Simulator,
     pub rng: &'r mut XorShiftRng,
-    pub history: &'r mut Vec<State>,
+    pub history: &'r mut Vec<Simulator>,
     pub stats: &'r mut Stats,
     pub time_to_ball: &'r mut Option<f64>,
 }
@@ -25,7 +25,7 @@ impl Context<'_> {
             *self.time_to_ball = Some(self.simulator.current_time());
         }
 
-        self.history.push(State::new(&self.simulator));
+        self.history.push(self.simulator.clone());
     }
 }
 

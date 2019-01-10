@@ -8,14 +8,14 @@ use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Color;
-use crate::my_strategy::history::{Stats, State};
+use crate::my_strategy::history::Stats;
 
 pub struct Order {
     pub id: i32,
     pub robot_id: i32,
     pub action: Action,
     pub score: i32,
-    pub history: Vec<State>,
+    pub history: Vec<Simulator>,
     pub stats: Stats,
 }
 
@@ -87,7 +87,7 @@ impl Order {
                     } else {
                         Vec3::default()
                     };
-                    let mut history = vec![State::new(&local_simulator)];
+                    let mut history = vec![local_simulator.clone()];
                     log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
                     let before_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
                         log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
@@ -162,7 +162,7 @@ impl Order {
         let action_id = next_action_id;
         next_action_id += 1;
         let mut local_simulator = initial_simulator.clone();
-        let mut history = vec![State::new(&local_simulator)];
+        let mut history = vec![local_simulator.clone()];
         let mut stats = Stats::default();
         let mut time_to_ball = None;
 
@@ -226,7 +226,7 @@ impl Order {
             let action_id = next_action_id;
             next_action_id += 1;
             let mut local_simulator = initial_simulator.clone();
-            let mut history = vec![State::new(&local_simulator)];
+            let mut history = vec![local_simulator.clone()];
             let mut stats = Stats::default();
             let mut time_to_ball = None;
 
@@ -300,26 +300,26 @@ impl Order {
     }
 
     #[cfg(feature = "enable_render")]
-    pub fn render_history(robot: &Robot, history: &Vec<State>, rules: &Rules, render: &mut Render) {
+    pub fn render_history(robot: &Robot, history: &Vec<Simulator>, rules: &Rules, render: &mut Render) {
         use crate::my_strategy::render::Object;
 
         if history.is_empty() {
             return;
         }
 
-        let max_time = history.last().unwrap().time;
+        let max_time = history.last().unwrap().current_time();
 
         for state in history.iter() {
-            let time = state.time / if max_time == 0.0 { 1.0 } else { max_time };
+            let time = state.current_time() / if max_time == 0.0 { 1.0 } else { max_time };
             render.add(
-                Object::sphere(state.ball.position, rules.BALL_RADIUS, get_ball_color(time))
+                Object::sphere(state.ball().position(), rules.BALL_RADIUS, get_ball_color(time))
             );
             render.add(
-                Object::sphere(state.me.position, state.me.radius, get_my_color(time))
+                Object::sphere(state.me().position(), state.me().radius(), get_my_color(time))
             );
-            for (i, robot) in state.robots.iter().enumerate() {
+            for (i, robot) in state.robots().iter().enumerate() {
                 render.add(
-                    Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len(), time))
+                    Object::sphere(robot.position(), robot.radius(), get_robot_color(i, state.robots().len(), time))
                 );
             }
         }
