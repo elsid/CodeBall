@@ -45,7 +45,7 @@ impl Strategy for MyStrategyImpl {
             } else {
                 self.give_orders();
             }
-            #[cfg(feature = "dump_stats")]
+            #[cfg(feature = "enable_stats")]
             for v in self.order.iter() {
                 println!("{}", serde_json::to_string(&v.stats).unwrap());
             }
