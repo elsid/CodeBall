@@ -25,4 +25,8 @@ impl Plane {
             *normal = self.normal;
         }
     }
+
+    pub fn projected(value: Vec3, normal: Vec3) -> Vec3 {
+        value - normal * normal.dot(value)
+    }
 }

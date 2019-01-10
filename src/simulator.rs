@@ -371,6 +371,8 @@ impl Simulator {
     }
 
     fn micro_tick(&mut self, time_interval: f64, rng: &mut XorShiftRng) {
+        use crate::my_strategy::plane::Plane;
+
         rng.shuffle(&mut self.robots[..]);
 
         for robot in self.robots.iter_mut() {
@@ -380,8 +382,7 @@ impl Simulator {
             if let Some(touch_normal) = robot.touch_normal {
                 let target_velocity = robot.action.target_velocity()
                     .clamp(self.rules.ROBOT_MAX_GROUND_SPEED);
-                let velocity = target_velocity
-                    - touch_normal * touch_normal.dot(target_velocity);
+                let velocity = Plane::projected(target_velocity, touch_normal);
                 let velocity_change = velocity - robot.velocity();
                 let velocity_change_norm = velocity_change.norm();
                 if velocity_change_norm > 0.0 {
