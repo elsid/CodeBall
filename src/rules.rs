@@ -22,6 +22,14 @@ impl Rules {
         self.ROBOT_MAX_RADIUS + self.BALL_RADIUS
     }
 
+    pub fn get_goal_target(&self) -> Vec3 {
+        Vec3::new(
+            0.0,
+            self.arena.goal_height - self.BALL_RADIUS,
+            self.arena.depth / 2.0 + self.arena.goal_depth - self.BALL_RADIUS
+        )
+    }
+
     pub fn get_goalkeeper_position(&self) -> Vec3 {
         Vec3::new(0.0, self.ROBOT_MIN_RADIUS, -self.arena.depth / 2.0)
     }

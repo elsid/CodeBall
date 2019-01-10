@@ -122,7 +122,7 @@ impl Order {
                         kick_ball_position: target,
                         my_max_speed: required_speed,
                         my_jump_speed: world.rules.ROBOT_MAX_JUMP_SPEED,
-                        ball_target: world.rules.arena.get_goal_target(world.rules.BALL_RADIUS),
+                        ball_target: world.rules.get_goal_target(),
                         max_time: simulation_time_depth,
                         tick_time_interval: time_interval,
                         micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
@@ -357,7 +357,7 @@ pub fn render_history(history: &Vec<Simulator>, render: &mut Render) {
 
 fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>, max_time: f64) -> i32 {
     let ball = simulator.ball();
-    let to_goal = rules.arena.get_goal_target(rules.BALL_RADIUS) - ball.position();
+    let to_goal = rules.get_goal_target() - ball.position();
     let ball_goal_distance_score = if simulator.score() == 0 {
         1.0 - to_goal.norm()
             / Vec2::new(rules.arena.width + 2.0 * rules.arena.goal_depth, rules.arena.depth).norm()
