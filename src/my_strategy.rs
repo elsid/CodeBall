@@ -57,8 +57,8 @@ pub mod simulator;
 #[path = "scenarios.rs"]
 pub mod scenarios;
 
-#[path = "optimal_action.rs"]
-pub mod optimal_action;
+#[path = "orders.rs"]
+pub mod orders;
 
 #[cfg(not(feature = "use_test_strategy"))]
 #[path = "my_strategy_impl.rs"]

@@ -3,7 +3,7 @@ use crate::strategy::Strategy;
 use crate::my_strategy::random::{XorShiftRng, SeedableRng};
 use crate::my_strategy::world::World;
 use crate::my_strategy::render::{Render, Tag};
-use crate::my_strategy::optimal_action::Order;
+use crate::my_strategy::orders::Order;
 
 pub struct MyStrategyImpl {
     world: World,

@@ -15,7 +15,7 @@ cp src/common.rs ${DIR}/src
 cp src/entity.rs ${DIR}/src
 cp src/my_strategy_impl.rs ${DIR}/src
 cp src/my_strategy.rs ${DIR}/src
-cp src/optimal_action.rs ${DIR}/src
+cp src/orders.rs ${DIR}/src
 cp src/plane.rs ${DIR}/src
 cp src/random.rs ${DIR}/src
 cp src/render.rs ${DIR}/src
