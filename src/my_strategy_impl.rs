@@ -104,27 +104,27 @@ impl MyStrategyImpl {
         let rng = &mut self.rng;
         let render= &mut self.render;
         self.optimal_action = if let Some(action) = &self.optimal_action {
-            let current_robot_action = world.game.robots.iter()
+            let robot = world.game.robots.iter()
                 .find(|v| v.id == action.robot_id)
-                .unwrap()
-                .get_optimal_action(world, rng, render);
+                .unwrap();
+            let current_robot_action = Order::new(robot, world, rng, render);
             if let Some(a) = current_robot_action {
                 world.game.robots.iter()
                     .filter(|v| v.is_teammate && v.id != action.robot_id)
-                    .filter_map(|v| v.get_optimal_action(world, rng, render))
+                    .filter_map(|v| Order::new(v, world, rng, render))
                     .max_by_key(|v| v.score)
                     .filter(|v| v.score > a.score + 100)
                     .or(Some(a))
             } else {
                 world.game.robots.iter()
                     .filter(|v| v.is_teammate && v.id != action.robot_id)
-                    .filter_map(|v| v.get_optimal_action(world, rng, render))
+                    .filter_map(|v| Order::new(v, world, rng, render))
                     .max_by_key(|v| v.score)
             }
         } else {
             world.game.robots.iter()
                 .filter(|v| v.is_teammate)
-                .filter_map(|v| v.get_optimal_action(world, rng, render))
+                .filter_map(|v| Order::new(v, world, rng, render))
                 .max_by_key(|v| v.score)
         };
     }

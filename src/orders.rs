@@ -20,14 +20,14 @@ pub struct Order {
     pub stats: Stats,
 }
 
-impl Robot {
-    pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> Option<Order> {
+impl Order {
+    pub fn new(robot: &Robot, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> Option<Order> {
         use crate::my_strategy::physics::get_min_distance_between_spheres;
         use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall, DoNothing};
 
-        log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", self.id, self.position(), self.velocity(), world.game.ball.position(), world.game.ball.velocity());
+        log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
         let initial_simulator = {
-            let mut s = Simulator::new(world, self.id);
+            let mut s = Simulator::new(world, robot.id);
             s.robots_mut().iter_mut()
                 .filter(|v| !v.is_teammate())
                 .for_each(|v| v.action.set_target_velocity(v.velocity()));
@@ -47,11 +47,11 @@ impl Robot {
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
         while (iterations < 5 || optimal_action.is_none()) && global_simulator.current_time() + time_interval < simulation_time_depth {
-            log!(world.game.current_tick, "[{}] try time point {} {}", self.id, global_simulator.current_micro_tick(), global_simulator.current_time());
+            log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
             if let Some(distance) = get_min_distance_between_spheres(ball_y, ball_radius, world.rules.ROBOT_MAX_RADIUS) {
-                log!(world.game.current_tick, "[{}] use time point {} {} position={:?} velocity={:?} ball_position={:?} ball_velocity={:?}", self.id, global_simulator.current_micro_tick(), global_simulator.current_time(), global_simulator.me().position(), global_simulator.me().velocity(), global_simulator.ball().position(), global_simulator.ball().velocity());
+                log!(world.game.current_tick, "[{}] use time point {} {} position={:?} velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time(), global_simulator.me().position(), global_simulator.me().velocity(), global_simulator.ball().position(), global_simulator.ball().velocity());
                 iterations += 1;
                 let points = get_points(
                     distance,
@@ -67,7 +67,7 @@ impl Robot {
                         world.rules.arena.collide(&mut robot);
                         robot.position()
                     };
-                    let to_target = target - self.position();
+                    let to_target = target - robot.position();
                     let distance_to_target = to_target.norm();
                     let required_speed = if global_simulator.current_time() > 0.0 {
                         if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * 20.0 * time_interval {
@@ -80,7 +80,7 @@ impl Robot {
                     };
                     let action_id = next_action_id;
                     next_action_id += 1;
-                    log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", self.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
+                    log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", robot.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
                     let mut local_simulator = initial_simulator.clone();
                     let mut stats = Stats::default();
                     let velocity = if distance_to_target > 1e-3 {
@@ -89,18 +89,18 @@ impl Robot {
                         Vec3::default()
                     };
                     let mut history = vec![State::new(&local_simulator)];
-                    log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
+                    log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
                     let before_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
-                        log!(world.game.current_tick, "[{}] <{}> far", self.id, action_id);
+                        log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
                         far_micro_ticks_per_tick
                     } else {
-                        log!(world.game.current_tick, "[{}] <{}> near", self.id, action_id);
+                        log!(world.game.current_tick, "[{}] <{}> near", robot.id, action_id);
                         near_micro_ticks_per_tick
                     };
                     let mut time_to_ball = None;
                     let mut ctx = Context {
                         current_tick: world.game.current_tick,
-                        robot_id: self.id,
+                        robot_id: robot.id,
                         action_id,
                         simulator: &mut local_simulator,
                         rng,
@@ -121,7 +121,7 @@ impl Robot {
                         max_micro_ticks,
                     }.perform(&mut ctx);
                     if local_simulator.score() != 0 {
-                        log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
+                        log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
                     }
                     let action_score = get_action_score(
                         &world.rules,
@@ -140,11 +140,11 @@ impl Robot {
                     stats.action_score = action_score;
                     stats.iteration = iterations;
                     stats.current_step = steps[iterations.min(steps.len() - 1)];
-                    log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
+                    log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
                     if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
                         optimal_action = Some(Order {
                             id: action_id,
-                            robot_id: self.id,
+                            robot_id: robot.id,
                             action,
                             score: action_score,
                             history,
@@ -169,7 +169,7 @@ impl Robot {
 
         let mut ctx = Context {
             current_tick: world.game.current_tick,
-            robot_id: self.id,
+            robot_id: robot.id,
             action_id,
             simulator: &mut local_simulator,
             rng,
@@ -207,14 +207,14 @@ impl Robot {
 
             log!(
                 world.game.current_tick, "[{}] <{}> suggest action far jump {}:{} score={}",
-                self.id, action_id,
+                robot.id, action_id,
                 local_simulator.current_time(), local_simulator.current_micro_tick(), action_score
             );
 
             if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
                 optimal_action = Some(Order {
                     id: action_id,
-                    robot_id: self.id,
+                    robot_id: robot.id,
                     action: v,
                     score: action_score,
                     history,
@@ -233,7 +233,7 @@ impl Robot {
 
             let mut ctx = Context {
                 current_tick: world.game.current_tick,
-                robot_id: self.id,
+                robot_id: robot.id,
                 action_id,
                 simulator: &mut local_simulator,
                 rng,
@@ -268,7 +268,7 @@ impl Robot {
             if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
                 optimal_action = Some(Order {
                     id: action_id,
-                    robot_id: self.id,
+                    robot_id: robot.id,
                     action,
                     score: action_score,
                     history,
@@ -279,7 +279,7 @@ impl Robot {
 
         if let Some(v) = &mut optimal_action {
             #[cfg(feature = "enable_render")]
-                self.render_optimal_action(v, &world.rules, render);
+            v.render(robot, &world.rules, render);
 
             v.stats.total_iterations = iterations;
             v.stats.total_micro_ticks = total_micro_ticks;
@@ -289,22 +289,22 @@ impl Robot {
     }
 
     #[cfg(feature = "enable_render")]
-    pub fn render_optimal_action(&self, optimal_action: &Order, rules: &Rules, render: &mut Render) {
+    pub fn render(&self, robot: &Robot, rules: &Rules, render: &mut Render) {
         use crate::my_strategy::render::{Tag, Object};
 
-        self.render_history(&optimal_action.history, rules, render);
-        render.add_with_tag(Tag::RobotId(self.id), Object::text(
+        Self::render_history(robot, &self.history, rules, render);
+        render.add_with_tag(Tag::RobotId(robot.id), Object::text(
             format!(
                 "robot: {}\n  position: {:?}\n  speed: {}\n  target_speed: {}\n  jump: {}",
-                self.id, self.position(), self.velocity().norm(),
-                optimal_action.action.target_velocity().norm(),
-                optimal_action.action.jump_speed
+                robot.id, robot.position(), robot.velocity().norm(),
+                self.action.target_velocity().norm(),
+                self.action.jump_speed
             )
         ));
     }
 
     #[cfg(feature = "enable_render")]
-    pub fn render_history(&self, history: &Vec<State>, rules: &Rules, render: &mut Render) {
+    pub fn render_history(robot: &Robot, history: &Vec<State>, rules: &Rules, render: &mut Render) {
         use crate::my_strategy::render::{Tag, Object};
 
         if history.is_empty() {
@@ -316,16 +316,16 @@ impl Robot {
         for state in history.iter() {
             let time = state.time / if max_time == 0.0 { 1.0 } else { max_time };
             render.add_with_tag(
-                Tag::RobotId(self.id),
+                Tag::RobotId(robot.id),
                 Object::sphere(state.ball.position, rules.BALL_RADIUS, get_ball_color(time))
             );
             render.add_with_tag(
-                Tag::RobotId(self.id),
+                Tag::RobotId(robot.id),
                 Object::sphere(state.me.position, state.me.radius, get_my_color(time))
             );
             for (i, robot) in state.robots.iter().enumerate() {
                 render.add_with_tag(
-                    Tag::RobotId(self.id),
+                    Tag::RobotId(robot.id),
                     Object::sphere(robot.position, robot.radius, get_robot_color(i, state.robots.len(), time))
                 );
             }
