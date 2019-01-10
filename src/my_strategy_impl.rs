@@ -132,7 +132,7 @@ impl MyStrategyImpl {
         if action_applied {
             return;
         }
-        let target = self.world.rules.arena.get_defend_target();
+        let target = self.world.rules.get_goalkeeper_position();
         let velocity = (target - self.world.me.position()).normalized()
             * self.world.rules.ROBOT_MAX_GROUND_SPEED;
         action.set_target_velocity(velocity);

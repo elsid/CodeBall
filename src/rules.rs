@@ -21,4 +21,8 @@ impl Rules {
     pub fn ball_distance_limit(&self) -> f64 {
         self.ROBOT_MAX_RADIUS + self.BALL_RADIUS
     }
+
+    pub fn get_goalkeeper_position(&self) -> Vec3 {
+        Vec3::new(0.0, self.ROBOT_MIN_RADIUS, -self.arena.depth / 2.0)
+    }
 }
