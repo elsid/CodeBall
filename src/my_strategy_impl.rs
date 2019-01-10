@@ -3,7 +3,7 @@ use crate::strategy::Strategy;
 use crate::my_strategy::random::{XorShiftRng, SeedableRng};
 use crate::my_strategy::world::World;
 use crate::my_strategy::render::{Render, Tag};
-use crate::my_strategy::optimal_action::OptimalAction;
+use crate::my_strategy::optimal_action::Order;
 
 pub struct MyStrategyImpl {
     world: World,
@@ -12,7 +12,7 @@ pub struct MyStrategyImpl {
 //    tick_start_time: Instant,
 //    cpu_time_spent: Duration,
     last_tick: i32,
-    optimal_action: Option<OptimalAction>,
+    optimal_action: Option<Order>,
     render: Render,
 }
 

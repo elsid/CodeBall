@@ -11,7 +11,7 @@ use crate::my_strategy::render::Render;
 use crate::my_strategy::render::Color;
 use crate::my_strategy::history::{Stats, State};
 
-pub struct OptimalAction {
+pub struct Order {
     pub id: i32,
     pub robot_id: i32,
     pub action: Action,
@@ -21,7 +21,7 @@ pub struct OptimalAction {
 }
 
 impl Robot {
-    pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> Option<OptimalAction> {
+    pub fn get_optimal_action(&self, world: &World, rng: &mut XorShiftRng, render: &mut Render) -> Option<Order> {
         use crate::my_strategy::physics::get_min_distance_between_spheres;
         use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall, DoNothing};
 
@@ -43,7 +43,7 @@ impl Robot {
         let max_micro_ticks = 1000;
         let mut total_micro_ticks = 0;
         let mut next_action_id = 0;
-        let mut optimal_action: Option<OptimalAction> = None;
+        let mut optimal_action: Option<Order> = None;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
         while (iterations < 5 || optimal_action.is_none()) && global_simulator.current_time() + time_interval < simulation_time_depth {
@@ -142,7 +142,7 @@ impl Robot {
                     stats.current_step = steps[iterations.min(steps.len() - 1)];
                     log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", self.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
                     if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
-                        optimal_action = Some(OptimalAction {
+                        optimal_action = Some(Order {
                             id: action_id,
                             robot_id: self.id,
                             action,
@@ -212,7 +212,7 @@ impl Robot {
             );
 
             if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
-                optimal_action = Some(OptimalAction {
+                optimal_action = Some(Order {
                     id: action_id,
                     robot_id: self.id,
                     action: v,
@@ -266,7 +266,7 @@ impl Robot {
             stats.action_score = action_score;
 
             if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
-                optimal_action = Some(OptimalAction {
+                optimal_action = Some(Order {
                     id: action_id,
                     robot_id: self.id,
                     action,
@@ -289,7 +289,7 @@ impl Robot {
     }
 
     #[cfg(feature = "enable_render")]
-    pub fn render_optimal_action(&self, optimal_action: &OptimalAction, rules: &Rules, render: &mut Render) {
+    pub fn render_optimal_action(&self, optimal_action: &Order, rules: &Rules, render: &mut Render) {
         use crate::my_strategy::render::{Tag, Object};
 
         self.render_history(&optimal_action.history, rules, render);
