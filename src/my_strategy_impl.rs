@@ -106,9 +106,7 @@ impl MyStrategyImpl {
         let world = &self.world;
         let rng = &mut self.rng;
         self.order = if let Some(action) = &self.order {
-            let robot = world.game.robots.iter()
-                .find(|v| v.id == action.robot_id)
-                .unwrap();
+            let robot = world.get_robot(action.robot_id);
             let current_robot_action = Order::new(robot, world, rng);
             if let Some(a) = current_robot_action {
                 world.game.robots.iter()
