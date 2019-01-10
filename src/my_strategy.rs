@@ -21,6 +21,7 @@ pub mod sphere;
 #[path = "optimization.rs"]
 mod optimization;
 
+#[cfg(feature = "enable_render")]
 #[path = "render.rs"]
 pub mod render;
 
@@ -45,6 +46,7 @@ pub mod ball;
 #[path = "world.rs"]
 pub mod world;
 
+#[cfg(feature = "enable_stats")]
 #[path = "stats.rs"]
 pub mod stats;
 
@@ -92,13 +94,16 @@ impl Strategy for MyStrategy {
     }
 
     fn custom_rendering(&mut self) -> String {
-        if cfg!(feature = "enable_render") {
+        #[cfg(feature = "enable_render")]
+        {
             if let Some(v) = &self.strategy_impl {
                 serde_json::to_string(v.get_render()).unwrap()
             } else {
                 String::new()
             }
-        } else {
+        }
+        #[cfg(not(feature = "enable_render"))]
+        {
             String::new()
         }
     }

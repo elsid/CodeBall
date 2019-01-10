@@ -8,6 +8,7 @@ use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Color;
+#[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
 pub struct Order {
@@ -15,7 +16,9 @@ pub struct Order {
     pub robot_id: i32,
     pub action: Action,
     pub score: i32,
+    #[cfg(feature = "enable_render")]
     pub history: Vec<Simulator>,
+    #[cfg(feature = "enable_stats")]
     pub stats: Stats,
 }
 
@@ -40,6 +43,7 @@ impl Order {
         let simulation_time_depth = world.rules.tick_time_interval() * 90.0;
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
         let max_micro_ticks = 1000;
+        #[cfg(feature = "enable_stats")]
         let mut total_micro_ticks = 0;
         let mut next_action_id = 0;
         let mut order: Option<Order> = None;
@@ -81,13 +85,11 @@ impl Order {
                     next_action_id += 1;
                     log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", robot.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
                     let mut local_simulator = initial_simulator.clone();
-                    let mut stats = Stats::default();
                     let velocity = if distance_to_target > 1e-3 {
                         to_target.normalized() * required_speed
                     } else {
                         Vec3::default()
                     };
-                    let mut history = vec![local_simulator.clone()];
                     log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
                     let before_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
                         log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
@@ -97,16 +99,24 @@ impl Order {
                         near_micro_ticks_per_tick
                     };
                     let mut time_to_ball = None;
+                    #[cfg(feature = "enable_render")]
+                    let mut history = vec![local_simulator.clone()];
+                    #[cfg(feature = "enable_stats")]
+                    let mut stats = Stats::default();
+
                     let mut ctx = Context {
                         current_tick: world.game.current_tick,
                         robot_id: robot.id,
                         action_id,
                         simulator: &mut local_simulator,
                         rng,
-                        history: &mut history,
-                        stats: &mut stats,
                         time_to_ball: &mut time_to_ball,
+                        #[cfg(feature = "enable_render")]
+                        history: &mut history,
+                        #[cfg(feature = "enable_stats")]
+                        stats: &mut stats,
                     };
+
                     let action = JumpAtPosition {
                         ball: global_simulator.ball().base(),
                         kick_ball_position: target,
@@ -128,17 +138,22 @@ impl Order {
                         time_to_ball,
                         simulation_time_depth + time_interval,
                     );
-                    stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-                    stats.time_to_end = local_simulator.current_time();
-                    stats.time_to_score = if local_simulator.score() != 0 {
-                        Some(stats.time_to_end)
-                    } else {
-                        None
-                    };
-                    stats.score = local_simulator.score();
-                    stats.action_score = action_score;
-                    stats.iteration = iterations;
-                    stats.current_step = steps[iterations.min(steps.len() - 1)];
+
+                    #[cfg(feature = "enable_stats")]
+                    {
+                        stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+                        stats.time_to_end = local_simulator.current_time();
+                        stats.time_to_score = if local_simulator.score() != 0 {
+                            Some(stats.time_to_end)
+                        } else {
+                            None
+                        };
+                        stats.score = local_simulator.score();
+                        stats.action_score = action_score;
+                        stats.iteration = iterations;
+                        stats.current_step = steps[iterations.min(steps.len() - 1)];
+                    }
+
                     log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
                     if order.is_none() || order.as_ref().unwrap().score < action_score {
                         order = Some(Order {
@@ -146,25 +161,35 @@ impl Order {
                             robot_id: robot.id,
                             action,
                             score: action_score,
+                            #[cfg(feature = "enable_render")]
                             history,
+                            #[cfg(feature = "enable_stats")]
                             stats,
                         });
                     }
-                    total_micro_ticks += local_simulator.current_micro_tick();
+                    #[cfg(feature = "enable_stats")]
+                    {
+                        total_micro_ticks += local_simulator.current_micro_tick();
+                    }
                 }
             }
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
                 global_simulator.tick(time_interval, near_micro_ticks_per_tick, rng);
             }
         }
-        total_micro_ticks += global_simulator.current_micro_tick();
+        #[cfg(feature = "enable_stats")]
+        {
+            total_micro_ticks += global_simulator.current_micro_tick();
+        }
 
         let action_id = next_action_id;
         next_action_id += 1;
         let mut local_simulator = initial_simulator.clone();
-        let mut history = vec![local_simulator.clone()];
-        let mut stats = Stats::default();
         let mut time_to_ball = None;
+        #[cfg(feature = "enable_render")]
+        let mut history = vec![local_simulator.clone()];
+        #[cfg(feature = "enable_stats")]
+        let mut stats = Stats::default();
 
         let mut ctx = Context {
             current_tick: world.game.current_tick,
@@ -172,9 +197,11 @@ impl Order {
             action_id,
             simulator: &mut local_simulator,
             rng,
-            history: &mut history,
-            stats: &mut stats,
             time_to_ball: &mut time_to_ball,
+            #[cfg(feature = "enable_render")]
+            history: &mut history,
+            #[cfg(feature = "enable_stats")]
+            stats: &mut stats,
         };
 
         let action = JumpToBall {
@@ -185,7 +212,10 @@ impl Order {
             max_micro_ticks,
         }.perform(&mut ctx);
 
-        total_micro_ticks += local_simulator.current_micro_tick();
+        #[cfg(feature = "enable_stats")]
+        {
+            total_micro_ticks += local_simulator.current_micro_tick();
+        }
 
         if let Some(v) = action {
             let action_score = get_action_score(
@@ -194,15 +224,19 @@ impl Order {
                 time_to_ball,
                 simulation_time_depth + time_interval,
             );
-            stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-            stats.time_to_end = local_simulator.current_time();
-            stats.time_to_score = if local_simulator.score() != 0 {
-                Some(stats.time_to_end)
-            } else {
-                None
-            };
-            stats.score = local_simulator.score();
-            stats.action_score = action_score;
+
+            #[cfg(feature = "enable_stats")]
+            {
+                stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+                stats.time_to_end = local_simulator.current_time();
+                stats.time_to_score = if local_simulator.score() != 0 {
+                    Some(stats.time_to_end)
+                } else {
+                    None
+                };
+                stats.score = local_simulator.score();
+                stats.action_score = action_score;
+            }
 
             log!(
                 world.game.current_tick, "[{}] <{}> suggest action far jump {}:{} score={}",
@@ -216,7 +250,9 @@ impl Order {
                     robot_id: robot.id,
                     action: v,
                     score: action_score,
+                    #[cfg(feature = "enable_render")]
                     history,
+                    #[cfg(feature = "enable_stats")]
                     stats,
                 });
             }
@@ -226,9 +262,11 @@ impl Order {
             let action_id = next_action_id;
             next_action_id += 1;
             let mut local_simulator = initial_simulator.clone();
-            let mut history = vec![local_simulator.clone()];
-            let mut stats = Stats::default();
             let mut time_to_ball = None;
+            #[cfg(feature = "enable_render")]
+            let mut history = vec![local_simulator.clone()];
+            #[cfg(feature = "enable_stats")]
+            let mut stats = Stats::default();
 
             let mut ctx = Context {
                 current_tick: world.game.current_tick,
@@ -236,9 +274,11 @@ impl Order {
                 action_id,
                 simulator: &mut local_simulator,
                 rng,
-                history: &mut history,
-                stats: &mut stats,
                 time_to_ball: &mut time_to_ball,
+                #[cfg(feature = "enable_render")]
+                history: &mut history,
+                #[cfg(feature = "enable_stats")]
+                stats: &mut stats,
             };
 
             let action = DoNothing {
@@ -254,15 +294,19 @@ impl Order {
                 time_to_ball,
                 simulation_time_depth + time_interval,
             );
-            stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-            stats.time_to_end = local_simulator.current_time();
-            stats.time_to_score = if local_simulator.score() != 0 {
-                Some(stats.time_to_end)
-            } else {
-                None
-            };
-            stats.score = local_simulator.score();
-            stats.action_score = action_score;
+
+            #[cfg(feature = "enable_stats")]
+            {
+                stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+                stats.time_to_end = local_simulator.current_time();
+                stats.time_to_score = if local_simulator.score() != 0 {
+                    Some(stats.time_to_end)
+                } else {
+                    None
+                };
+                stats.score = local_simulator.score();
+                stats.action_score = action_score;
+            }
 
             if order.is_none() || order.as_ref().unwrap().score < action_score {
                 order = Some(Order {
@@ -270,15 +314,20 @@ impl Order {
                     robot_id: robot.id,
                     action,
                     score: action_score,
+                    #[cfg(feature = "enable_render")]
                     history,
+                    #[cfg(feature = "enable_stats")]
                     stats,
                 });
             }
         }
 
-        if let Some(v) = &mut order {
-            v.stats.total_iterations = iterations;
-            v.stats.total_micro_ticks = total_micro_ticks;
+        #[cfg(feature = "enable_stats")]
+        {
+            if let Some(v) = &mut order {
+                v.stats.total_iterations = iterations;
+                v.stats.total_micro_ticks = total_micro_ticks;
+            }
         }
 
         order

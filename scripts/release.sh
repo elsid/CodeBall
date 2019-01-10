@@ -18,7 +18,6 @@ cp src/my_strategy.rs ${DIR}/src
 cp src/orders.rs ${DIR}/src
 cp src/plane.rs ${DIR}/src
 cp src/random.rs ${DIR}/src
-cp src/render.rs ${DIR}/src
 cp src/robot.rs ${DIR}/src
 cp src/rules.rs ${DIR}/src
 cp src/simulator.rs ${DIR}/src
@@ -28,7 +27,6 @@ cp src/vec3.rs ${DIR}/src
 cp src/world.rs ${DIR}/src
 cp src/optimization.rs ${DIR}/src
 cp src/physics.rs ${DIR}/src
-cp src/stats.rs ${DIR}/src
 cp src/scenarios.rs ${DIR}/src
 
 cd ${DIR}/src

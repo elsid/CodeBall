@@ -2,8 +2,10 @@ use crate::model::{Game, Action, Robot, Rules};
 use crate::strategy::Strategy;
 use crate::my_strategy::random::{XorShiftRng, SeedableRng};
 use crate::my_strategy::world::World;
-use crate::my_strategy::render::Render;
 use crate::my_strategy::orders::Order;
+
+#[cfg(feature = "enable_render")]
+use crate::my_strategy::render::Render;
 
 pub struct MyStrategyImpl {
     world: World,
@@ -13,6 +15,7 @@ pub struct MyStrategyImpl {
 //    cpu_time_spent: Duration,
     last_tick: i32,
     order: Option<Order>,
+    #[cfg(feature = "enable_render")]
     render: Render,
 }
 
@@ -73,10 +76,12 @@ impl MyStrategyImpl {
 //            cpu_time_spent: Duration::default(),
             last_tick: -1,
             order: None,
+            #[cfg(feature = "enable_render")]
             render: Render::new(),
         }
     }
 
+    #[cfg(feature = "enable_render")]
     pub fn get_render(&self) -> &Render {
         &self.render
     }

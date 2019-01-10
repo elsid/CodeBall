@@ -2,6 +2,7 @@ use crate::model::{Action, Ball};
 use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec3::Vec3;
+#[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
 pub struct Context<'r> {
@@ -10,9 +11,11 @@ pub struct Context<'r> {
     pub action_id: i32,
     pub simulator: &'r mut Simulator,
     pub rng: &'r mut XorShiftRng,
-    pub history: &'r mut Vec<Simulator>,
-    pub stats: &'r mut Stats,
     pub time_to_ball: &'r mut Option<f64>,
+    #[cfg(feature = "enable_render")]
+    pub history: &'r mut Vec<Simulator>,
+    #[cfg(feature = "enable_stats")]
+    pub stats: &'r mut Stats,
 }
 
 impl Context<'_> {
@@ -25,6 +28,7 @@ impl Context<'_> {
             *self.time_to_ball = Some(self.simulator.current_time());
         }
 
+        #[cfg(feature = "enable_render")]
         self.history.push(self.simulator.clone());
     }
 }
@@ -181,8 +185,11 @@ impl Jump {
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::CollisionType;
 
-        ctx.stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_jump = ctx.simulator.current_time();
+        #[cfg(feature = "enable_stats")]
+        {
+            ctx.stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
+            ctx.stats.time_to_jump = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 
@@ -247,8 +254,11 @@ impl WatchBallMove {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
 
-        ctx.stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_watch = ctx.simulator.current_time();
+        #[cfg(feature = "enable_stats")]
+        {
+            ctx.stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
+            ctx.stats.time_to_watch = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 
@@ -392,9 +402,12 @@ impl FarJump {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
 
-        ctx.stats.far_jump_simulation = true;
-        ctx.stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_jump = ctx.simulator.current_time();
+        #[cfg(feature = "enable_stats")]
+        {
+            ctx.stats.far_jump_simulation = true;
+            ctx.stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
+            ctx.stats.time_to_jump = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 
@@ -467,8 +480,11 @@ impl WatchMeJump {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
 
-        ctx.stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
-        ctx.stats.time_to_watch = ctx.simulator.current_time();
+        #[cfg(feature = "enable_stats")]
+        {
+            ctx.stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
+            ctx.stats.time_to_watch = ctx.simulator.current_time();
+        }
 
         let stored_action = ctx.simulator.me().action;
 
