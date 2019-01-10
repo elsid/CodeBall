@@ -39,7 +39,7 @@ impl Order {
         let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 4;
         let far_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 30;
         let time_interval = world.rules.tick_time_interval();
-        let simulation_time_depth = world.rules.tick_time_interval() * 90.0;
+        let simulation_time_depth = world.rules.tick_time_interval() * 100.0;
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
         let max_micro_ticks = 1000;
         #[cfg(feature = "enable_stats")]
