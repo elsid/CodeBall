@@ -8,7 +8,7 @@ use crate::my_strategy::simulator::Solid;
 use crate::my_strategy::entity::Entity;
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Color;
-use crate::my_strategy::history::Stats;
+use crate::my_strategy::stats::Stats;
 
 pub struct Order {
     pub id: i32,

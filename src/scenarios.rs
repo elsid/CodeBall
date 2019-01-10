@@ -2,7 +2,7 @@ use crate::model::{Action, Ball};
 use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec3::Vec3;
-use crate::my_strategy::history::Stats;
+use crate::my_strategy::stats::Stats;
 
 pub struct Context<'r> {
     pub current_tick: i32,

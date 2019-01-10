@@ -45,8 +45,8 @@ pub mod ball;
 #[path = "world.rs"]
 pub mod world;
 
-#[path = "history.rs"]
-pub mod history;
+#[path = "stats.rs"]
+pub mod stats;
 
 #[path = "physics.rs"]
 pub mod physics;
