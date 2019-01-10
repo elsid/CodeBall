@@ -153,10 +153,10 @@ impl MyStrategyImpl {
 
             let order = self.order.iter()
                 .find(|v| v.robot_id == robot.id)
-                .map(|v| &v.order);
+                .map(|v| v);
 
             if let Some(order) = order {
-                order.render(&robot, render);
+                order.render(render);
             }
         }
 
