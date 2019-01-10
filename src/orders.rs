@@ -331,8 +331,25 @@ impl Order {
     }
 
     #[cfg(feature = "enable_render")]
-    pub fn render(&self, render: &mut Render) {
+    pub fn render(&self, robot: &Robot, render: &mut Render) {
+        self.render_text(render);
+        self.render_action(robot, render);
         render_history(&self.history, render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_text(&self, render: &mut Render) {
+        use crate::my_strategy::render::Object;
+
+        render.add(Object::text(format!(
+            "  order:\n    score: {}\n    speed: {}\n    jump: {}\n",
+            self.score, self.action.target_velocity().norm(), self.action.jump_speed
+        )));
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_action(&self, robot: &Robot, render: &mut Render) {
+        self.action.render(robot, render);
     }
 }
 

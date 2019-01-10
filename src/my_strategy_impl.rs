@@ -156,7 +156,7 @@ impl MyStrategyImpl {
                 .map(|v| v);
 
             if let Some(order) = order {
-                order.render(render);
+                order.render(robot, render);
             }
         }
 
