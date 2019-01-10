@@ -24,7 +24,6 @@ pub struct Order {
 
 impl Order {
     pub fn new(robot: &Robot, world: &World, rng: &mut XorShiftRng) -> Option<Order> {
-        use crate::my_strategy::physics::get_min_distance_between_spheres;
         use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall, DoNothing};
 
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
@@ -53,11 +52,10 @@ impl Order {
             log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
-            if let Some(distance) = get_min_distance_between_spheres(ball_y, ball_radius, world.rules.ROBOT_MAX_RADIUS) {
+            if ball_y < world.rules.max_robot_jump_height() {
                 log!(world.game.current_tick, "[{}] use time point {} {} position={:?} velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time(), global_simulator.me().position(), global_simulator.me().velocity(), global_simulator.ball().position(), global_simulator.ball().velocity());
                 iterations += 1;
                 let points = get_points(
-                    distance,
                     global_simulator.ball().base(),
                     global_simulator.me().base(),
                     global_simulator.rules(),
@@ -388,9 +386,20 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
     (1000.0 * score).round() as i32
 }
 
-pub fn get_points(distance: f64, ball: &Ball, robot: &Robot, rules: &Rules, rng: &mut XorShiftRng) -> Vec<Vec3> {
+pub fn get_points(ball: &Ball, robot: &Robot, rules: &Rules, rng: &mut XorShiftRng) -> Vec<Vec3> {
+    use crate::my_strategy::physics::get_min_distance_between_spheres;
     use crate::my_strategy::random::Rng;
+    use crate::my_strategy::common::Clamp;
 
+    let min_distance = get_min_distance_between_spheres(
+        ball.y,
+        rules.BALL_RADIUS,
+        rules.ROBOT_MIN_RADIUS,
+    ).unwrap_or(0.0);
+    let max_distance = ball.position().with_y(robot.y)
+        .distance(robot.position())
+        .clamp(rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS, min_distance + 1e-3);
+    let distance = rng.gen_range(min_distance, max_distance);
     let mut result = Vec::new();
     let ball_position = ball.position().with_y(rules.ROBOT_MAX_RADIUS);
     let to_robot = (robot.position() - ball_position).normalized();

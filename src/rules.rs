@@ -33,4 +33,13 @@ impl Rules {
     pub fn get_goalkeeper_position(&self) -> Vec3 {
         Vec3::new(0.0, self.ROBOT_MIN_RADIUS, -self.arena.depth / 2.0)
     }
+
+    pub fn max_robot_jump_height(&self) -> f64 {
+        use crate::my_strategy::common::Square;
+
+        let time = self.ROBOT_MAX_JUMP_SPEED / self.GRAVITY;
+        self.ROBOT_MAX_RADIUS
+            + self.ROBOT_MAX_JUMP_SPEED * time
+            - self.GRAVITY * time.square() / 2.0
+    }
 }

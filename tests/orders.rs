@@ -8,9 +8,9 @@ fn test_robot_get_optimal_action() {
     let mut rng = example_rng();
     let result = Order::new(&world.me, &world, &mut rng).unwrap();
 
-    assert_eq!(result.action.target_velocity(), Vec3::new(-15.112130922109685, 0.0749066624159364, 25.915591600134114));
+    assert_eq!(result.action.target_velocity(), Vec3::new(-15.347094741643096, 0.07475320338123587, 25.777142877937717));
     assert_eq!(result.action.jump_speed, 0.0);
-    assert_eq!(result.score, 1084);
+    assert_eq!(result.score, 1067);
 }
 
 #[test]
@@ -40,9 +40,9 @@ fn test_robot_get_optimal_action_should_not_jump_on_ball_top() {
 
     let result = Order::new(&world.me, &world, &mut rng).unwrap();
 
-    assert_eq!(result.action.target_velocity(), Vec3::new(15.205946498380044, 0.0904449080449424, 25.860607317056818));
+    assert_eq!(result.action.target_velocity(), Vec3::new(17.254706108683354, 0.07713352679070667, 24.54117290436645));
     assert_eq!(result.action.jump_speed, 0.0);
-    assert_eq!(result.score, 1236);
+    assert_eq!(result.score, 1282);
 }
 
 #[test]
