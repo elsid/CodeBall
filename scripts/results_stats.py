@@ -29,13 +29,18 @@ def main():
         median_score=[statistics.median(v['scores']) for v in players.values()],
         stdev_score=[statistics.stdev(v['scores']) for v in players.values()],
         q95_score=[numpy.quantile(v['scores'], 0.95) for v in players.values()],
+        min_score_diff=[min(v['score_diffs']) for v in players.values()],
+        max_score_diff=[max(v['score_diffs']) for v in players.values()],
+        mean_score_diff=[statistics.mean(v['score_diffs']) for v in players.values()],
+        median_score_diff=[statistics.median(v['score_diffs']) for v in players.values()],
+        stdev_score_diff=[statistics.stdev(v['score_diffs']) for v in players.values()],
     )
     row('games', len(games))
     row('unique seeds', len(set(seeds)))
     print()
     row('', *(list(players.keys()) + ['ratio (second/first)']))
     for k, v in stats.items():
-        row(k, *(v + ratio(v)))
+        row(k, *(v + [ratio(v)]))
     print()
     print(*seeds)
     fig, ax = matplotlib.pyplot.subplots()
@@ -81,7 +86,12 @@ def main():
 
 
 def ratio(values):
-    return [values[1] / values[0] if values[0] else float('inf')]
+    if values[1] == values[0]:
+        return 1
+    elif values[0] == 0:
+        return float('inf')
+    else:
+        return values[1] / values[0]
 
 
 def row(*args):
