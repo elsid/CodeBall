@@ -43,10 +43,10 @@ impl Order {
         let max_micro_ticks = 1000;
         let mut total_micro_ticks = 0;
         let mut next_action_id = 0;
-        let mut optimal_action: Option<Order> = None;
+        let mut order: Option<Order> = None;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
-        while (iterations < 5 || optimal_action.is_none()) && global_simulator.current_time() + time_interval < simulation_time_depth {
+        while (iterations < 5 || order.is_none()) && global_simulator.current_time() + time_interval < simulation_time_depth {
             log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
             let ball_radius = global_simulator.ball().radius();
@@ -141,8 +141,8 @@ impl Order {
                     stats.iteration = iterations;
                     stats.current_step = steps[iterations.min(steps.len() - 1)];
                     log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
-                    if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
-                        optimal_action = Some(Order {
+                    if order.is_none() || order.as_ref().unwrap().score < action_score {
+                        order = Some(Order {
                             id: action_id,
                             robot_id: robot.id,
                             action,
@@ -211,8 +211,8 @@ impl Order {
                 local_simulator.current_time(), local_simulator.current_micro_tick(), action_score
             );
 
-            if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
-                optimal_action = Some(Order {
+            if order.is_none() || order.as_ref().unwrap().score < action_score {
+                order = Some(Order {
                     id: action_id,
                     robot_id: robot.id,
                     action: v,
@@ -223,7 +223,7 @@ impl Order {
             }
         }
 
-        if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < 0 {
+        if order.is_none() || order.as_ref().unwrap().score < 0 {
             let action_id = next_action_id;
             next_action_id += 1;
             let mut local_simulator = initial_simulator.clone();
@@ -265,8 +265,8 @@ impl Order {
             stats.score = local_simulator.score();
             stats.action_score = action_score;
 
-            if optimal_action.is_none() || optimal_action.as_ref().unwrap().score < action_score {
-                optimal_action = Some(Order {
+            if order.is_none() || order.as_ref().unwrap().score < action_score {
+                order = Some(Order {
                     id: action_id,
                     robot_id: robot.id,
                     action,
@@ -277,7 +277,7 @@ impl Order {
             }
         }
 
-        if let Some(v) = &mut optimal_action {
+        if let Some(v) = &mut order {
             #[cfg(feature = "enable_render")]
             v.render(robot, &world.rules, render);
 
@@ -285,7 +285,7 @@ impl Order {
             v.stats.total_micro_ticks = total_micro_ticks;
         }
 
-        optimal_action
+        order
     }
 
     #[cfg(feature = "enable_render")]

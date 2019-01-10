@@ -12,7 +12,7 @@ pub struct MyStrategyImpl {
 //    tick_start_time: Instant,
 //    cpu_time_spent: Duration,
     last_tick: i32,
-    optimal_action: Option<Order>,
+    order: Option<Order>,
     render: Render,
 }
 
@@ -42,12 +42,12 @@ impl Strategy for MyStrategyImpl {
             self.render.clear();
             self.update_world(me, game);
             if self.world.is_reset_ticks() {
-                self.optimal_action = None;
+                self.order = None;
             } else {
-                self.generate_actions();
+                self.give_orders();
             }
             self.render.ignore_all();
-            for v in self.optimal_action.iter() {
+            for v in self.order.iter() {
                 self.render.include_tag(Tag::RobotId(v.robot_id));
                 if cfg!(feature = "dump_stats") {
                     println!("{}", serde_json::to_string(&v.stats).unwrap());
@@ -82,7 +82,7 @@ impl MyStrategyImpl {
 //            tick_start_time: start_time,
 //            cpu_time_spent: Duration::default(),
             last_tick: -1,
-            optimal_action: None,
+            order: None,
             render: Render::new(),
         }
     }
@@ -99,11 +99,11 @@ impl MyStrategyImpl {
         self.world.me = me.clone();
     }
 
-    fn generate_actions(&mut self) {
+    fn give_orders(&mut self) {
         let world = &self.world;
         let rng = &mut self.rng;
         let render= &mut self.render;
-        self.optimal_action = if let Some(action) = &self.optimal_action {
+        self.order = if let Some(action) = &self.order {
             let robot = world.game.robots.iter()
                 .find(|v| v.id == action.robot_id)
                 .unwrap();
@@ -130,11 +130,11 @@ impl MyStrategyImpl {
     }
 
     fn apply_action(&mut self, action: &mut Action) {
-        let action_applied = self.optimal_action.iter()
+        let action_applied = self.order.iter()
             .find(|v| v.robot_id == self.world.me.id)
             .map(|v| {
                 *action = v.action.clone();
-                log!(self.world.game.current_tick, "[{}] <{}> apply optimal action {:?}", self.world.me.id, v.id, action);
+                log!(self.world.game.current_tick, "[{}] <{}> apply order {:?}", self.world.me.id, v.id, action);
             })
             .is_some();
         if action_applied {
