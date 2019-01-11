@@ -30,7 +30,10 @@ impl Order {
             let mut s = Simulator::new(world, robot.id);
             s.robots_mut().iter_mut()
                 .filter(|v| !v.is_teammate())
-                .for_each(|v| v.action.set_target_velocity(v.velocity()));
+                .for_each(|v| {
+                    let velocity = v.velocity();
+                    v.action_mut().set_target_velocity(velocity);
+                });
             s
         };
         let mut global_simulator = initial_simulator.clone();

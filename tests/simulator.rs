@@ -15,7 +15,7 @@ fn test_simulator_tick_robot_jump() {
         0,
         0,
     ]);
-    simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+    simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
@@ -37,7 +37,7 @@ fn test_simulator_tick_robot_jump_with_half_micro_ticks() {
         0,
         0,
     ]);
-    simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+    simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
         Vec3::new(9.748591261158683, 1.0, -17.463246216636257)
@@ -63,7 +63,7 @@ fn test_simulator_robot_jump() {
         0,
         0,
     ]);
-    simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+    simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
         Vec3::new(9.748591261158683, 1.0, -17.463246216636257)
@@ -73,7 +73,7 @@ fn test_simulator_robot_jump() {
         simulator.rules().MICROTICKS_PER_TICK / 2,
         &mut rng
     );
-    simulator.me_mut().action.jump_speed = 0.0;
+    simulator.me_mut().action_mut().jump_speed = 0.0;
     while simulator.me().position().y() > 1.0 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -97,7 +97,7 @@ fn test_simulator_robot_jump_with_half_micro_ticks() {
         0,
         0,
     ]);
-    simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+    simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
         Vec3::new(9.748591261158683, 1.0, -17.463246216636257)
@@ -107,7 +107,7 @@ fn test_simulator_robot_jump_with_half_micro_ticks() {
         simulator.rules().MICROTICKS_PER_TICK / 2,
         &mut rng
     );
-    simulator.me_mut().action.jump_speed = 0.0;
+    simulator.me_mut().action_mut().jump_speed = 0.0;
     while simulator.me().position().y() > 1.0 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -148,7 +148,7 @@ fn test_simulator_robot_kick_ball() {
         0,
         0,
     ]);
-    simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+    simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
@@ -412,7 +412,9 @@ fn test_simulator_robot_turn_left() {
     let mut rng = example_rng();
     while simulator.me().position().distance(target) > 0.5 {
         let position = simulator.me().position();
-        simulator.me_mut().action.set_target_velocity((target - position).normalized() * world.rules.ROBOT_MAX_GROUND_SPEED);
+        simulator.me_mut().action_mut().set_target_velocity(
+            (target - position).normalized() * world.rules.ROBOT_MAX_GROUND_SPEED
+        );
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
@@ -432,7 +434,9 @@ fn test_simulator_robot_turn_back() {
     let mut rng = example_rng();
     while simulator.me().position().distance(target) > 0.5 {
         let position = simulator.me().position();
-        simulator.me_mut().action.set_target_velocity((target - position).normalized() * world.rules.ROBOT_MAX_GROUND_SPEED);
+        simulator.me_mut().action_mut().set_target_velocity(
+            (target - position).normalized() * world.rules.ROBOT_MAX_GROUND_SPEED
+        );
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,

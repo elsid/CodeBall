@@ -115,9 +115,9 @@ impl MoveMeToPosition {
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::CollisionType;
 
-        let stored_action = ctx.simulator.me().action;
+        let stored_action = ctx.simulator.me().action().clone();
 
-        ctx.simulator.me_mut().action = Action::default();
+        *ctx.simulator.me_mut().action_mut() = Action::default();
 
         let initial_position = ctx.simulator.me().position();
         let to_target = self.target - initial_position;
@@ -126,9 +126,9 @@ impl MoveMeToPosition {
         } else {
             Vec3::default()
         };
-        ctx.simulator.me_mut().action.set_target_velocity(velocity);
+        ctx.simulator.me_mut().action_mut().set_target_velocity(velocity);
 
-        let action = ctx.simulator.me().action;
+        let action = ctx.simulator.me().action().clone();
 
         let max_distance_to_target = self.max_speed * self.tick_time_interval;
         let max_distance_to_ball = ctx.simulator.rules().ball_distance_limit()
@@ -157,7 +157,7 @@ impl MoveMeToPosition {
             } else {
                 Vec3::default()
             };
-            ctx.simulator.me_mut().action.set_target_velocity(velocity);
+            ctx.simulator.me_mut().action_mut().set_target_velocity(velocity);
 
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
 
@@ -171,7 +171,7 @@ impl MoveMeToPosition {
             );
         }
 
-        ctx.simulator.me_mut().action = stored_action;
+        *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
     }
@@ -198,14 +198,14 @@ impl Jump {
             ctx.stats.time_to_jump = ctx.simulator.current_time();
         }
 
-        let stored_action = ctx.simulator.me().action;
+        let stored_action = ctx.simulator.me().action().clone();
 
-        ctx.simulator.me_mut().action = Action::default();
+        *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
-        ctx.simulator.me_mut().action.set_target_velocity(stored_action.target_velocity());
+        ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
+        ctx.simulator.me_mut().action_mut().set_target_velocity(stored_action.target_velocity());
 
-        let action = ctx.simulator.me().action;
+        let action = ctx.simulator.me().action().clone();
 
         let min_distance_to_target = self.max_speed * self.tick_time_interval;
         let min_distance_to_ball = ctx.simulator.rules().ball_distance_limit()
@@ -243,7 +243,7 @@ impl Jump {
             );
         }
 
-        ctx.simulator.me_mut().action = stored_action;
+        *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
     }
@@ -267,16 +267,16 @@ impl WatchBallMove {
             ctx.stats.time_to_watch = ctx.simulator.current_time();
         }
 
-        let stored_action = ctx.simulator.me().action;
+        let stored_action = ctx.simulator.me().action().clone();
 
-        ctx.simulator.me_mut().action = Action::default();
+        *ctx.simulator.me_mut().action_mut() = Action::default();
 
         if self.stop {
-            ctx.simulator.me_mut().action.jump_speed = 0.0;
-            ctx.simulator.me_mut().action.set_target_velocity(Vec3::default());
+            ctx.simulator.me_mut().action_mut().jump_speed = 0.0;
+            ctx.simulator.me_mut().action_mut().set_target_velocity(Vec3::default());
         }
 
-        let action = ctx.simulator.me().action;
+        let action = ctx.simulator.me().action().clone();
 
         log!(
             ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
@@ -299,7 +299,7 @@ impl WatchBallMove {
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
         }
 
-        ctx.simulator.me_mut().action = stored_action;
+        *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
     }
@@ -366,7 +366,7 @@ impl JumpToBall {
         use crate::my_strategy::physics::MoveEquation;
         use crate::my_strategy::optimization::minimize1d;
 
-        simulator.me_mut().action.jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+        simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
 
         simulator.tick(self.tick_time_interval, self.micro_ticks_per_tick_before_jump, &mut rng);
 
@@ -416,19 +416,19 @@ impl FarJump {
             ctx.stats.time_to_jump = ctx.simulator.current_time();
         }
 
-        let stored_action = ctx.simulator.me().action;
+        let stored_action = ctx.simulator.me().action().clone();
 
-        ctx.simulator.me_mut().action = Action::default();
+        *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
+        ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
 
         let velocity = ctx.simulator.me().velocity();
         if velocity.norm() > 0.0 {
             let target_velocity = velocity.normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
-            ctx.simulator.me_mut().action.set_target_velocity(target_velocity);
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
         }
 
-        let action = ctx.simulator.me().action;
+        let action = ctx.simulator.me().action().clone();
 
         log!(
             ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
@@ -469,7 +469,7 @@ impl FarJump {
             );
         }
 
-        ctx.simulator.me_mut().action = stored_action;
+        *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
     }
@@ -493,13 +493,13 @@ impl WatchMeJump {
             ctx.stats.time_to_watch = ctx.simulator.current_time();
         }
 
-        let stored_action = ctx.simulator.me().action;
+        let stored_action = ctx.simulator.me().action().clone();
 
-        ctx.simulator.me_mut().action = Action::default();
+        *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        ctx.simulator.me_mut().action.jump_speed = self.jump_speed;
+        ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
 
-        let action = ctx.simulator.me().action;
+        let action = ctx.simulator.me().action().clone();
 
         log!(
             ctx.current_tick, "[{}] <{}> watch me move {}:{} velocity_y={}",
@@ -523,7 +523,7 @@ impl WatchMeJump {
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
         }
 
-        ctx.simulator.me_mut().action = stored_action;
+        *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
     }
@@ -538,11 +538,11 @@ pub struct DoNothing {
 
 impl DoNothing {
     pub fn perform(&self, ctx: &mut Context) -> Action {
-        let stored_action = ctx.simulator.me().action;
+        let stored_action = ctx.simulator.me().action().clone();
 
-        ctx.simulator.me_mut().action = Action::default();
+        *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        let action = ctx.simulator.me().action;
+        let action = ctx.simulator.me().action().clone();
 
         log!(
             ctx.current_tick, "[{}] <{}> do nothing {}:{}",
@@ -563,7 +563,7 @@ impl DoNothing {
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
         }
 
-        ctx.simulator.me_mut().action = stored_action;
+        *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
     }

@@ -39,7 +39,7 @@ pub struct RobotExt {
     base: Robot,
     touch_normal: Option<Vec3>,
     radius_change_speed: f64,
-    pub action: Action,
+    action: Action,
     mass: f64,
     arena_e: f64,
     is_me: bool,
@@ -82,6 +82,10 @@ impl RobotExt {
 
     pub fn action(&self) -> &Action {
         &self.action
+    }
+
+    pub fn action_mut(&mut self) -> &mut Action {
+        &mut self.action
     }
 
     pub fn jump(&mut self, jump_speed: f64, rules: &Rules) {
