@@ -152,6 +152,13 @@ impl MoveMeToPosition {
                 > max_distance_to_ball
             && ctx.simulator.me().ball_collision_type() == CollisionType::None {
 
+            let velocity = if to_target.norm() > 1e-3 {
+                (self.target - ctx.simulator.me().position()).normalized() * self.max_speed
+            } else {
+                Vec3::default()
+            };
+            ctx.simulator.me_mut().action.set_target_velocity(velocity);
+
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
 
             log!(
