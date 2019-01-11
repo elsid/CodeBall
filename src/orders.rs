@@ -50,7 +50,6 @@ impl Order {
         while (iterations < 5 || order.is_none()) && global_simulator.current_time() + time_interval < simulation_time_depth {
             log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
-            let ball_radius = global_simulator.ball().radius();
             if ball_y < world.rules.max_robot_jump_height() {
                 log!(world.game.current_tick, "[{}] use time point {} {} position={:?} velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time(), global_simulator.me().position(), global_simulator.me().velocity(), global_simulator.ball().position(), global_simulator.ball().velocity());
                 iterations += 1;
