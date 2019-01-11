@@ -25,6 +25,8 @@ pub trait Solid : Entity {
     fn mass(&self) -> f64;
     fn radius_change_speed(&self) -> f64;
     fn arena_e(&self) -> f64;
+    fn set_distance_to_arena(&mut self, value: f64);
+    fn set_normal_to_arena(&mut self, value: Vec3);
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -44,6 +46,8 @@ pub struct RobotExt {
     arena_e: f64,
     is_me: bool,
     ball_collision_type: CollisionType,
+    distance_to_arena: f64,
+    normal_to_arena: Vec3,
 }
 
 impl RobotExt {
@@ -57,6 +61,8 @@ impl RobotExt {
             arena_e: rules.ROBOT_ARENA_E,
             is_me: false,
             ball_collision_type: CollisionType::None,
+            distance_to_arena: 0.0,
+            normal_to_arena: Vec3::default(),
         }
     }
 
@@ -91,6 +97,14 @@ impl RobotExt {
     pub fn jump(&mut self, jump_speed: f64, rules: &Rules) {
         self.base.jump(jump_speed, rules);
         self.radius_change_speed = jump_speed;
+    }
+
+    pub fn distance_to_arena(&self) -> f64 {
+        self.distance_to_arena
+    }
+
+    pub fn normal_to_arena(&self) -> Vec3 {
+        self.normal_to_arena
     }
 
     #[cfg(feature = "enable_render")]
@@ -150,11 +164,19 @@ pub struct BallExt {
     base: Ball,
     mass: f64,
     arena_e: f64,
+    distance_to_arena: f64,
+    normal_to_arena: Vec3,
 }
 
 impl BallExt {
     pub fn new(base: Ball, mass: f64, arena_e: f64) -> Self {
-        BallExt {base, mass, arena_e}
+        BallExt {
+            base,
+            mass,
+            arena_e,
+            distance_to_arena: 0.0,
+            normal_to_arena: Vec3::default(),
+        }
     }
 
     pub fn from_ball(ball: &Ball, rules: &Rules) -> Self {
@@ -162,11 +184,25 @@ impl BallExt {
             base: ball.clone(),
             mass: rules.BALL_MASS,
             arena_e: rules.BALL_ARENA_E,
+            distance_to_arena: 0.0,
+            normal_to_arena: Vec3::default(),
         }
     }
 
     pub fn base(&self) -> &Ball {
         &self.base
+    }
+
+    pub fn distance_to_arena(&self) -> f64 {
+        self.distance_to_arena
+    }
+
+    pub fn normal_to_arena(&self) -> Vec3 {
+        self.normal_to_arena
+    }
+
+    pub fn projected_to_arena_position(&self) -> Vec3 {
+        self.base().position() - self.normal_to_arena * self.distance_to_arena
     }
 
     #[cfg(feature = "enable_render")]
@@ -235,6 +271,14 @@ impl Solid for BallExt {
     fn arena_e(&self) -> f64 {
         self.arena_e
     }
+
+    fn set_distance_to_arena(&mut self, value: f64) {
+        self.distance_to_arena = value;
+    }
+
+    fn set_normal_to_arena(&mut self, value: Vec3) {
+        self.normal_to_arena = value;
+    }
 }
 
 impl Solid for RobotExt {
@@ -252,6 +296,14 @@ impl Solid for RobotExt {
 
     fn arena_e(&self) -> f64 {
         self.arena_e
+    }
+
+    fn set_distance_to_arena(&mut self, value: f64) {
+        self.distance_to_arena = value;
+    }
+
+    fn set_normal_to_arena(&mut self, value: Vec3) {
+        self.normal_to_arena = value;
     }
 }
 
@@ -281,6 +333,8 @@ impl Simulator {
                 } else {
                     None
                 };
+                let (distance, normal) = world.rules.arena
+                    .distance_and_normal(v.position());
                 RobotExt {
                     base: v.clone(),
                     touch_normal,
@@ -290,12 +344,16 @@ impl Simulator {
                     arena_e: world.rules.ROBOT_ARENA_E,
                     is_me: v.id == me_id,
                     ball_collision_type: CollisionType::None,
+                    distance_to_arena: distance,
+                    normal_to_arena: normal,
                 }
             })
             .collect();
         let me_index = robots.iter()
             .position(|v| v.id() == me_id)
             .unwrap();
+        let (distance, normal) = world.rules.arena
+            .distance_and_normal(world.game.ball.position());
 
         Simulator {
             robots,
@@ -303,6 +361,8 @@ impl Simulator {
                 base: world.game.ball.clone(),
                 mass: world.rules.BALL_MASS,
                 arena_e: world.rules.BALL_ARENA_E,
+                distance_to_arena: distance,
+                normal_to_arena: normal,
             },
             rules: world.rules.clone(),
             current_tick: 0,
@@ -508,4 +568,3 @@ impl Simulator {
         self.ball.render(relative_time, render);
     }
 }
-

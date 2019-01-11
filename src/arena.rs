@@ -17,6 +17,8 @@ impl Arena {
 
     pub fn collide(&self, e: &mut Solid) -> Option<Vec3> {
         let (distance, normal) = self.distance_and_normal(e.position());
+        e.set_distance_to_arena(distance);
+        e.set_normal_to_arena(normal);
         let penetration = e.radius() - distance;
         if penetration > 0.0 {
             let e_position = e.position() + normal * penetration;
