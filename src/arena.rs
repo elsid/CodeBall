@@ -16,7 +16,7 @@ impl Arena {
     }
 
     pub fn collide(&self, e: &mut Solid) -> Option<Vec3> {
-        let (distance, normal) = self.distance_and_normal_to_arena(e.position());
+        let (distance, normal) = self.distance_and_normal(e.position());
         let penetration = e.radius() - distance;
         if penetration > 0.0 {
             let e_position = e.position() + normal * penetration;
@@ -44,7 +44,7 @@ impl Arena {
 //        distance > 0.0
 //    }
 
-    pub fn distance_and_normal_to_arena(&self, mut position: Vec3) -> (f64, Vec3) {
+    pub fn distance_and_normal(&self, mut position: Vec3) -> (f64, Vec3) {
         let negate_x = position.x() < 0.0;
         let negate_z = position.z() < 0.0;
         if negate_x {
@@ -53,7 +53,7 @@ impl Arena {
         if negate_z {
             position = position.with_neg_z();
         }
-        let (distance, mut normal) = self.distance_and_normal_to_arena_quarter(position);
+        let (distance, mut normal) = self.distance_and_normal_to_quarter(position);
         if negate_x {
             normal = normal.with_neg_x();
         }
@@ -63,7 +63,7 @@ impl Arena {
         (distance, normal)
     }
 
-    pub fn distance_and_normal_to_arena_quarter(&self, position: Vec3) -> (f64, Vec3) {
+    pub fn distance_and_normal_to_quarter(&self, position: Vec3) -> (f64, Vec3) {
         let (mut distance, mut normal) = Arena::distance_and_normal_to_ground(position);
         self.collide_ceiling(position, &mut distance, &mut normal);
         self.collide_side_x(position, &mut distance, &mut normal);
