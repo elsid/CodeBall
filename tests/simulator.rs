@@ -3,7 +3,7 @@ use my_strategy::my_strategy::simulator::{Simulator, CollisionType, RobotExt, Ba
 use my_strategy::my_strategy::entity::Entity;
 use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
 use my_strategy::my_strategy::common::IsBetween;
-use my_strategy::examples::{example_world, example_rules, example_me, example_ball};
+use my_strategy::examples::{example_world, example_rules, example_me, example_ball, example_rng};
 
 #[test]
 fn test_simulator_tick_robot_jump() {
@@ -400,4 +400,44 @@ fn test_simulator_tick_ball_to_goal() {
         simulator.ball().position(),
         Vec3::new(0.0, 2.6393846000002408, 41.00000000000252)
     );
+}
+
+#[test]
+fn test_simulator_robot_turn_left() {
+    let world = example_world();
+    let mut simulator = Simulator::new(&world, world.me.id);
+    let target = Vec3::new(3.0, 1.0, 0.0);
+    simulator.me_mut().set_position(Vec3::new(10.0, 1.0, 0.0));
+    simulator.me_mut().set_velocity(Vec3::only_z(30.0));
+    let mut rng = example_rng();
+    while simulator.me().position().distance(target) > 0.5 {
+        let position = simulator.me().position();
+        simulator.me_mut().action.set_target_velocity((target - position).normalized() * world.rules.ROBOT_MAX_GROUND_SPEED);
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.current_tick(), 40);
+}
+
+#[test]
+fn test_simulator_robot_turn_back() {
+    let world = example_world();
+    let mut simulator = Simulator::new(&world, world.me.id);
+    let target = Vec3::new(10.0, 1.0, -7.0);
+    simulator.me_mut().set_position(Vec3::new(10.0, 1.0, 0.0));
+    simulator.me_mut().set_velocity(Vec3::only_z(30.0));
+    let mut rng = example_rng();
+    while simulator.me().position().distance(target) > 0.5 {
+        let position = simulator.me().position();
+        simulator.me_mut().action.set_target_velocity((target - position).normalized() * world.rules.ROBOT_MAX_GROUND_SPEED);
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.current_tick(), 49);
 }
