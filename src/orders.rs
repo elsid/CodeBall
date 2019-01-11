@@ -397,11 +397,7 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
         0.0
     };
     let time_score = if let Some(v) = time_to_ball {
-        if simulator.score() < 0 {
-            v / max_time - 1.0
-        } else {
-            1.0 - v / max_time
-        }
+        1.0 - v / max_time
     } else {
         0.0
     };
