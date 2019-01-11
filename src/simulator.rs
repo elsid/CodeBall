@@ -36,14 +36,14 @@ pub enum CollisionType {
 
 #[derive(Clone, Debug)]
 pub struct RobotExt {
-    pub base: Robot,
-    pub touch_normal: Option<Vec3>,
-    pub radius_change_speed: f64,
+    base: Robot,
+    touch_normal: Option<Vec3>,
+    radius_change_speed: f64,
     pub action: Action,
-    pub mass: f64,
-    pub arena_e: f64,
-    pub is_me: bool,
-    pub ball_collision_type: CollisionType,
+    mass: f64,
+    arena_e: f64,
+    is_me: bool,
+    ball_collision_type: CollisionType,
 }
 
 impl RobotExt {
