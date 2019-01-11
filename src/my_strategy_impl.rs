@@ -133,8 +133,12 @@ impl MyStrategyImpl {
             return;
         }
         let target = self.world.rules.get_goalkeeper_position();
-        let velocity = (target - self.world.me.position()).normalized()
-            * self.world.rules.ROBOT_MAX_GROUND_SPEED;
+        let to_target = target - self.world.me.position();
+        let velocity = if to_target.norm() > self.world.rules.min_running_distance() {
+            to_target.normalized() * self.world.rules.ROBOT_MAX_GROUND_SPEED
+        } else {
+            to_target
+        };
         action.set_target_velocity(velocity);
         log!(self.world.game.current_tick, "[{}] apply default action {:?}", self.world.me.id, action);
     }

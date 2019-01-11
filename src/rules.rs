@@ -42,4 +42,14 @@ impl Rules {
             + self.ROBOT_MAX_JUMP_SPEED * time
             - self.GRAVITY * time.square() / 2.0
     }
+
+    pub fn min_acceleration_time(&self) -> f64 {
+        self.ROBOT_MAX_GROUND_SPEED / self.ROBOT_ACCELERATION
+    }
+
+    pub fn min_running_distance(&self) -> f64 {
+        use crate::my_strategy::common::Square;
+
+        self.ROBOT_ACCELERATION * self.min_acceleration_time().square() / 2.0
+    }
 }
