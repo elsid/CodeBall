@@ -1,5 +1,5 @@
 #[test]
-fn test_robot_get_optimal_action() {
+fn test_new() {
     use my_strategy::examples::{example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::orders::Order;
@@ -14,7 +14,7 @@ fn test_robot_get_optimal_action() {
 }
 
 #[test]
-fn test_robot_get_optimal_action_should_not_jump_on_ball_top() {
+fn test_new_should_not_jump_on_ball_top() {
     use my_strategy::examples::example_world;
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
@@ -46,7 +46,7 @@ fn test_robot_get_optimal_action_should_not_jump_on_ball_top() {
 }
 
 #[test]
-fn test_robot_get_optimal_action_far_jump() {
+fn test_new_far_jump() {
     use my_strategy::examples::example_world;
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
