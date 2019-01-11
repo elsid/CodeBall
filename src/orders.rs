@@ -134,6 +134,9 @@ impl Order {
                         &local_simulator,
                         time_to_ball,
                         simulation_time_depth + time_interval,
+                        world.game.current_tick,
+                        robot.id,
+                        action_id,
                     );
 
                     #[cfg(feature = "enable_stats")]
@@ -220,6 +223,9 @@ impl Order {
                 &local_simulator,
                 time_to_ball,
                 simulation_time_depth + time_interval,
+                world.game.current_tick,
+                robot.id,
+                action_id,
             );
 
             #[cfg(feature = "enable_stats")]
@@ -290,6 +296,9 @@ impl Order {
                 &local_simulator,
                 time_to_ball,
                 simulation_time_depth + time_interval,
+                world.game.current_tick,
+                robot.id,
+                action_id,
             );
 
             #[cfg(feature = "enable_stats")]
@@ -369,7 +378,7 @@ pub fn render_history(history: &Vec<Simulator>, render: &mut Render) {
     }
 }
 
-fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>, max_time: f64) -> i32 {
+fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>, max_time: f64, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
     let ball = simulator.ball();
     let to_goal = rules.get_goal_target() - ball.position();
     let ball_goal_distance_score = if simulator.score() == 0 {
@@ -398,7 +407,10 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
         + ball_goal_distance_score
         + 0.1 * ball_goal_direction_score
         + 0.5 * time_score;
-//    log!(current_tick, " <{}> action ball_goal_distance_score={} ball_goal_direction_score={} time_score={}", action_id, ball_goal_distance_score, ball_goal_direction_score, time_score);
+    log!(
+        current_tick, "[{}] <{}> action ball_goal_distance_score={} ball_goal_direction_score={} time_score={} total={}",
+        robot_id, action_id, ball_goal_distance_score, ball_goal_direction_score, time_score, score
+    );
     (1000.0 * score).round() as i32
 }
 
