@@ -119,14 +119,11 @@ impl MoveMeToPosition {
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        let initial_position = ctx.simulator.me().position();
-        let to_target = self.target - initial_position;
-        let velocity = if to_target.norm() > 1e-3 {
-            to_target.normalized() * self.max_speed
-        } else {
-            Vec3::default()
-        };
-        ctx.simulator.me_mut().action_mut().set_target_velocity(velocity);
+        let target_velocity = self.get_target_velocity(
+            ctx.simulator.me().position(),
+            ctx.simulator.me().normal_to_arena()
+        );
+        ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
         let action = ctx.simulator.me().action().clone();
 
@@ -152,12 +149,11 @@ impl MoveMeToPosition {
                 > max_distance_to_ball
             && ctx.simulator.me().ball_collision_type() == CollisionType::None {
 
-            let velocity = if to_target.norm() > 1e-3 {
-                (self.target - ctx.simulator.me().position()).normalized() * self.max_speed
-            } else {
-                Vec3::default()
-            };
-            ctx.simulator.me_mut().action_mut().set_target_velocity(velocity);
+            let target_velocity = self.get_target_velocity(
+                ctx.simulator.me().position(),
+                ctx.simulator.me().normal_to_arena()
+            );
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
 
@@ -174,6 +170,17 @@ impl MoveMeToPosition {
         *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
+    }
+
+    fn get_target_velocity(&self, position: Vec3, normal: Vec3) -> Vec3 {
+        use crate::my_strategy::plane::Plane;
+
+        let to_target = Plane::projected(self.target - position, normal);
+        if to_target.norm() > 1e-3 {
+            to_target.normalized() * self.max_speed
+        } else {
+            Vec3::default()
+        }
     }
 }
 

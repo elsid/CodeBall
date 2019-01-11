@@ -8,7 +8,7 @@ fn test_new() {
     let mut rng = example_rng();
     let result = Order::new(&world.me, &world, &mut rng).unwrap();
 
-    assert_eq!(result.action.target_velocity(), Vec3::new(-15.364893396178722, 0.059657209069410216, 25.76657703191228));
+    assert_eq!(result.action.target_velocity(), Vec3::new(-15.364923775928911, 0.0, 25.766627978062917));
     assert_eq!(result.action.jump_speed, 0.0);
     assert_eq!(result.score, 1127);
 }
@@ -40,7 +40,7 @@ fn test_new_should_not_jump_on_ball_top() {
 
     let result = Order::new(&world.me, &world, &mut rng).unwrap();
 
-    assert_eq!(result.action.target_velocity(), Vec3::new(19.23819757371259, 0.14249056442010866, 29.035597214445392));
+    assert_eq!(result.action.target_velocity(), Vec3::new(19.238358557311788, 0.0, 29.035840181850553));
     assert_eq!(result.action.jump_speed, 0.0);
     assert_eq!(result.score, 1335);
 }
