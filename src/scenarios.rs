@@ -121,7 +121,8 @@ impl MoveMeToPosition {
 
         let target_velocity = self.get_target_velocity(
             ctx.simulator.me().position(),
-            ctx.simulator.me().normal_to_arena()
+            ctx.simulator.me().normal_to_arena(),
+            ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED,
         );
         ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
@@ -151,7 +152,8 @@ impl MoveMeToPosition {
 
             let target_velocity = self.get_target_velocity(
                 ctx.simulator.me().position(),
-                ctx.simulator.me().normal_to_arena()
+                ctx.simulator.me().normal_to_arena(),
+                ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED,
             );
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
@@ -172,12 +174,12 @@ impl MoveMeToPosition {
         action
     }
 
-    fn get_target_velocity(&self, position: Vec3, normal: Vec3) -> Vec3 {
+    fn get_target_velocity(&self, position: Vec3, normal: Vec3, max_speed: f64) -> Vec3 {
         use crate::my_strategy::plane::Plane;
 
         let to_target = Plane::projected(self.target - position, normal);
         if to_target.norm() > 1e-3 {
-            to_target.normalized() * self.max_speed
+            to_target.normalized() * self.max_speed.min(max_speed)
         } else {
             Vec3::default()
         }

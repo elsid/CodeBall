@@ -40,7 +40,7 @@ fn test_new_should_not_jump_on_ball_top() {
 
     let result = Order::new(&world.me, &world, &mut rng).unwrap();
 
-    assert_eq!(result.action.target_velocity(), Vec3::new(19.238358557311788, 0.0, 29.035840181850553));
+    assert_eq!(result.action.target_velocity(), Vec3::new(16.570059239687744, 0.0, 25.00866123552476));
     assert_eq!(result.action.jump_speed, 0.0);
     assert_eq!(result.score, 1335);
 }
