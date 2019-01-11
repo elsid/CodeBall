@@ -46,6 +46,11 @@ impl Arena {
 //        distance > 0.0
 //    }
 
+    pub fn projected_with_shift(&self, position: Vec3, shift: f64) -> Vec3 {
+        let (distance, normal) = self.distance_and_normal(position);
+        position - normal * (distance - shift)
+    }
+
     pub fn distance_and_normal(&self, mut position: Vec3) -> (f64, Vec3) {
         let negate_x = position.x() < 0.0;
         let negate_z = position.z() < 0.0;

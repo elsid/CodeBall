@@ -28,6 +28,7 @@ cp src/world.rs ${DIR}/src
 cp src/optimization.rs ${DIR}/src
 cp src/physics.rs ${DIR}/src
 cp src/scenarios.rs ${DIR}/src
+cp src/mat3.rs ${DIR}/src
 
 cd ${DIR}/src
 
