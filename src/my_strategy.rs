@@ -38,10 +38,10 @@ pub mod action;
 pub mod entity;
 
 #[path = "ball.rs"]
-pub mod robot;
+pub mod ball;
 
 #[path = "robot.rs"]
-pub mod ball;
+pub mod robot;
 
 #[path = "world.rs"]
 pub mod world;
