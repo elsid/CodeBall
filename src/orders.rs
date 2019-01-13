@@ -421,6 +421,8 @@ pub fn get_points(ball: &Ball, robot: &Robot, rules: &Rules, rng: &mut XorShiftR
     use crate::my_strategy::random::Rng;
     use crate::my_strategy::common::Clamp;
 
+    let ball_position = ball.position().with_y(rules.ROBOT_MAX_RADIUS);
+    let to_robot = (robot.position() - ball_position).normalized();
     let min_distance = get_min_distance_between_spheres(
         ball.y,
         rules.BALL_RADIUS,
@@ -428,11 +430,9 @@ pub fn get_points(ball: &Ball, robot: &Robot, rules: &Rules, rng: &mut XorShiftR
     ).unwrap_or(0.0);
     let max_distance = ball.position().with_y(robot.y)
         .distance(robot.position())
-        .clamp(rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS, min_distance + 1e-3);
+        .clamp(min_distance + 1e-3, rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS);
     let distance = rng.gen_range(min_distance, max_distance);
     let mut result = Vec::new();
-    let ball_position = ball.position().with_y(rules.ROBOT_MAX_RADIUS);
-    let to_robot = (robot.position() - ball_position).normalized();
     for _ in 0..5 {
         let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
         result.push(ball_position + to_robot.rotated_by_y(angle) * distance);
