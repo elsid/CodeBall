@@ -18,10 +18,10 @@ fn test_new() {
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats, Stats {
         micro_ticks_to_jump: 132,
-        micro_ticks_to_watch: 300,
+        micro_ticks_to_watch: 138,
         micro_ticks_to_end: 300,
         time_to_jump: 0.733333333333334,
-        time_to_watch: 1.6666666666666656,
+        time_to_watch: 0.7666666666666674,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
         iteration: 4,
@@ -72,10 +72,10 @@ fn test_new_should_not_jump_on_ball_top() {
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats, Stats {
         micro_ticks_to_jump: 54,
-        micro_ticks_to_watch: 300,
+        micro_ticks_to_watch: 66,
         micro_ticks_to_end: 300,
         time_to_jump: 0.3,
-        time_to_watch: 1.6666666666666656,
+        time_to_watch: 0.36666666666666664,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
         iteration: 4,

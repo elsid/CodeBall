@@ -232,13 +232,25 @@ impl Jump {
         while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
             && ctx.simulator.current_micro_tick() < self.max_micro_ticks
             && ctx.simulator.score() == 0
-            && (
-                ctx.simulator.me().position().distance(self.target)
-                    <= min_distance_to_target
-                || ctx.simulator.me().position().distance(ctx.simulator.ball().position())
-                    <= min_distance_to_ball
-                || ctx.simulator.me().ball_collision_type() == CollisionType::None
-            ) {
+            && ctx.simulator.me().ball_collision_type() == CollisionType::None {
+
+            ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
+
+            log!(
+                ctx.current_tick, "[{}] <{}> jump {}:{} target={}/{} ball={}/{}",
+                ctx.robot_id, ctx.action_id,
+                ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
+                ctx.simulator.me().position().distance(self.target), min_distance_to_target,
+                ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
+                min_distance_to_ball
+            );
+        }
+
+        while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
+            && ctx.simulator.current_micro_tick() < self.max_micro_ticks
+            && ctx.simulator.score() == 0
+            && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
+                    <= min_distance_to_ball {
 
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
 
