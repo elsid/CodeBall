@@ -80,8 +80,8 @@ impl Robot {
     pub fn render_text(&self, render: &mut Render) {
         use crate::my_strategy::render::Object;
 
-        render.add(Object::text(
-            format!("robot: {}\n  speed: {}", self.id, self.velocity().norm())
-        ));
+        render.add(Object::text(format!(
+            "robot: {}\n  speed: {}\n  nitro: {}", self.id, self.velocity().norm(), self.nitro_amount
+        )));
     }
 }

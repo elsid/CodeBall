@@ -144,7 +144,17 @@ impl MyStrategyImpl {
                     .unwrap_or(true)
             })
             .map(|robot| {
-                Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
+                if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
+                    && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
+                        > world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS {
+
+                    Order::try_take_nitro_pack(robot, world, ctx.order_id_generator)
+                        .unwrap_or_else(|| {
+                            Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
+                        })
+                } else {
+                    Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
+                }
             })
             .collect();
     }

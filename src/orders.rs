@@ -23,6 +23,7 @@ const MAX_ITERATIONS: usize = 5;
 pub enum Order {
     Play(Play),
     WalkToGoalkeeperPosition(WalkToGoalkeeperPosition),
+    TakeNitroPack(TakeNitroPack),
 }
 
 impl Order {
@@ -37,10 +38,16 @@ impl Order {
         )
     }
 
+    pub fn try_take_nitro_pack(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Option<Order> {
+        TakeNitroPack::try_new(robot, world, order_id_generator)
+            .map(|v| Order::TakeNitroPack(v))
+    }
+
     pub fn id(&self) -> i32 {
         match self {
             Order::Play(v) => v.id,
             Order::WalkToGoalkeeperPosition(v) => v.id,
+            Order::TakeNitroPack(v) => v.id,
         }
     }
 
@@ -48,6 +55,7 @@ impl Order {
         match self {
             Order::Play(v) => v.robot_id,
             Order::WalkToGoalkeeperPosition(v) => v.robot_id,
+            Order::TakeNitroPack(v) => v.robot_id,
         }
     }
 
@@ -55,6 +63,7 @@ impl Order {
         match self {
             Order::Play(v) => v.score,
             Order::WalkToGoalkeeperPosition(v) => v.score,
+            Order::TakeNitroPack(v) => v.score,
         }
     }
 
@@ -62,6 +71,7 @@ impl Order {
         match self {
             Order::Play(v) => &v.action,
             Order::WalkToGoalkeeperPosition(v) => &v.action,
+            Order::TakeNitroPack(v) => &v.action,
         }
     }
 
@@ -70,6 +80,7 @@ impl Order {
         match self {
             Order::Play(v) => &v.stats,
             Order::WalkToGoalkeeperPosition(v) => &v.stats,
+            Order::TakeNitroPack(v) => &v.stats,
         }
     }
 
@@ -100,7 +111,7 @@ impl Order {
     pub fn render_sub(&self, render: &mut Render) {
         match self {
             Order::Play(v) => v.render(render),
-            Order::WalkToGoalkeeperPosition(_) => (),
+            _ => (),
         }
     }
 }
@@ -725,4 +736,43 @@ fn make_initial_simulator(robot: &Robot, world: &World) -> Simulator {
             v.action_mut().set_target_velocity(velocity);
         });
     result
+}
+
+pub struct TakeNitroPack {
+    pub id: i32,
+    pub robot_id: i32,
+    pub action: Action,
+    pub score: i32,
+    #[cfg(feature = "enable_stats")]
+    pub stats: Stats,
+}
+
+impl TakeNitroPack {
+    pub fn try_new(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Option<Self> {
+        world.game.nitro_packs.iter()
+            .filter(|v| {
+                v.respawn_ticks.map(|v| v < 100).unwrap_or(true)
+            })
+            .map(|v| (v.position().distance(robot.position()), v))
+            .filter(|(distance, _)| *distance < world.rules.arena.depth)
+            .min_by_key(|(distance, _)| (distance.round() * 100.0) as i32)
+            .map(|(_, nitro_pack)| {
+                let to_target = nitro_pack.position() - robot.position();
+                let velocity = if to_target.norm() > world.rules.min_running_distance() {
+                    to_target.normalized() * world.rules.ROBOT_MAX_GROUND_SPEED
+                } else {
+                    to_target
+                };
+                let mut action = Action::default();
+                action.set_target_velocity(velocity);
+                TakeNitroPack {
+                    id: order_id_generator.next(),
+                    robot_id: robot.id,
+                    action,
+                    score: 0,
+                    #[cfg(feature = "enable_stats")]
+                    stats: Stats::new(robot.player_id, robot.id, world.game.current_tick, "take_nitro_pack"),
+                }
+            })
+    }
 }
