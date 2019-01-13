@@ -58,7 +58,7 @@ impl JumpAtPosition<'_> {
 
         let before_move = ctx.simulator.current_time();
 
-        let mut action = MoveMeToPosition {
+        let mut action = WalkToPosition {
             target: self.kick_ball_position,
             max_speed: self.my_max_speed,
             max_time: self.max_time,
@@ -101,7 +101,7 @@ impl JumpAtPosition<'_> {
     }
 }
 
-pub struct MoveMeToPosition {
+pub struct WalkToPosition {
     pub target: Vec3,
     pub max_speed: f64,
     pub max_time: f64,
@@ -110,7 +110,7 @@ pub struct MoveMeToPosition {
     pub max_micro_ticks: i32,
 }
 
-impl MoveMeToPosition {
+impl WalkToPosition {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::CollisionType;
