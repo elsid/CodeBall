@@ -43,7 +43,7 @@ pub struct JumpAtPosition<'r> {
     pub tick_time_interval: f64,
     pub micro_ticks_per_tick_before_jump: usize,
     pub micro_ticks_per_tick_after_jump: usize,
-    pub max_micro_ticks: i32,
+    pub max_micro_tick: i32,
 }
 
 impl JumpAtPosition<'_> {
@@ -64,7 +64,7 @@ impl JumpAtPosition<'_> {
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
-            max_micro_ticks: self.max_micro_ticks,
+            max_micro_ticks: self.max_micro_tick,
         }.perform(ctx);
 
         if before_move == ctx.simulator.current_time() {
@@ -86,14 +86,14 @@ impl JumpAtPosition<'_> {
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
-            max_micro_ticks: self.max_micro_ticks,
+            max_micro_ticks: self.max_micro_tick,
         }.perform(ctx);
 
         WatchBallMove {
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_after_jump,
-            max_micro_ticks: self.max_micro_ticks,
+            max_micro_ticks: self.max_micro_tick,
             stop: true,
         }.perform(ctx);
 

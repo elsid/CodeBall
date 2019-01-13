@@ -10,6 +10,11 @@ use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
+const MAX_TIME: f64 = 1.6666666666666667;
+const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
+const FAR_MICRO_TICKS_PER_TICK: usize = 3;
+const MAX_MICRO_TICK: i32 = 1000;
+
 pub struct Order {
     pub id: i32,
     pub robot_id: i32,
@@ -38,19 +43,17 @@ impl Order {
         };
         let mut global_simulator = initial_simulator.clone();
         global_simulator.set_ignore_me(true);
-        let near_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 4;
-        let far_micro_ticks_per_tick = world.rules.MICROTICKS_PER_TICK / 30;
         let time_interval = world.rules.tick_time_interval();
-        let simulation_time_depth = world.rules.tick_time_interval() * 100.0;
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
-        let max_micro_ticks = 1000;
         #[cfg(feature = "enable_stats")]
         let mut total_micro_ticks: usize = 0;
         let mut next_action_id = 0;
         let mut order: Option<Order> = None;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
-        while (iterations < 5 || order.is_none()) && global_simulator.current_time() + time_interval < simulation_time_depth {
+        while (iterations < 5 || order.is_none())
+            && global_simulator.current_time() + time_interval < MAX_TIME {
+
             log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
             if ball_y < world.rules.max_robot_jump_height() {
@@ -92,10 +95,10 @@ impl Order {
                     log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
                     let before_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
                         log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
-                        far_micro_ticks_per_tick
+                        FAR_MICRO_TICKS_PER_TICK
                     } else {
                         log!(world.game.current_tick, "[{}] <{}> near", robot.id, action_id);
-                        near_micro_ticks_per_tick
+                        NEAR_MICRO_TICKS_PER_TICK
                     };
                     let mut time_to_ball = None;
                     #[cfg(feature = "enable_render")]
@@ -122,11 +125,11 @@ impl Order {
                         my_max_speed: required_speed,
                         my_jump_speed: world.rules.ROBOT_MAX_JUMP_SPEED,
                         ball_target: world.rules.get_goal_target(),
-                        max_time: simulation_time_depth,
+                        max_time: MAX_TIME,
                         tick_time_interval: time_interval,
                         micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
-                        micro_ticks_per_tick_after_jump: far_micro_ticks_per_tick,
-                        max_micro_ticks,
+                        micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
+                        max_micro_tick: MAX_MICRO_TICK,
                     }.perform(&mut ctx);
                     if local_simulator.score() != 0 {
                         log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
@@ -135,7 +138,7 @@ impl Order {
                         &world.rules,
                         &local_simulator,
                         time_to_ball,
-                        simulation_time_depth + time_interval,
+                        MAX_TIME + time_interval,
                         world.game.current_tick,
                         robot.id,
                         action_id,
@@ -176,7 +179,7 @@ impl Order {
                 }
             }
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
-                global_simulator.tick(time_interval, near_micro_ticks_per_tick, rng);
+                global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, rng);
             }
         }
         #[cfg(feature = "enable_stats")]
@@ -207,11 +210,11 @@ impl Order {
         };
 
         let action = JumpToBall {
-            max_time: simulation_time_depth,
+            max_time: MAX_TIME,
             tick_time_interval: time_interval,
-            micro_ticks_per_tick_before_jump: near_micro_ticks_per_tick,
-            micro_ticks_per_tick_after_jump: far_micro_ticks_per_tick,
-            max_micro_ticks,
+            micro_ticks_per_tick_before_jump: NEAR_MICRO_TICKS_PER_TICK,
+            micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
+            max_micro_ticks: MAX_MICRO_TICK,
         }.perform(&mut ctx);
 
         #[cfg(feature = "enable_stats")]
@@ -224,7 +227,7 @@ impl Order {
                 &world.rules,
                 &local_simulator,
                 time_to_ball,
-                simulation_time_depth + time_interval,
+                MAX_TIME + time_interval,
                 world.game.current_tick,
                 robot.id,
                 action_id,
@@ -287,17 +290,17 @@ impl Order {
             };
 
             let action = DoNothing {
-                max_time: simulation_time_depth,
+                max_time: MAX_TIME,
                 tick_time_interval: time_interval,
-                micro_ticks_per_tick: far_micro_ticks_per_tick,
-                max_micro_ticks,
+                micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
+                max_micro_ticks: MAX_MICRO_TICK,
             }.perform(&mut ctx);
 
             let action_score = get_action_score(
                 &world.rules,
                 &local_simulator,
                 time_to_ball,
-                simulation_time_depth + time_interval,
+                MAX_TIME + time_interval,
                 world.game.current_tick,
                 robot.id,
                 action_id,
