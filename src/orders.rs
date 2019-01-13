@@ -45,7 +45,7 @@ impl Order {
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
         let max_micro_ticks = 1000;
         #[cfg(feature = "enable_stats")]
-        let mut total_micro_ticks = 0;
+        let mut total_micro_ticks: usize = 0;
         let mut next_action_id = 0;
         let mut order: Option<Order> = None;
         let steps = [1, 3, 4, 8];
@@ -171,7 +171,7 @@ impl Order {
                     }
                     #[cfg(feature = "enable_stats")]
                     {
-                        total_micro_ticks += local_simulator.current_micro_tick();
+                        total_micro_ticks += local_simulator.current_micro_tick() as usize;
                     }
                 }
             }
@@ -181,7 +181,7 @@ impl Order {
         }
         #[cfg(feature = "enable_stats")]
         {
-            total_micro_ticks += global_simulator.current_micro_tick();
+            total_micro_ticks += global_simulator.current_micro_tick() as usize;
         }
 
         let action_id = next_action_id;
@@ -216,7 +216,7 @@ impl Order {
 
         #[cfg(feature = "enable_stats")]
         {
-            total_micro_ticks += local_simulator.current_micro_tick();
+            total_micro_ticks += local_simulator.current_micro_tick() as usize;
         }
 
         if let Some(v) = action {
@@ -305,6 +305,7 @@ impl Order {
 
             #[cfg(feature = "enable_stats")]
             {
+                total_micro_ticks += local_simulator.current_micro_tick() as usize;
                 stats.micro_ticks_to_end = local_simulator.current_micro_tick();
                 stats.time_to_end = local_simulator.current_time();
                 stats.time_to_score = if local_simulator.score() != 0 {
@@ -334,7 +335,7 @@ impl Order {
         {
             if let Some(v) = &mut order {
                 v.stats.total_iterations = iterations;
-                v.stats.total_micro_ticks = total_micro_ticks;
+                v.stats.total_micro_ticks += total_micro_ticks;
             }
         }
 

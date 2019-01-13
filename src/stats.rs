@@ -13,6 +13,6 @@ pub struct Stats {
     pub jump_simulation: bool,
     pub far_jump_simulation: bool,
     pub action_score: i32,
-    pub total_micro_ticks: i32,
+    pub total_micro_ticks: usize,
     pub current_step: i32,
 }

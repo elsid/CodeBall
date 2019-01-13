@@ -138,7 +138,7 @@ fn test_new_far_jump() {
         jump_simulation: false,
         far_jump_simulation: true,
         action_score: 1171,
-        total_micro_ticks: 9718,
+        total_micro_ticks: 9743,
         current_step: 0,
     });
 }

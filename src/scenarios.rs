@@ -332,7 +332,7 @@ impl JumpToBall {
             ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
         );
 
-        if !self.does_jump_hit_ball(ctx.simulator.clone(), ctx.rng.clone()) {
+        if !self.does_jump_hit_ball(ctx) {
             return None;
         }
 
@@ -371,13 +371,21 @@ impl JumpToBall {
         Some(action)
     }
 
-    pub fn does_jump_hit_ball(&self, mut simulator: Simulator, mut rng: XorShiftRng) -> bool {
+    pub fn does_jump_hit_ball(&self, ctx: &mut Context) -> bool {
         use crate::my_strategy::physics::MoveEquation;
         use crate::my_strategy::optimization::minimize1d;
+
+        let mut simulator = ctx.simulator.clone();
+        let mut rng = ctx.rng.clone();
 
         simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
 
         simulator.tick(self.tick_time_interval, self.micro_ticks_per_tick_before_jump, &mut rng);
+
+        #[cfg(feature = "enable_stats")]
+        {
+            ctx.stats.total_micro_ticks += self.micro_ticks_per_tick_before_jump;
+        }
 
         let my_move_equation = MoveEquation::from_entity(simulator.me(), simulator.rules());
         let ball_move_equation = MoveEquation::from_entity(simulator.ball(), simulator.rules());
