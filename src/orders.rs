@@ -134,43 +134,46 @@ impl Order {
                     if local_simulator.score() != 0 {
                         log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
                     }
-                    let action_score = get_action_score(
-                        &world.rules,
-                        &local_simulator,
-                        time_to_ball,
-                        MAX_TIME + time_interval,
-                        world.game.current_tick,
-                        robot.id,
-                        action_id,
-                    );
 
-                    #[cfg(feature = "enable_stats")]
-                    {
-                        stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-                        stats.time_to_end = local_simulator.current_time();
-                        stats.time_to_score = if local_simulator.score() != 0 {
-                            Some(stats.time_to_end)
-                        } else {
-                            None
-                        };
-                        stats.score = local_simulator.score();
-                        stats.action_score = action_score;
-                        stats.iteration = iterations;
-                        stats.current_step = steps[iterations.min(steps.len() - 1)];
-                    }
+                    if let Some(action) = action {
+                        let action_score = get_action_score(
+                            &world.rules,
+                            &local_simulator,
+                            time_to_ball,
+                            MAX_TIME + time_interval,
+                            world.game.current_tick,
+                            robot.id,
+                            action_id,
+                        );
 
-                    log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
-                    if order.is_none() || order.as_ref().unwrap().score < action_score {
-                        order = Some(Order {
-                            id: action_id,
-                            robot_id: robot.id,
-                            action,
-                            score: action_score,
-                            #[cfg(feature = "enable_render")]
-                            history,
-                            #[cfg(feature = "enable_stats")]
-                            stats,
-                        });
+                        #[cfg(feature = "enable_stats")]
+                        {
+                            stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+                            stats.time_to_end = local_simulator.current_time();
+                            stats.time_to_score = if local_simulator.score() != 0 {
+                                Some(stats.time_to_end)
+                            } else {
+                                None
+                            };
+                            stats.score = local_simulator.score();
+                            stats.action_score = action_score;
+                            stats.iteration = iterations;
+                            stats.current_step = steps[iterations.min(steps.len() - 1)];
+                        }
+
+                        log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
+                        if order.is_none() || order.as_ref().unwrap().score < action_score {
+                            order = Some(Order {
+                                id: action_id,
+                                robot_id: robot.id,
+                                action,
+                                score: action_score,
+                                #[cfg(feature = "enable_render")]
+                                history,
+                                #[cfg(feature = "enable_stats")]
+                                stats,
+                            });
+                        }
                     }
                     #[cfg(feature = "enable_stats")]
                     {
@@ -358,7 +361,7 @@ impl Order {
 
         render.add(Object::text(format!(
             "  order:\n    score: {}\n    speed: {}\n    jump: {}\n",
-            self.score, self.action.target_velocity().norm(), self.action.jump_speed
+            self.score, self.action.target_velocity().norm(), self.action.jump_speed,
         )));
     }
 

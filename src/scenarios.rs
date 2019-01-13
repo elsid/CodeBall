@@ -47,7 +47,7 @@ pub struct JumpAtPosition<'r> {
 }
 
 impl JumpAtPosition<'_> {
-    pub fn perform(&self, ctx: &mut Context) -> Action {
+    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::entity::Entity;
 
         log!(
@@ -68,8 +68,6 @@ impl JumpAtPosition<'_> {
         }.perform(ctx);
 
         if before_move == ctx.simulator.current_time() {
-            action.jump_speed = self.my_jump_speed;
-
             log!(
                 ctx.current_tick, "[{}] <{}> jump now {}:{} kick_ball_position={} ball={}",
                 ctx.robot_id, ctx.action_id,
@@ -79,7 +77,7 @@ impl JumpAtPosition<'_> {
             );
         }
 
-        Jump {
+        action = action.or(Jump {
             target: self.kick_ball_position,
             max_speed: self.my_max_speed,
             jump_speed: self.my_jump_speed,
@@ -87,15 +85,15 @@ impl JumpAtPosition<'_> {
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
             max_micro_ticks: self.max_micro_tick,
-        }.perform(ctx);
+        }.perform(ctx));
 
-        WatchBallMove {
+        action = action.or(WatchBallMove {
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_after_jump,
             max_micro_ticks: self.max_micro_tick,
             stop: true,
-        }.perform(ctx);
+        }.perform(ctx));
 
         action
     }
@@ -111,7 +109,7 @@ pub struct WalkToPosition {
 }
 
 impl WalkToPosition {
-    pub fn perform(&self, ctx: &mut Context) -> Action {
+    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::CollisionType;
 
@@ -119,14 +117,7 @@ impl WalkToPosition {
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        let target_velocity = self.get_target_velocity(
-            ctx.simulator.me().position(),
-            ctx.simulator.me().normal_to_arena(),
-            ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED,
-        );
-        ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
-
-        let action = ctx.simulator.me().action().clone();
+        let mut action = None;
 
         let max_distance_to_target = self.max_speed * self.tick_time_interval;
         let max_distance_to_ball = ctx.simulator.rules().ball_distance_limit()
@@ -156,6 +147,10 @@ impl WalkToPosition {
                 ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED,
             );
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+
+            if action.is_none() {
+                action = Some(ctx.simulator.me().action().clone());
+            }
 
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
 
@@ -197,7 +192,7 @@ pub struct Jump {
 }
 
 impl Jump {
-    pub fn perform(&self, ctx: &mut Context) -> Action {
+    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::CollisionType;
 
@@ -211,10 +206,7 @@ impl Jump {
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
-        ctx.simulator.me_mut().action_mut().set_target_velocity(stored_action.target_velocity());
-
-        let action = ctx.simulator.me().action().clone();
+        let mut action = None;
 
         let min_distance_to_target = self.max_speed * self.tick_time_interval;
         let min_distance_to_ball = ctx.simulator.rules().ball_distance_limit()
@@ -234,6 +226,14 @@ impl Jump {
             && ctx.simulator.score() == 0
             && ctx.simulator.me().ball_collision_type() == CollisionType::None {
 
+            ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
+            let target_velocity = ctx.simulator.me().velocity();
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+
+            if action.is_none() {
+                action = Some(ctx.simulator.me().action().clone());
+            }
+
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
 
             log!(
@@ -246,11 +246,17 @@ impl Jump {
             );
         }
 
+        *ctx.simulator.me_mut().action_mut() = Action::default();
+
         while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
             && ctx.simulator.current_micro_tick() < self.max_micro_ticks
             && ctx.simulator.score() == 0
             && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
                     <= min_distance_to_ball {
+
+            if action.is_none() {
+                action = Some(ctx.simulator.me().action().clone());
+            }
 
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
 
@@ -279,7 +285,7 @@ pub struct WatchBallMove {
 }
 
 impl WatchBallMove {
-    pub fn perform(&self, ctx: &mut Context) -> Action {
+    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::entity::Entity;
 
         #[cfg(feature = "enable_stats")]
@@ -297,7 +303,7 @@ impl WatchBallMove {
             ctx.simulator.me_mut().action_mut().set_target_velocity(Vec3::default());
         }
 
-        let action = ctx.simulator.me().action().clone();
+        let mut action = None;
 
         log!(
             ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
@@ -309,6 +315,10 @@ impl WatchBallMove {
         while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
             && ctx.simulator.current_micro_tick() < self.max_micro_ticks
             && ctx.simulator.score() == 0 {
+
+            if action.is_none() {
+                action = Some(ctx.simulator.me().action().clone());
+            }
 
             log!(
                 ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",

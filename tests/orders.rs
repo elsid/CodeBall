@@ -65,9 +65,9 @@ fn test_new_should_not_jump_on_ball_top() {
 
     let result = Order::new(&world.me, &world, &mut rng).unwrap();
 
-    assert_eq!(result.action.target_velocity(), Vec3::new(16.27127572705258, 0.0, 25.204078761466953));
+    assert_eq!(result.action.target_velocity(), Vec3::new(16.778350649872877, 0.0, 24.86939785097159));
     assert_eq!(result.action.jump_speed, 0.0);
-    assert_eq!(result.score, 1336);
+    assert_eq!(result.score, 1356);
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats, Stats {
@@ -83,7 +83,7 @@ fn test_new_should_not_jump_on_ball_top() {
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1336,
+        action_score: 1356,
         total_micro_ticks: 6825,
         current_step: 8,
     });

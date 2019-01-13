@@ -70,24 +70,30 @@ fn test_two_robots_first_ball_kick() {
         &simulator.rules(),
         &simulator.game(),
     );
+
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().position().y() - simulator.me().radius() < 1e-3
-            && simulator.current_tick() < 45
+            && simulator.current_tick() < 100
     });
+
+    assert_eq!(simulator.me().position().y(), 1.2931412499999937);
+    assert_eq!(simulator.current_tick(), 44);
+
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().ball_collision_type() == CollisionType::None
-            && simulator.current_tick() < 45
+            && simulator.current_tick() < 100
     });
-    assert_eq!(simulator.current_tick(), 45);
+
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.01351300403589236,
-        y: 3.5032015849146876,
-        z: 0.110906932432163,
-        velocity_x: 3.5111168841242457,
-        velocity_y: 32.473218681186175,
-        velocity_z: 28.817219472049022,
+        x: 0.022607959970376436,
+        y: 3.5121352045713805,
+        z: 0.1205824993684884,
+        velocity_x: 5.382291409553884,
+        velocity_y: 32.66051720115633,
+        velocity_z: 28.7071523190929,
         radius: 2.0,
     });
+    assert_eq!(simulator.current_tick(), 45);
 }
 
 fn simulate_while<P>(my_strategy: &mut MyStrategyImpl, simulator: &mut Simulator,
