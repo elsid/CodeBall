@@ -3,6 +3,7 @@ use crate::strategy::Strategy;
 use crate::my_strategy::random::{XorShiftRng, SeedableRng};
 use crate::my_strategy::world::World;
 use crate::my_strategy::orders::Order;
+use crate::my_strategy::common::IdGenerator;
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
@@ -14,7 +15,9 @@ pub struct MyStrategyImpl {
 //    tick_start_time: Instant,
 //    cpu_time_spent: Duration,
     last_tick: i32,
-    order: Option<Order>,
+    active_order: Option<Order>,
+    passive_orders: Vec<Order>,
+    order_id_generator: IdGenerator,
     #[cfg(feature = "enable_render")]
     render: Render,
 }
@@ -36,13 +39,13 @@ impl Strategy for MyStrategyImpl {
             self.last_tick = game.current_tick;
             self.update_world(me, game);
             if self.world.is_reset_ticks() {
-                self.order = None;
+                self.active_order = None;
             } else {
                 self.give_orders();
             }
             #[cfg(feature = "enable_stats")]
-            for v in self.order.iter() {
-                println!("{}", serde_json::to_string(&v.stats).unwrap());
+            for v in self.active_order.iter() {
+                println!("{}", serde_json::to_string(&v.stats()).unwrap());
             }
             #[cfg(feature = "enable_render")]
             self.render();
@@ -75,7 +78,9 @@ impl MyStrategyImpl {
 //            tick_start_time: start_time,
 //            cpu_time_spent: Duration::default(),
             last_tick: -1,
-            order: None,
+            active_order: None,
+            passive_orders: Vec::new(),
+            order_id_generator: IdGenerator::new(),
             #[cfg(feature = "enable_render")]
             render: Render::new(),
         }
@@ -97,50 +102,55 @@ impl MyStrategyImpl {
     fn give_orders(&mut self) {
         let world = &self.world;
         let rng = &mut self.rng;
-        self.order = if let Some(action) = &self.order {
-            let robot = world.get_robot(action.robot_id);
-            let current_robot_action = Order::new(robot, world, rng);
-            if let Some(a) = current_robot_action {
+        let order_id_generator = &mut self.order_id_generator;
+        self.active_order = if let Some(order) = &self.active_order {
+            let robot = world.get_robot(order.robot_id());
+            let current_robot_order = Order::try_play(robot, world, rng, order_id_generator);
+            if let Some(current) = current_robot_order {
                 world.game.robots.iter()
-                    .filter(|v| v.is_teammate && v.id != action.robot_id)
-                    .filter_map(|v| Order::new(v, world, rng))
-                    .max_by_key(|v| v.score)
-                    .filter(|v| v.score > a.score + 100)
-                    .or(Some(a))
+                    .filter(|v| v.is_teammate && v.id != order.robot_id())
+                    .filter_map(|v| Order::try_play(v, world, rng, order_id_generator))
+                    .max_by_key(|v| v.score())
+                    .filter(|v| v.score() > current.score() + 100)
+                    .or(Some(current))
             } else {
                 world.game.robots.iter()
-                    .filter(|v| v.is_teammate && v.id != action.robot_id)
-                    .filter_map(|v| Order::new(v, world, rng))
-                    .max_by_key(|v| v.score)
+                    .filter(|v| v.is_teammate && v.id != order.robot_id())
+                    .filter_map(|v| Order::try_play(v, world, rng, order_id_generator))
+                    .max_by_key(|v| v.score())
             }
         } else {
             world.game.robots.iter()
                 .filter(|v| v.is_teammate)
-                .filter_map(|v| Order::new(v, world, rng))
-                .max_by_key(|v| v.score)
+                .filter_map(|v| Order::try_play(v, world, rng, order_id_generator))
+                .max_by_key(|v| v.score())
         };
+        let active_order = self.active_order.as_ref();
+        self.passive_orders = world.game.robots.iter()
+            .filter(|robot| {
+                active_order
+                    .map(|v| v.robot_id() != robot.id)
+                    .unwrap_or(true)
+            })
+            .map(|robot| {
+                Order::walk_to_goalkeeper_position(robot, world, order_id_generator)
+            })
+            .collect();
     }
 
     fn apply_action(&mut self, action: &mut Action) {
-        let action_applied = self.order.iter()
-            .find(|v| v.robot_id == self.world.me.id)
+        self.active_order.iter()
+            .find(|v| v.robot_id() == self.world.me.id)
             .map(|v| {
-                *action = v.action.clone();
-                log!(self.world.game.current_tick, "[{}] <{}> apply order {:?}", self.world.me.id, v.id, action);
-            })
-            .is_some();
-        if action_applied {
-            return;
-        }
-        let target = self.world.rules.get_goalkeeper_position();
-        let to_target = target - self.world.me.position();
-        let velocity = if to_target.norm() > self.world.rules.min_running_distance() {
-            to_target.normalized() * self.world.rules.ROBOT_MAX_GROUND_SPEED
-        } else {
-            to_target
-        };
-        action.set_target_velocity(velocity);
-        log!(self.world.game.current_tick, "[{}] apply default action {:?}", self.world.me.id, action);
+                *action = v.action().clone();
+                log!(self.world.game.current_tick, "[{}] <{}> apply active order {:?}", self.world.me.id, v.id(), action);
+            });
+        self.passive_orders.iter()
+            .find(|v| v.robot_id() == self.world.me.id)
+            .map(|v| {
+                *action = v.action().clone();
+                log!(self.world.game.current_tick, "[{}] <{}> apply passive order {:?}", self.world.me.id, v.id(), action);
+            });
     }
 
     #[cfg(feature = "enable_render")]
@@ -155,8 +165,8 @@ impl MyStrategyImpl {
         for robot in robots {
             robot.render(render);
 
-            let order = self.order.iter()
-                .find(|v| v.robot_id == robot.id)
+            let order = self.active_order.iter()
+                .find(|v| v.robot_id() == robot.id)
                 .map(|v| v);
 
             if let Some(order) = order {

@@ -64,3 +64,19 @@ impl BuildHasher for ConstState {
         DefaultHasher::new()
     }
 }
+
+pub struct IdGenerator {
+    next: i32,
+}
+
+impl IdGenerator {
+    pub fn new() -> Self {
+        IdGenerator {next: 1}
+    }
+
+    pub fn next(&mut self) -> i32 {
+        let result = self.next;
+        self.next += 1;
+        result
+    }
+}

@@ -5,8 +5,11 @@ use crate::my_strategy::simulator::{Simulator, BallExt};
 use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::entity::Entity;
+use crate::my_strategy::common::IdGenerator;
+
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
+
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
@@ -15,7 +18,91 @@ const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 const MAX_MICRO_TICK: i32 = 1000;
 
-pub struct Order {
+pub enum Order {
+    Play(Play),
+    WalkToGoalkeeperPosition(WalkToGoalkeeperPosition),
+}
+
+impl Order {
+    pub fn try_play(robot: &Robot, world: &World, rng: &mut XorShiftRng, order_id_generator: &mut IdGenerator) -> Option<Order> {
+        Play::try_new(robot, world, rng, order_id_generator)
+            .map(|v| Order::Play(v))
+    }
+
+    pub fn walk_to_goalkeeper_position(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Order {
+        Order::WalkToGoalkeeperPosition(
+            WalkToGoalkeeperPosition::new(robot, world, order_id_generator)
+        )
+    }
+
+    pub fn id(&self) -> i32 {
+        match self {
+            Order::Play(v) => v.id,
+            Order::WalkToGoalkeeperPosition(v) => v.id,
+        }
+    }
+
+    pub fn robot_id(&self) -> i32 {
+        match self {
+            Order::Play(v) => v.robot_id,
+            Order::WalkToGoalkeeperPosition(v) => v.robot_id,
+        }
+    }
+
+    pub fn score(&self) -> i32 {
+        match self {
+            Order::Play(v) => v.score,
+            Order::WalkToGoalkeeperPosition(v) => v.score,
+        }
+    }
+
+    pub fn action(&self) -> &Action {
+        match self {
+            Order::Play(v) => &v.action,
+            Order::WalkToGoalkeeperPosition(v) => &v.action,
+        }
+    }
+
+    #[cfg(feature = "enable_stats")]
+    pub fn stats(&self) -> Stats {
+        match self {
+            Order::Play(v) => v.stats.clone(),
+            Order::WalkToGoalkeeperPosition(_) => Stats::default(),
+        }
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render(&self, robot: &Robot, render: &mut Render) {
+        self.render_text(render);
+        self.render_action(robot, render);
+        self.render_sub(render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_text(&self, render: &mut Render) {
+        use crate::my_strategy::render::Object;
+
+        render.add(Object::text(format!(
+            "  order:\n    score: {}\n    speed: {}\n    jump: {}\n",
+            self.score(), self.action().target_velocity().norm(), self.action().jump_speed
+        )));
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_action(&self, robot: &Robot, render: &mut Render) {
+        self.action().render(robot, render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_sub(&self, render: &mut Render) {
+        match self {
+            Order::Play(v) => v.render(render),
+            Order::WalkToGoalkeeperPosition(_) => (),
+        }
+    }
+}
+
+pub struct Play {
     pub id: i32,
     pub robot_id: i32,
     pub action: Action,
@@ -26,8 +113,9 @@ pub struct Order {
     pub stats: Stats,
 }
 
-impl Order {
-    pub fn new(robot: &Robot, world: &World, rng: &mut XorShiftRng) -> Option<Order> {
+impl Play {
+    pub fn try_new(robot: &Robot, world: &World, rng: &mut XorShiftRng,
+                   order_id_generator: &mut IdGenerator) -> Option<Self> {
         use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall, DoNothing};
 
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
@@ -47,8 +135,7 @@ impl Order {
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
         #[cfg(feature = "enable_stats")]
         let mut total_micro_ticks: usize = 0;
-        let mut next_action_id = 0;
-        let mut order: Option<Order> = None;
+        let mut order: Option<Play> = None;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
         while (iterations < 5 || order.is_none())
@@ -83,8 +170,7 @@ impl Order {
                     } else {
                         world.rules.ROBOT_MAX_GROUND_SPEED
                     };
-                    let action_id = next_action_id;
-                    next_action_id += 1;
+                    let action_id = order_id_generator.next();
                     log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", robot.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
                     let mut local_simulator = initial_simulator.clone();
                     let velocity = if distance_to_target > 1e-3 {
@@ -163,7 +249,7 @@ impl Order {
 
                         log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
                         if order.is_none() || order.as_ref().unwrap().score < action_score {
-                            order = Some(Order {
+                            order = Some(Play {
                                 id: action_id,
                                 robot_id: robot.id,
                                 action,
@@ -190,8 +276,7 @@ impl Order {
             total_micro_ticks += global_simulator.current_micro_tick() as usize;
         }
 
-        let action_id = next_action_id;
-        next_action_id += 1;
+        let action_id = order_id_generator.next();
         let mut local_simulator = initial_simulator.clone();
         let mut time_to_ball = None;
         #[cfg(feature = "enable_render")]
@@ -256,7 +341,7 @@ impl Order {
             );
 
             if order.is_none() || order.as_ref().unwrap().score < action_score {
-                order = Some(Order {
+                order = Some(Play {
                     id: action_id,
                     robot_id: robot.id,
                     action: v,
@@ -270,8 +355,7 @@ impl Order {
         }
 
         if order.is_none() || order.as_ref().unwrap().score < 0 {
-            let action_id = next_action_id;
-            next_action_id += 1;
+            let action_id = order_id_generator.next();
             let mut local_simulator = initial_simulator.clone();
             let mut time_to_ball = None;
             #[cfg(feature = "enable_render")]
@@ -324,7 +408,7 @@ impl Order {
             }
 
             if order.is_none() || order.as_ref().unwrap().score < action_score {
-                order = Some(Order {
+                order = Some(Play {
                     id: action_id,
                     robot_id: robot.id,
                     action,
@@ -349,25 +433,8 @@ impl Order {
     }
 
     #[cfg(feature = "enable_render")]
-    pub fn render(&self, robot: &Robot, render: &mut Render) {
-        self.render_text(render);
-        self.render_action(robot, render);
+    pub fn render(&self, render: &mut Render) {
         render_history(&self.history, render);
-    }
-
-    #[cfg(feature = "enable_render")]
-    pub fn render_text(&self, render: &mut Render) {
-        use crate::my_strategy::render::Object;
-
-        render.add(Object::text(format!(
-            "  order:\n    score: {}\n    speed: {}\n    jump: {}\n",
-            self.score, self.action.target_velocity().norm(), self.action.jump_speed,
-        )));
-    }
-
-    #[cfg(feature = "enable_render")]
-    pub fn render_action(&self, robot: &Robot, render: &mut Render) {
-        self.action.render(robot, render);
     }
 }
 
@@ -445,4 +512,31 @@ pub fn get_points(ball: &BallExt, robot: &Robot, rules: &Rules, rng: &mut XorShi
         result.push(rules.arena.projected_with_shift(position, rules.ROBOT_MAX_RADIUS));
     }
     result
+}
+
+pub struct WalkToGoalkeeperPosition {
+    pub id: i32,
+    pub robot_id: i32,
+    pub action: Action,
+    pub score: i32,
+}
+
+impl WalkToGoalkeeperPosition {
+    pub fn new(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Self {
+        let target = world.rules.get_goalkeeper_position();
+        let to_target = target - robot.position();
+        let velocity = if to_target.norm() > world.rules.min_running_distance() {
+            to_target.normalized() * world.rules.ROBOT_MAX_GROUND_SPEED
+        } else {
+            to_target
+        };
+        let mut action = Action::default();
+        action.set_target_velocity(velocity);
+        WalkToGoalkeeperPosition {
+            id: order_id_generator.next(),
+            robot_id: robot.id,
+            action,
+            score: 0,
+        }
+    }
 }

@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Default, Serialize)]
+#[derive(Debug, PartialEq, Default, Serialize, Clone)]
 pub struct Stats {
     pub micro_ticks_to_jump: i32,
     pub micro_ticks_to_watch: i32,
