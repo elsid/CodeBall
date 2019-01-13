@@ -311,7 +311,7 @@ impl WatchBallMove {
             && ctx.simulator.score() == 0 {
 
             log!(
-                ctx.current_tick, "[{}] <{}> watch {}:{} ball_position={:?}",
+                ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
                 ctx.robot_id, ctx.action_id,
                 ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
                 ctx.simulator.ball().position()
