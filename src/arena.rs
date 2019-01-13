@@ -51,6 +51,13 @@ impl Arena {
         position - normal * (distance - shift)
     }
 
+    pub fn projected_at(&self, position: Vec3, value: Vec3) -> Vec3 {
+        use crate::my_strategy::plane::Plane;
+
+        let (_, normal) = self.distance_and_normal(position);
+        Plane::projected(value, normal)
+    }
+
     pub fn distance_and_normal(&self, mut position: Vec3) -> (f64, Vec3) {
         let negate_x = position.x() < 0.0;
         let negate_z = position.z() < 0.0;

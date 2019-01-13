@@ -453,9 +453,16 @@ fn test_simulator_robot_walk_on_wall() {
     let mut rng = example_rng();
     let mut prev_y = simulator.me().position().y();
     let mut max_y = simulator.me().position().y();
-    simulator.me_mut().action_mut()
-        .set_target_velocity(Vec3::only_x(world.rules.ROBOT_MAX_GROUND_SPEED));
     while prev_y - simulator.me().position().y() <= 1e-3 {
+        if simulator.me().velocity().norm() < 1.0 {
+            simulator.me_mut().action_mut()
+                .set_target_velocity(Vec3::only_x(world.rules.ROBOT_MAX_GROUND_SPEED));
+        } else {
+            let v = world.rules.arena
+                .projected_at(simulator.me().position(), simulator.me().velocity())
+                .normalized() * world.rules.ROBOT_MAX_GROUND_SPEED;
+            simulator.me_mut().action_mut().set_target_velocity(v);
+        }
         prev_y = simulator.me().position().y();
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -464,14 +471,14 @@ fn test_simulator_robot_walk_on_wall() {
         );
         max_y = max_y.max(simulator.me().position().y());
     }
-    assert_eq!(max_y, 10.105629646194776);
+    assert_eq!(max_y, 16.67704416378882);
     assert_eq!(
         simulator.me().position(),
-        Vec3::new(29.0, 10.104553563147775, -17.463246216636257)
+        Vec3::new(27.271399780469423, 16.66802419546084, -17.463246216636257)
     );
     assert_eq!(
         simulator.me().normal_to_arena(),
-        Vec3::new(-1.0, 0.0, -0.0)
+        Vec3::new(-0.7586573602400657, -0.6514898385650963, -0.0)
     );
-    assert_eq!(simulator.me().distance_to_arena(), 1.0);
+    assert_eq!(simulator.me().distance_to_arena(), 1.369790627065421);
 }
