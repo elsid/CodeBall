@@ -46,6 +46,9 @@ pub mod ball;
 #[path = "robot.rs"]
 pub mod robot;
 
+#[path = "nitro_pack.rs"]
+pub mod nitro_pack;
+
 #[path = "world.rs"]
 pub mod world;
 

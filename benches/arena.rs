@@ -10,7 +10,7 @@ fn arena_collide(c: &mut Criterion) {
     c.bench_function("arena_collide", |b| {
         let arena = example_arena();
         let rules = example_rules();
-        let ball = example_ball();
+        let ball = example_ball(&rules);
         b.iter(move || {
             let mut ball = BallExt::new(
                 ball.clone(),

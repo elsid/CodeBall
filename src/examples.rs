@@ -1,6 +1,21 @@
-use crate::model::{Arena, Ball, Game, Player, Robot, Rules};
+use crate::model::{Arena, Ball, Game, Player, Robot, Rules, NitroPack};
 use crate::my_strategy::world::World;
 use crate::my_strategy::random::{XorShiftRng, SeedableRng};
+
+#[derive(Copy, Clone)]
+pub enum GameType {
+    TwoRobots,
+    TwoRobotsWithNitro,
+}
+
+impl GameType {
+    pub fn nitro(self) -> bool {
+        match self {
+            GameType::TwoRobots => false,
+            GameType::TwoRobotsWithNitro => true,
+        }
+    }
+}
 
 pub fn example_rng() -> XorShiftRng {
     let rules = example_rules();
@@ -12,11 +27,16 @@ pub fn example_rng() -> XorShiftRng {
     ])
 }
 
-pub fn example_world() -> World {
-    World::new(example_me(), example_rules(), example_game())
+pub fn example_world(game_type: GameType) -> World {
+    let rules = example_rules();
+    World::new(
+        example_me(game_type, &rules),
+        rules.clone(),
+        example_game(game_type, &rules)
+    )
 }
 
-pub fn example_game() -> Game {
+pub fn example_game(game_type: GameType, rules: &Rules) -> Game {
     Game {
         current_tick: 0,
         players: vec![
@@ -24,29 +44,74 @@ pub fn example_game() -> Game {
             Player { id: 2, me: false, strategy_crashed: false, score: 0 },
         ],
         robots: vec![
-            example_me(),
-            example_teammate(),
-            example_opponent_1(),
-            example_opponent_2(),
+            example_me(game_type, rules),
+            example_teammate(game_type, rules),
+            example_opponent_1(game_type, rules),
+            example_opponent_2(game_type, rules),
         ],
-        nitro_packs: vec![],
-        ball: example_ball(),
+        nitro_packs: if game_type.nitro() {
+            vec![
+                NitroPack {
+                    id: 1,
+                    x: -rules.NITRO_PACK_X,
+                    y: rules.NITRO_PACK_Y,
+                    z: -rules.NITRO_PACK_Z,
+                    radius: rules.NITRO_PACK_RADIUS,
+                    nitro_amount: rules.NITRO_PACK_AMOUNT,
+                    respawn_ticks: None,
+                },
+                NitroPack {
+                    id: 2,
+                    x: -rules.NITRO_PACK_X,
+                    y: rules.NITRO_PACK_Y,
+                    z: rules.NITRO_PACK_Z,
+                    radius: rules.NITRO_PACK_RADIUS,
+                    nitro_amount: rules.NITRO_PACK_AMOUNT,
+                    respawn_ticks: None,
+                },
+                NitroPack {
+                    id: 3,
+                    x: rules.NITRO_PACK_X,
+                    y: rules.NITRO_PACK_Y,
+                    z: -rules.NITRO_PACK_Z,
+                    radius: rules.NITRO_PACK_RADIUS,
+                    nitro_amount: rules.NITRO_PACK_AMOUNT,
+                    respawn_ticks: None,
+                },
+                NitroPack {
+                    id: 4,
+                    x: rules.NITRO_PACK_X,
+                    y: rules.NITRO_PACK_Y,
+                    z: rules.NITRO_PACK_Z,
+                    radius: rules.NITRO_PACK_RADIUS,
+                    nitro_amount: rules.NITRO_PACK_AMOUNT,
+                    respawn_ticks: None,
+                },
+            ]
+        } else {
+            vec![]
+        },
+        ball: example_ball(rules),
     }
 }
 
-pub fn example_me() -> Robot {
+pub fn example_me(game_type: GameType, rules: &Rules) -> Robot {
     Robot {
         id: 1,
         player_id: 1,
         is_teammate: true,
         x: 9.748591261158683,
-        y: 1.0,
+        y: rules.ROBOT_RADIUS,
         z: -17.463246216636257,
         velocity_x: 0.0,
         velocity_y: 0.0,
         velocity_z: 0.0,
-        radius: 1.0,
-        nitro_amount: 0.0,
+        radius: rules.ROBOT_RADIUS,
+        nitro_amount: if game_type.nitro() {
+            rules.START_NITRO_AMOUNT
+        } else {
+            0.0
+        },
         touch: true,
         touch_normal_x: Some(0.0),
         touch_normal_y: Some(1.0),
@@ -54,19 +119,23 @@ pub fn example_me() -> Robot {
     }
 }
 
-pub fn example_teammate() -> Robot {
+pub fn example_teammate(game_type: GameType, rules: &Rules) -> Robot {
     Robot {
         id: 2,
         player_id: 1,
         is_teammate: true,
         x: -10.24931922557014,
-        y: 1.0,
+        y: rules.ROBOT_RADIUS,
         z: -17.17415079159253,
         velocity_x: 0.0,
         velocity_y: 0.0,
         velocity_z: 0.0,
-        radius: 1.0,
-        nitro_amount: 0.0,
+        radius: rules.ROBOT_RADIUS,
+        nitro_amount: if game_type.nitro() {
+            rules.START_NITRO_AMOUNT
+        } else {
+            0.0
+        },
         touch: true,
         touch_normal_x: Some(0.0),
         touch_normal_y: Some(1.0),
@@ -74,7 +143,7 @@ pub fn example_teammate() -> Robot {
     }
 }
 
-pub fn example_opponent_1() -> Robot {
+pub fn example_opponent_1(game_type: GameType, rules: &Rules) -> Robot {
     Robot {
         id: 3,
         player_id: 2,
@@ -85,8 +154,12 @@ pub fn example_opponent_1() -> Robot {
         velocity_x: 0.0,
         velocity_y: 0.0,
         velocity_z: 0.0,
-        radius: 1.0,
-        nitro_amount: 0.0,
+        radius: rules.ROBOT_RADIUS,
+        nitro_amount: if game_type.nitro() {
+            rules.START_NITRO_AMOUNT
+        } else {
+            0.0
+        },
         touch: true,
         touch_normal_x: Some(0.0),
         touch_normal_y: Some(1.0),
@@ -94,7 +167,7 @@ pub fn example_opponent_1() -> Robot {
     }
 }
 
-pub fn example_opponent_2() -> Robot {
+pub fn example_opponent_2(game_type: GameType, rules: &Rules) -> Robot {
     Robot {
         id: 4,
         player_id: 2,
@@ -105,8 +178,12 @@ pub fn example_opponent_2() -> Robot {
         velocity_x: 0.0,
         velocity_y: 0.0,
         velocity_z: 0.0,
-        radius: 1.0,
-        nitro_amount: 0.0,
+        radius: rules.ROBOT_RADIUS,
+        nitro_amount: if game_type.nitro() {
+            rules.START_NITRO_AMOUNT
+        } else {
+            0.0
+        },
         touch: true,
         touch_normal_x: Some(0.0),
         touch_normal_y: Some(1.0),
@@ -114,7 +191,7 @@ pub fn example_opponent_2() -> Robot {
     }
 }
 
-pub fn example_ball() -> Ball {
+pub fn example_ball(rules: &Rules) -> Ball {
     Ball {
         x: 0.0,
         y: 7.837328533066,
@@ -122,7 +199,7 @@ pub fn example_ball() -> Ball {
         velocity_x: 0.0,
         velocity_y: 0.0,
         velocity_z: 0.0,
-        radius: 2.0,
+        radius: rules.BALL_RADIUS,
     }
 }
 

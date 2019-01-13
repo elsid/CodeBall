@@ -1,13 +1,13 @@
 #[test]
 fn test_new() {
-    use my_strategy::examples::{example_world, example_rng};
+    use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::orders::Order;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
-    let world = example_world();
+    let world = example_world(GameType::TwoRobots);
     let mut rng = example_rng();
     let result = Order::new(&world.me, &world, &mut rng).unwrap();
 
@@ -37,7 +37,7 @@ fn test_new() {
 
 #[test]
 fn test_new_should_not_jump_on_ball_top() {
-    use my_strategy::examples::example_world;
+    use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
     use my_strategy::my_strategy::orders::Order;
@@ -45,7 +45,7 @@ fn test_new_should_not_jump_on_ball_top() {
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
-    let mut world = example_world();
+    let mut world = example_world(GameType::TwoRobots);
     let mut rng = XorShiftRng::from_seed([
         1662648909,
         2447818268,
@@ -91,7 +91,7 @@ fn test_new_should_not_jump_on_ball_top() {
 
 #[test]
 fn test_new_far_jump() {
-    use my_strategy::examples::example_world;
+    use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
     use my_strategy::my_strategy::orders::Order;
@@ -99,7 +99,7 @@ fn test_new_far_jump() {
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
-    let mut world = example_world();
+    let mut world = example_world(GameType::TwoRobots);
     let mut rng = XorShiftRng::from_seed([
         1662648909,
         2447818268,

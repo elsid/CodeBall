@@ -29,6 +29,7 @@ cp src/optimization.rs ${DIR}/src
 cp src/physics.rs ${DIR}/src
 cp src/scenarios.rs ${DIR}/src
 cp src/mat3.rs ${DIR}/src
+cp src/nitro_pack.rs ${DIR}/src
 
 cd ${DIR}/src
 

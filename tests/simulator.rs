@@ -2,11 +2,11 @@ use my_strategy::my_strategy::vec3::Vec3;
 use my_strategy::my_strategy::simulator::{Simulator, CollisionType, RobotExt, BallExt};
 use my_strategy::my_strategy::entity::Entity;
 use my_strategy::my_strategy::common::IsBetween;
-use my_strategy::examples::{example_world, example_rules, example_me, example_ball, example_rng};
+use my_strategy::examples::{GameType, example_world, example_rules, example_me, example_ball, example_rng};
 
 #[test]
 fn test_simulator_tick_robot_jump() {
-    let world = example_world();
+    let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
     let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
@@ -23,7 +23,7 @@ fn test_simulator_tick_robot_jump() {
 
 #[test]
 fn test_simulator_tick_robot_jump_with_half_micro_ticks() {
-    let world = example_world();
+    let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
     let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
@@ -44,7 +44,7 @@ fn test_simulator_tick_robot_jump_with_half_micro_ticks() {
 
 #[test]
 fn test_simulator_robot_jump() {
-    let world = example_world();
+    let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
     let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
@@ -73,7 +73,7 @@ fn test_simulator_robot_jump() {
 
 #[test]
 fn test_simulator_robot_jump_with_half_micro_ticks() {
-    let world = example_world();
+    let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
     let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
@@ -105,7 +105,7 @@ fn test_simulator_robot_kick_ball() {
     use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
 
     let world = {
-        let mut world = example_world();
+        let mut world = example_world(GameType::TwoRobots);
         world.game.ball.y = world.rules.BALL_RADIUS + 0.4;
         world.game.ball.set_velocity(Vec3::new(0.0, -5.0, -5.0));
         let distance = get_min_distance_between_spheres(
@@ -150,7 +150,7 @@ fn test_simulator_robot_kick_ball() {
 #[test]
 fn test_simulator_wait_for_goal() {
     let world = {
-        let mut world = example_world();
+        let mut world = example_world(GameType::TwoRobots);
         world.game.ball.y = 7.584569693698086;
         world.game.ball.x = 2.354339378140074;
         world.game.ball.z = 27.7479348041067;
@@ -176,7 +176,7 @@ fn test_simulator_wait_for_goal() {
 #[test]
 fn test_simulator_throw_ball_by_plus_x_and_z() {
     let world = {
-        let mut world = example_world();
+        let mut world = example_world(GameType::TwoRobots);
         world.game.ball.velocity_x = world.rules.MAX_ENTITY_SPEED / 2.0;
         world.game.ball.velocity_y = 0.0;
         world.game.ball.velocity_z = world.rules.MAX_ENTITY_SPEED / 2.0;
@@ -205,7 +205,7 @@ fn test_simulator_throw_ball_by_plus_x_and_z() {
 #[test]
 fn test_simulator_throw_ball_by_plus_x_and_neg_z() {
     let world = {
-        let mut world = example_world();
+        let mut world = example_world(GameType::TwoRobots);
         world.game.ball.velocity_x = world.rules.MAX_ENTITY_SPEED / 2.0;
         world.game.ball.velocity_y = 0.0;
         world.game.ball.velocity_z = -world.rules.MAX_ENTITY_SPEED / 2.0;
@@ -234,7 +234,7 @@ fn test_simulator_throw_ball_by_plus_x_and_neg_z() {
 #[test]
 fn test_simulator_throw_ball_by_neg_x_and_plus_z() {
     let world = {
-        let mut world = example_world();
+        let mut world = example_world(GameType::TwoRobots);
         world.game.ball.velocity_x = -world.rules.MAX_ENTITY_SPEED / 2.0;
         world.game.ball.velocity_y = 0.0;
         world.game.ball.velocity_z = world.rules.MAX_ENTITY_SPEED / 2.0;
@@ -263,7 +263,7 @@ fn test_simulator_throw_ball_by_neg_x_and_plus_z() {
 #[test]
 fn test_simulator_throw_ball_by_neg_x_and_z() {
     let world = {
-        let mut world = example_world();
+        let mut world = example_world(GameType::TwoRobots);
         world.game.ball.velocity_x = -world.rules.MAX_ENTITY_SPEED / 2.0;
         world.game.ball.velocity_y = 0.0;
         world.game.ball.velocity_z = -world.rules.MAX_ENTITY_SPEED / 2.0;
@@ -294,8 +294,8 @@ fn test_simulator_collide_jumping_robot_and_ball() {
     use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
 
     let rules = example_rules();
-    let mut me = RobotExt::from_robot(&example_me(), &rules);
-    let mut ball = BallExt::from_ball(&example_ball(), &rules);
+    let mut me = RobotExt::from_robot(&example_me(GameType::TwoRobots, &rules), &rules);
+    let mut ball = BallExt::from_ball(&example_ball(&rules), &rules);
     ball.set_position(Vec3::new(0.0, rules.BALL_RADIUS, 0.0));
     let distance = get_min_distance_between_spheres(
         ball.position().y(),
@@ -313,8 +313,8 @@ fn test_simulator_collide_jumping_and_moving_robot_and_ball() {
     use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
 
     let rules = example_rules();
-    let mut me = RobotExt::from_robot(&example_me(), &rules);
-    let mut ball = BallExt::from_ball(&example_ball(), &rules);
+    let mut me = RobotExt::from_robot(&example_me(GameType::TwoRobots, &rules), &rules);
+    let mut ball = BallExt::from_ball(&example_ball(&rules), &rules);
     ball.set_position(Vec3::new(0.0, rules.BALL_RADIUS, 0.0));
     let distance = get_min_distance_between_spheres(
         ball.position().y(),
@@ -330,7 +330,7 @@ fn test_simulator_collide_jumping_and_moving_robot_and_ball() {
 
 #[test]
 fn test_simulator_tick_ball_to_goal() {
-    let mut world = example_world();
+    let mut world = example_world(GameType::TwoRobots);
     world.game.ball.set_position(Vec3::new(0.0, 2.6720979333335597, 40.50000000000227));
     world.game.ball.set_velocity(Vec3::new(0.0, -1.7128000000001131, 30.0));
     let mut simulator = Simulator::new(&world, world.me.id);
@@ -348,7 +348,7 @@ fn test_simulator_tick_ball_to_goal() {
 
 #[test]
 fn test_simulator_robot_turn_left() {
-    let world = example_world();
+    let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
     let target = Vec3::new(3.0, 1.0, 0.0);
     simulator.me_mut().set_position(Vec3::new(10.0, 1.0, 0.0));
@@ -370,7 +370,7 @@ fn test_simulator_robot_turn_left() {
 
 #[test]
 fn test_simulator_robot_turn_back() {
-    let world = example_world();
+    let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
     let target = Vec3::new(10.0, 1.0, -7.0);
     simulator.me_mut().set_position(Vec3::new(10.0, 1.0, 0.0));
@@ -392,7 +392,7 @@ fn test_simulator_robot_turn_back() {
 
 #[test]
 fn test_simulator_robot_walk_on_wall() {
-    let world = example_world();
+    let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
     let mut rng = example_rng();
     let mut prev_y = simulator.me().position().y();
@@ -425,4 +425,76 @@ fn test_simulator_robot_walk_on_wall() {
         Vec3::new(-0.7586573602400657, -0.6514898385650963, -0.0)
     );
     assert_eq!(simulator.me().distance_to_arena(), 1.369790627065421);
+}
+
+#[test]
+fn test_simulator_tick_robot_jump_using_nitro_with_nitro() {
+    let world = example_world(GameType::TwoRobotsWithNitro);
+    let mut simulator = Simulator::new(&world, world.me.id);
+    let mut rng = example_rng();
+    simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+    simulator.me_mut().action_mut().target_velocity_y = simulator.rules().MAX_ENTITY_SPEED;
+    simulator.me_mut().action_mut().use_nitro = true;
+    for _ in 0..76 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(
+        simulator.me().position(),
+        Vec3::new(9.748591261158683, 18.924958333333343, -17.463246216636257)
+    );
+    assert_eq!(simulator.me().nitro_amount(), 0.0);
+}
+
+#[test]
+fn test_simulator_tick_robot_jump_using_nitro_without_nitro() {
+    let world = example_world(GameType::TwoRobots);
+    let mut simulator = Simulator::new(&world, world.me.id);
+    let mut rng = example_rng();
+    simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+    simulator.me_mut().action_mut().target_velocity_y = simulator.rules().MAX_ENTITY_SPEED;
+    simulator.me_mut().action_mut().use_nitro = true;
+    for _ in 0..76 {
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(
+        simulator.me().position(),
+        Vec3::new(9.748591261158683, 3.984697916666674, -17.463246216636257)
+    );
+    assert_eq!(simulator.me().nitro_amount(), 0.0);
+}
+
+#[test]
+fn test_simulator_tick_robot_walk_to_nitro_pack() {
+    let world = example_world(GameType::TwoRobotsWithNitro);
+    let mut simulator = Simulator::new(&world, world.me.id);
+    let mut rng = example_rng();
+    let nearest_nitro_pack  = simulator.nitro_packs().iter()
+        .map(|v| (v.position().distance(simulator.me().position()).round() as i32, v))
+        .min_by_key(|(distance, _)| *distance)
+        .map(|(_, v)| v.clone())
+        .unwrap();
+    let target_velocity = (nearest_nitro_pack.position() - simulator.me().position())
+        .normalized() * world.rules.ROBOT_MAX_GROUND_SPEED;
+    simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+    while nearest_nitro_pack.position().distance(simulator.me().position())
+        > simulator.me().velocity().norm() * simulator.rules().tick_time_interval() {
+
+        simulator.tick(
+            simulator.rules().tick_time_interval(),
+            simulator.rules().MICROTICKS_PER_TICK,
+            &mut rng
+        );
+    }
+    assert_eq!(simulator.me().nitro_amount(), world.rules.MAX_NITRO_AMOUNT);
+    let nitro_pack = simulator.nitro_packs().iter()
+        .find(|v| v.id == nearest_nitro_pack.id).unwrap();
+    assert_eq!(nitro_pack.respawn_ticks, Some(597));
 }

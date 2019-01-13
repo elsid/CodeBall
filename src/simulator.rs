@@ -1,4 +1,4 @@
-use crate::model::{Action, Ball, Robot, Rules};
+use crate::model::{Action, Ball, Robot, Rules, NitroPack};
 use crate::my_strategy::common::Square;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::random::{Rng, XorShiftRng};
@@ -105,6 +105,14 @@ impl RobotExt {
 
     pub fn normal_to_arena(&self) -> Vec3 {
         self.normal_to_arena
+    }
+
+    pub fn nitro_amount(&self) -> f64 {
+        self.base.nitro_amount
+    }
+
+    pub fn set_nitro_amount(&mut self, value: f64) {
+        self.base.nitro_amount = value;
     }
 
     #[cfg(feature = "enable_render")]
@@ -311,6 +319,7 @@ impl Solid for RobotExt {
 pub struct Simulator {
     robots: Vec<RobotExt>,
     ball: BallExt,
+    nitro_packs: Vec<NitroPack>,
     rules: Rules,
     current_tick: i32,
     current_micro_tick: i32,
@@ -364,6 +373,7 @@ impl Simulator {
                 distance_to_arena: distance,
                 normal_to_arena: normal,
             },
+            nitro_packs: world.game.nitro_packs.clone(),
             rules: world.rules.clone(),
             current_tick: 0,
             current_micro_tick: 0,
@@ -388,6 +398,14 @@ impl Simulator {
 
     pub fn rules(&self) -> &Rules {
         &self.rules
+    }
+
+    pub fn nitro_packs(&self) -> &Vec<NitroPack> {
+        &self.nitro_packs
+    }
+
+    pub fn nitro_packs_mut(&mut self) -> &mut Vec<NitroPack> {
+        &mut self.nitro_packs
     }
 
     pub fn current_tick(&self) -> i32 {
@@ -430,6 +448,17 @@ impl Simulator {
         for _ in 0..micro_ticks_per_tick {
             self.micro_tick(micro_tick_time_interval, rng);
         }
+        for nitro_pack in self.nitro_packs.iter_mut() {
+            nitro_pack.respawn_ticks = if let Some(v) = nitro_pack.respawn_ticks {
+                if v > 1 {
+                    Some(v - 1)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+        }
         self.current_tick += 1;
         self.current_time += time_interval;
     }
@@ -456,6 +485,21 @@ impl Simulator {
                         + (velocity_change.normalized() * acceleration * time_interval)
                         .clamp(velocity_change_norm);
                     robot.set_velocity(robot_velocity);
+                }
+            }
+            if robot.action.use_nitro {
+                let target_velocity_change = (robot.action.target_velocity() - robot.velocity())
+                    .clamp(robot.nitro_amount() * self.rules.NITRO_POINT_VELOCITY_CHANGE);
+                if target_velocity_change.norm() > 0.0 {
+                    let acceleration = target_velocity_change.normalized()
+                        * self.rules.ROBOT_NITRO_ACCELERATION;
+                    let velocity_change = (acceleration * time_interval)
+                        .clamp(target_velocity_change.norm());
+                    let velocity = robot.velocity() + velocity_change;
+                    robot.set_velocity(velocity);
+                    let nitro_amount = robot.nitro_amount()
+                        - velocity_change.norm() / self.rules.NITRO_POINT_VELOCITY_CHANGE;
+                    robot.set_nitro_amount(nitro_amount);
                 }
             }
             robot.shift(time_interval, self.rules.GRAVITY, self.rules.MAX_ENTITY_SPEED);
@@ -507,6 +551,21 @@ impl Simulator {
                 self.score = 1;
             } else if self.ball.position().z() < -(self.rules.arena.depth / 2.0 + self.ball.radius()) {
                 self.score = -1;
+            }
+        }
+
+        for robot in self.robots.iter_mut() {
+            if robot.nitro_amount() == self.rules.MAX_NITRO_AMOUNT {
+                continue;
+            }
+            for nitro_pack in self.nitro_packs.iter_mut() {
+                if nitro_pack.respawn_ticks.is_some() {
+                    continue;
+                }
+                if robot.position().distance(nitro_pack.position()) <= robot.radius() + nitro_pack.radius {
+                    robot.set_nitro_amount(self.rules.MAX_NITRO_AMOUNT);
+                    nitro_pack.respawn_ticks = Some(self.rules.NITRO_PACK_RESPAWN_TICKS as i32);
+                }
             }
         }
 
