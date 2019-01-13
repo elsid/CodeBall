@@ -1,4 +1,4 @@
-use crate::model::{Action, Ball, Robot, Rules, NitroPack};
+use crate::model::{Action, Ball, Robot, Rules, NitroPack, Game, Player};
 use crate::my_strategy::common::Square;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::random::{Rng, XorShiftRng};
@@ -317,6 +317,7 @@ impl Solid for RobotExt {
 
 #[derive(Clone)]
 pub struct Simulator {
+    players: Vec<Player>,
     robots: Vec<RobotExt>,
     ball: BallExt,
     nitro_packs: Vec<NitroPack>,
@@ -365,6 +366,7 @@ impl Simulator {
             .distance_and_normal(world.game.ball.position());
 
         Simulator {
+            players: world.game.players.clone(),
             robots,
             ball: BallExt {
                 base: world.game.ball.clone(),
@@ -406,6 +408,16 @@ impl Simulator {
 
     pub fn nitro_packs_mut(&mut self) -> &mut Vec<NitroPack> {
         &mut self.nitro_packs
+    }
+
+    pub fn game(&self) -> Game {
+        Game {
+            current_tick: self.current_tick,
+            players: self.players.clone(),
+            robots: self.robots.iter().map(|v| v.base().clone()).collect(),
+            nitro_packs: self.nitro_packs.clone(),
+            ball: self.ball.base().clone(),
+        }
     }
 
     pub fn current_tick(&self) -> i32 {

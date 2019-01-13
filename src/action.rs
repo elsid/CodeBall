@@ -48,3 +48,23 @@ impl Action {
         ));
     }
 }
+
+impl PartialEq for Action {
+    fn eq(&self, other: &Action) -> bool {
+        (
+            self.target_velocity_x,
+            self.target_velocity_y,
+            self.target_velocity_z,
+            self.jump_speed,
+            self.use_nitro,
+        ).eq(&(
+            other.target_velocity_x,
+            other.target_velocity_y,
+            other.target_velocity_z,
+            other.jump_speed,
+            other.use_nitro,
+        ))
+    }
+}
+
+impl Eq for Action {}

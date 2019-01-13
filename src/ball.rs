@@ -42,3 +42,27 @@ impl Ball {
         ));
     }
 }
+
+impl PartialEq for Ball {
+    fn eq(&self, other: &Ball) -> bool {
+        (
+            self.x,
+            self.y,
+            self.z,
+            self.velocity_x,
+            self.velocity_y,
+            self.velocity_z,
+            self.radius,
+        ).eq(&(
+            other.x,
+            other.y,
+            other.z,
+            other.velocity_x,
+            other.velocity_y,
+            other.velocity_z,
+            other.radius,
+        ))
+    }
+}
+
+impl Eq for Ball {}
