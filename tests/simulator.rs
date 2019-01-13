@@ -1,7 +1,6 @@
 use my_strategy::my_strategy::vec3::Vec3;
 use my_strategy::my_strategy::simulator::{Simulator, CollisionType, RobotExt, BallExt};
 use my_strategy::my_strategy::entity::Entity;
-use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
 use my_strategy::my_strategy::common::IsBetween;
 use my_strategy::examples::{example_world, example_rules, example_me, example_ball, example_rng};
 
@@ -9,12 +8,7 @@ use my_strategy::examples::{example_world, example_rules, example_me, example_ba
 fn test_simulator_tick_robot_jump() {
     let world = example_world();
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        0,
-        0,
-    ]);
+    let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.tick(
         simulator.rules().tick_time_interval(),
@@ -31,12 +25,7 @@ fn test_simulator_tick_robot_jump() {
 fn test_simulator_tick_robot_jump_with_half_micro_ticks() {
     let world = example_world();
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        0,
-        0,
-    ]);
+    let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
@@ -57,12 +46,7 @@ fn test_simulator_tick_robot_jump_with_half_micro_ticks() {
 fn test_simulator_robot_jump() {
     let world = example_world();
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        0,
-        0,
-    ]);
+    let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
@@ -91,12 +75,7 @@ fn test_simulator_robot_jump() {
 fn test_simulator_robot_jump_with_half_micro_ticks() {
     let world = example_world();
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        0,
-        0,
-    ]);
+    let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
@@ -142,20 +121,15 @@ fn test_simulator_robot_kick_ball() {
         world
     };
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        0,
-        0,
-    ]);
+    let mut rng = example_rng();
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
         &mut rng
     );
-    assert_eq!(simulator.ball().position(), Vec3::new(0.0, 2.685785194346652, 0.6238366102032489));
-    assert_eq!(simulator.ball().velocity(), Vec3::new(0.0, 15.671092310398691, 35.07455928925282));
+    assert_eq!(simulator.ball().position(), Vec3::new(0.0, 2.694228217927261, 0.6398122069549653));
+    assert_eq!(simulator.ball().velocity(), Vec3::new(0.0, 16.18748483167559, 36.05203378168932));
     assert_eq!(simulator.me().ball_collision_type(), CollisionType::Kick);
     while simulator.ball().position().y().is_between(
             world.rules.BALL_RADIUS + 0.1,
@@ -168,9 +142,9 @@ fn test_simulator_robot_kick_ball() {
             &mut rng
         );
     }
-    assert_eq!(simulator.current_time(), 1.100000000000001);
-    assert_eq!(simulator.ball().position(), Vec3::new(0.0, 2.0586351972784565, 38.62127584022837));
-    assert_eq!(simulator.ball().velocity(), Vec3::new(0.0, -16.828907689603298, 35.07455928925282));
+    assert_eq!(simulator.current_time(), 1.1333333333333342);
+    assert_eq!(simulator.ball().position(), Vec3::new(0.0, 2.066086279964874, 40.89791659650675));
+    assert_eq!(simulator.ball().velocity(), Vec3::new(0.0, -17.312515168326318, 36.05203378168932));
 }
 
 #[test]
@@ -187,12 +161,7 @@ fn test_simulator_wait_for_goal() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        1841971383,
-        1904458926,
-    ]);
+    let mut rng = example_rng();
     for _ in 0..37 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -214,12 +183,7 @@ fn test_simulator_throw_ball_by_plus_x_and_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        1841971383,
-        1904458926,
-    ]);
+    let mut rng = example_rng();;
     for _ in 0..10 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -248,12 +212,7 @@ fn test_simulator_throw_ball_by_plus_x_and_neg_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        1841971383,
-        1904458926,
-    ]);
+    let mut rng = example_rng();;
     for _ in 0..10 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -282,12 +241,7 @@ fn test_simulator_throw_ball_by_neg_x_and_plus_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        1841971383,
-        1904458926,
-    ]);
+    let mut rng = example_rng();
     for _ in 0..10 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -316,12 +270,7 @@ fn test_simulator_throw_ball_by_neg_x_and_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        1841971383,
-        1904458926,
-    ]);
+    let mut rng = example_rng();;
     for _ in 0..10 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -385,12 +334,7 @@ fn test_simulator_tick_ball_to_goal() {
     world.game.ball.set_position(Vec3::new(0.0, 2.6720979333335597, 40.50000000000227));
     world.game.ball.set_velocity(Vec3::new(0.0, -1.7128000000001131, 30.0));
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = XorShiftRng::from_seed([
-        simulator.rules().seed as u32,
-        (simulator.rules().seed >> 32) as u32,
-        0,
-        0,
-    ]);
+    let mut rng = example_rng();
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
