@@ -117,21 +117,45 @@ pub struct Play {
 impl Play {
     pub fn try_new(robot: &Robot, world: &World, rng: &mut XorShiftRng,
                    order_id_generator: &mut IdGenerator) -> Option<Self> {
-        use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall, DoNothing};
-
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
+
+        let mut ctx = OrderContext::new(rng, order_id_generator);
+
+        let jump_at_position = Self::jump_at_position(robot, world, &mut ctx);
+        let jump_to_ball = Self::jump_to_ball(robot, world, &mut ctx);
+
+        let mut order = Self::get_with_max_score(jump_at_position, jump_to_ball);
+
+        if order.is_none() || order.as_ref().unwrap().score < 0 {
+            let do_nothing = Self::do_nothing(robot, world, &mut ctx);
+            order = Self::get_with_max_score(order, Some(do_nothing));
+        }
+
+        #[cfg(feature = "enable_stats")]
+        {
+            if let Some(v) = &mut order {
+                v.stats.total_iterations = ctx.total_iterations;
+                v.stats.total_micro_ticks += ctx.total_micro_ticks;
+            }
+        }
+
+        order
+    }
+
+    fn jump_at_position(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Self> {
+        use crate::my_strategy::scenarios::{Context, JumpAtPosition};
+
         let initial_simulator = make_initial_simulator(robot, world);
         let mut global_simulator = initial_simulator.clone();
         global_simulator.set_ignore_me(true);
         let time_interval = world.rules.tick_time_interval();
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
-        let mut total_micro_ticks = 0;
         let mut order: Option<Play> = None;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
         while (iterations < 5 || order.is_none())
             && global_simulator.current_time() + time_interval < MAX_TIME
-            && total_micro_ticks < MAX_TOTAL_MICRO_TICKS - MAX_MICRO_TICK {
+            && ctx.total_micro_ticks < MAX_TOTAL_MICRO_TICKS - MAX_MICRO_TICK {
 
             log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
@@ -142,7 +166,7 @@ impl Play {
                     global_simulator.ball(),
                     global_simulator.me().base(),
                     global_simulator.rules(),
-                    rng
+                    ctx.rng
                 );
                 for point in points {
                     let target = {
@@ -162,7 +186,7 @@ impl Play {
                     } else {
                         world.rules.ROBOT_MAX_GROUND_SPEED
                     };
-                    let action_id = order_id_generator.next();
+                    let action_id = ctx.order_id_generator.next();
                     log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", robot.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
                     let mut local_simulator = initial_simulator.clone();
                     let velocity = if distance_to_target > 1e-3 {
@@ -184,12 +208,12 @@ impl Play {
                     #[cfg(feature = "enable_stats")]
                     let mut stats = Stats::default();
 
-                    let mut ctx = Context {
+                    let mut scenario_ctx = Context {
                         current_tick: world.game.current_tick,
                         robot_id: robot.id,
                         action_id,
                         simulator: &mut local_simulator,
-                        rng,
+                        rng: ctx.rng,
                         time_to_ball: &mut time_to_ball,
                         #[cfg(feature = "enable_render")]
                         history: &mut history,
@@ -208,7 +232,7 @@ impl Play {
                         micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
                         micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
                         max_micro_tick: MAX_MICRO_TICK,
-                    }.perform(&mut ctx);
+                    }.perform(&mut scenario_ctx);
                     if local_simulator.score() != 0 {
                         log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
                     }
@@ -253,29 +277,41 @@ impl Play {
                             });
                         }
                     }
-                    total_micro_ticks += local_simulator.current_micro_tick();
+                    ctx.total_micro_ticks += local_simulator.current_micro_tick();
                 }
             }
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
-                global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, rng);
-                total_micro_ticks += NEAR_MICRO_TICKS_PER_TICK as i32;
+                global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, ctx.rng);
+                ctx.total_micro_ticks += NEAR_MICRO_TICKS_PER_TICK as i32;
             }
         }
 
-        let action_id = order_id_generator.next();
-        let mut local_simulator = initial_simulator.clone();
+        #[cfg(feature = "enable_stats")]
+        {
+            ctx.total_iterations = iterations;
+        }
+
+        order
+    }
+
+    fn jump_to_ball(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Play> {
+        use crate::my_strategy::scenarios::{Context, JumpToBall};
+
+        let action_id = ctx.order_id_generator.next();
+        let mut local_simulator = make_initial_simulator(robot, world);
         let mut time_to_ball = None;
+        let time_interval = world.rules.tick_time_interval();
         #[cfg(feature = "enable_render")]
         let mut history = vec![local_simulator.clone()];
         #[cfg(feature = "enable_stats")]
         let mut stats = Stats::default();
 
-        let mut ctx = Context {
+        let mut scenario_ctx = Context {
             current_tick: world.game.current_tick,
             robot_id: robot.id,
             action_id,
             simulator: &mut local_simulator,
-            rng,
+            rng: ctx.rng,
             time_to_ball: &mut time_to_ball,
             #[cfg(feature = "enable_render")]
             history: &mut history,
@@ -289,14 +325,14 @@ impl Play {
             micro_ticks_per_tick_before_jump: NEAR_MICRO_TICKS_PER_TICK,
             micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
             max_micro_ticks: MAX_MICRO_TICK,
-        }.perform(&mut ctx);
+        }.perform(&mut scenario_ctx);
 
         #[cfg(feature = "enable_stats")]
         {
-            total_micro_ticks += local_simulator.current_micro_tick();
+            ctx.total_micro_ticks += local_simulator.current_micro_tick();
         }
 
-        if let Some(v) = action {
+        if let Some(action) = action {
             let action_score = get_action_score(
                 &world.rules,
                 &local_simulator,
@@ -326,96 +362,103 @@ impl Play {
                 local_simulator.current_time(), local_simulator.current_micro_tick(), action_score
             );
 
-            if order.is_none() || order.as_ref().unwrap().score < action_score {
-                order = Some(Play {
-                    id: action_id,
-                    robot_id: robot.id,
-                    action: v,
-                    score: action_score,
-                    #[cfg(feature = "enable_render")]
-                    history,
-                    #[cfg(feature = "enable_stats")]
-                    stats,
-                });
-            }
-        }
-
-        if order.is_none() || order.as_ref().unwrap().score < 0 {
-            let action_id = order_id_generator.next();
-            let mut local_simulator = initial_simulator.clone();
-            let mut time_to_ball = None;
-            #[cfg(feature = "enable_render")]
-            let mut history = vec![local_simulator.clone()];
-            #[cfg(feature = "enable_stats")]
-            let mut stats = Stats::default();
-
-            let mut ctx = Context {
-                current_tick: world.game.current_tick,
+            Some(Play {
+                id: action_id,
                 robot_id: robot.id,
-                action_id,
-                simulator: &mut local_simulator,
-                rng,
-                time_to_ball: &mut time_to_ball,
+                action,
+                score: action_score,
                 #[cfg(feature = "enable_render")]
-                history: &mut history,
+                history,
                 #[cfg(feature = "enable_stats")]
-                stats: &mut stats,
-            };
-
-            let action = DoNothing {
-                max_time: MAX_TIME,
-                tick_time_interval: time_interval,
-                micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
-                max_micro_ticks: MAX_MICRO_TICK,
-            }.perform(&mut ctx);
-
-            let action_score = get_action_score(
-                &world.rules,
-                &local_simulator,
-                time_to_ball,
-                MAX_TIME + time_interval,
-                world.game.current_tick,
-                robot.id,
-                action_id,
-            );
-
-            #[cfg(feature = "enable_stats")]
-            {
-                total_micro_ticks += local_simulator.current_micro_tick();
-                stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-                stats.time_to_end = local_simulator.current_time();
-                stats.time_to_score = if local_simulator.score() != 0 {
-                    Some(stats.time_to_end)
-                } else {
-                    None
-                };
-                stats.score = local_simulator.score();
-                stats.action_score = action_score;
-            }
-
-            if order.is_none() || order.as_ref().unwrap().score < action_score {
-                order = Some(Play {
-                    id: action_id,
-                    robot_id: robot.id,
-                    action,
-                    score: action_score,
-                    #[cfg(feature = "enable_render")]
-                    history,
-                    #[cfg(feature = "enable_stats")]
-                    stats,
-                });
-            }
+                stats,
+            })
+        } else {
+            None
         }
+    }
+
+    fn do_nothing(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Play {
+        use crate::my_strategy::scenarios::{Context, DoNothing};
+
+        let action_id = ctx.order_id_generator.next();
+        let mut local_simulator = make_initial_simulator(robot, world);
+        let mut time_to_ball = None;
+        let time_interval = world.rules.tick_time_interval();
+        #[cfg(feature = "enable_render")]
+        let mut history = vec![local_simulator.clone()];
+        #[cfg(feature = "enable_stats")]
+        let mut stats = Stats::default();
+
+        let mut scenario_ctx = Context {
+            current_tick: world.game.current_tick,
+            robot_id: robot.id,
+            action_id,
+            simulator: &mut local_simulator,
+            rng: ctx.rng,
+            time_to_ball: &mut time_to_ball,
+            #[cfg(feature = "enable_render")]
+            history: &mut history,
+            #[cfg(feature = "enable_stats")]
+            stats: &mut stats,
+        };
+
+        let action = DoNothing {
+            max_time: MAX_TIME,
+            tick_time_interval: time_interval,
+            micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
+            max_micro_ticks: MAX_MICRO_TICK,
+        }.perform(&mut scenario_ctx);
+
+        let action_score = get_action_score(
+            &world.rules,
+            &local_simulator,
+            time_to_ball,
+            MAX_TIME + time_interval,
+            world.game.current_tick,
+            robot.id,
+            action_id,
+        );
 
         #[cfg(feature = "enable_stats")]
         {
-            if let Some(v) = &mut order {
-                v.stats.total_iterations = iterations;
-                v.stats.total_micro_ticks += total_micro_ticks;
-            }
+            ctx.total_micro_ticks += local_simulator.current_micro_tick();
+            stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+            stats.time_to_end = local_simulator.current_time();
+            stats.time_to_score = if local_simulator.score() != 0 {
+                Some(stats.time_to_end)
+            } else {
+                None
+            };
+            stats.score = local_simulator.score();
+            stats.action_score = action_score;
         }
 
-        order
+        Play {
+            id: action_id,
+            robot_id: robot.id,
+            action,
+            score: action_score,
+            #[cfg(feature = "enable_render")]
+            history,
+            #[cfg(feature = "enable_stats")]
+            stats,
+        }
+    }
+
+    fn get_with_max_score(lhs: Option<Play>, rhs: Option<Play>) -> Option<Play> {
+        if let Some(lhs) = lhs {
+            if let Some(rhs) = rhs {
+                if lhs.score < rhs.score {
+                    Some(rhs)
+                } else {
+                    Some(lhs)
+                }
+            } else {
+                Some(lhs)
+            }
+        } else {
+            rhs
+        }
     }
 
     #[cfg(feature = "enable_render")]
@@ -523,6 +566,24 @@ impl WalkToGoalkeeperPosition {
             robot_id: robot.id,
             action,
             score: 0,
+        }
+    }
+}
+
+struct OrderContext<'r> {
+    pub rng: &'r mut XorShiftRng,
+    pub order_id_generator: &'r mut IdGenerator,
+    pub total_micro_ticks: i32,
+    pub total_iterations: usize,
+}
+
+impl<'r> OrderContext<'r> {
+    pub fn new(rng: &'r mut XorShiftRng, order_id_generator: &'r mut IdGenerator) -> Self {
+        OrderContext {
+            rng,
+            order_id_generator,
+            total_micro_ticks: 0,
+            total_iterations: 0,
         }
     }
 }
