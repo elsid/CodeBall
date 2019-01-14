@@ -17,6 +17,7 @@ const MAX_TIME: f64 = 1.6666666666666667;
 const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 const MAX_MICRO_TICK: i32 = 1000;
+const MAX_TOTAL_MICRO_TICKS: usize = 11000;
 
 pub enum Order {
     Play(Play),
@@ -133,13 +134,13 @@ impl Play {
         global_simulator.set_ignore_me(true);
         let time_interval = world.rules.tick_time_interval();
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
-        #[cfg(feature = "enable_stats")]
         let mut total_micro_ticks: usize = 0;
         let mut order: Option<Play> = None;
         let steps = [1, 3, 4, 8];
         let mut iterations = 0;
         while (iterations < 5 || order.is_none())
-            && global_simulator.current_time() + time_interval < MAX_TIME {
+            && global_simulator.current_time() + time_interval < MAX_TIME
+            && total_micro_ticks < MAX_TOTAL_MICRO_TICKS - MAX_MICRO_TICK as usize {
 
             log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
@@ -261,19 +262,13 @@ impl Play {
                             });
                         }
                     }
-                    #[cfg(feature = "enable_stats")]
-                    {
-                        total_micro_ticks += local_simulator.current_micro_tick() as usize;
-                    }
+                    total_micro_ticks += local_simulator.current_micro_tick() as usize;
                 }
             }
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
                 global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, rng);
+                total_micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
             }
-        }
-        #[cfg(feature = "enable_stats")]
-        {
-            total_micro_ticks += global_simulator.current_micro_tick() as usize;
         }
 
         let action_id = order_id_generator.next();
