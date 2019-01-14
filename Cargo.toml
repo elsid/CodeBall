@@ -5,7 +5,6 @@ edition = "2018"
 
 [lib]
 name = "my_strategy"
-version = "1.0.0"
 edition = "2018"
 
 [dependencies]
