@@ -406,7 +406,7 @@ impl JumpToBall {
 
         #[cfg(feature = "enable_stats")]
         {
-            ctx.stats.total_micro_ticks += self.micro_ticks_per_tick_before_jump;
+            ctx.stats.total_micro_ticks += self.micro_ticks_per_tick_before_jump as i32;
         }
 
         let my_move_equation = MoveEquation::from_entity(simulator.me(), simulator.rules());
