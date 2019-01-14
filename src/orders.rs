@@ -120,16 +120,7 @@ impl Play {
         use crate::my_strategy::scenarios::{Context, JumpAtPosition, JumpToBall, DoNothing};
 
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
-        let initial_simulator = {
-            let mut s = Simulator::new(world, robot.id);
-            s.robots_mut().iter_mut()
-                .filter(|v| !v.is_teammate())
-                .for_each(|v| {
-                    let velocity = v.velocity();
-                    v.action_mut().set_target_velocity(velocity);
-                });
-            s
-        };
+        let initial_simulator = make_initial_simulator(robot, world);
         let mut global_simulator = initial_simulator.clone();
         global_simulator.set_ignore_me(true);
         let time_interval = world.rules.tick_time_interval();
@@ -534,4 +525,17 @@ impl WalkToGoalkeeperPosition {
             score: 0,
         }
     }
+}
+
+fn make_initial_simulator(robot: &Robot, world: &World) -> Simulator {
+    use crate::my_strategy::entity::Entity;
+
+    let mut result = Simulator::new(world, robot.id);
+    result.robots_mut().iter_mut()
+        .filter(|v| !v.is_teammate())
+        .for_each(|v| {
+            let velocity = v.velocity();
+            v.action_mut().set_target_velocity(velocity);
+        });
+    result
 }
