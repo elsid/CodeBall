@@ -30,10 +30,22 @@ pub trait Solid : Entity {
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum CollisionType {
+pub enum RobotCollisionType {
     None,
-    Touch,
-    Kick,
+    TouchBall,
+    KickBall,
+}
+
+impl RobotCollisionType {
+    pub fn with(self, other: Self) -> Self {
+        if self == other || other == RobotCollisionType::None {
+            self
+        } else if self == RobotCollisionType::None {
+            other
+        } else {
+            RobotCollisionType::KickBall
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -45,7 +57,7 @@ pub struct RobotExt {
     mass: f64,
     arena_e: f64,
     is_me: bool,
-    ball_collision_type: CollisionType,
+    collision_type: RobotCollisionType,
     distance_to_arena: f64,
     normal_to_arena: Vec3,
 }
@@ -60,7 +72,7 @@ impl RobotExt {
             mass: rules.ROBOT_MASS,
             arena_e: rules.ROBOT_ARENA_E,
             is_me: false,
-            ball_collision_type: CollisionType::None,
+            collision_type: RobotCollisionType::None,
             distance_to_arena: 0.0,
             normal_to_arena: Vec3::default(),
         }
@@ -82,8 +94,8 @@ impl RobotExt {
         self.base.is_teammate
     }
 
-    pub fn ball_collision_type(&self) -> CollisionType {
-        self.ball_collision_type
+    pub fn ball_collision_type(&self) -> RobotCollisionType {
+        self.collision_type
     }
 
     pub fn action(&self) -> &Action {
@@ -167,6 +179,26 @@ impl Entity for RobotExt {
     }
 }
 
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub enum BallCollisionType {
+    None,
+    Arena,
+    Robot,
+    ArenaAndRobot,
+}
+
+impl BallCollisionType {
+    pub fn with(self, other: Self) -> Self {
+        if self == other || other == BallCollisionType::None {
+            self
+        } else if self == BallCollisionType::None {
+            other
+        } else {
+            BallCollisionType::ArenaAndRobot
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct BallExt {
     base: Ball,
@@ -174,6 +206,7 @@ pub struct BallExt {
     arena_e: f64,
     distance_to_arena: f64,
     normal_to_arena: Vec3,
+    collision_type: BallCollisionType,
 }
 
 impl BallExt {
@@ -184,6 +217,7 @@ impl BallExt {
             arena_e,
             distance_to_arena: 0.0,
             normal_to_arena: Vec3::default(),
+            collision_type: BallCollisionType::None,
         }
     }
 
@@ -194,6 +228,7 @@ impl BallExt {
             arena_e: rules.BALL_ARENA_E,
             distance_to_arena: 0.0,
             normal_to_arena: Vec3::default(),
+            collision_type: BallCollisionType::None,
         }
     }
 
@@ -353,7 +388,7 @@ impl Simulator {
                     mass: world.rules.ROBOT_MASS,
                     arena_e: world.rules.ROBOT_ARENA_E,
                     is_me: v.id == me_id,
-                    ball_collision_type: CollisionType::None,
+                    collision_type: RobotCollisionType::None,
                     distance_to_arena: distance,
                     normal_to_arena: normal,
                 }
@@ -374,6 +409,7 @@ impl Simulator {
                 arena_e: world.rules.BALL_ARENA_E,
                 distance_to_arena: distance,
                 normal_to_arena: normal,
+                collision_type: BallCollisionType::None,
             },
             nitro_packs: world.game.nitro_packs.clone(),
             rules: world.rules.clone(),
@@ -455,8 +491,9 @@ impl Simulator {
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize, rng: &mut XorShiftRng) {
         let micro_tick_time_interval = time_interval / micro_ticks_per_tick as f64;
         for robot in self.robots.iter_mut() {
-            robot.ball_collision_type = CollisionType::None;
+            robot.collision_type = RobotCollisionType::None;
         }
+        self.ball.collision_type = BallCollisionType::None;
         for _ in 0..micro_ticks_per_tick {
             self.micro_tick(micro_tick_time_interval, rng);
         }
@@ -548,13 +585,16 @@ impl Simulator {
             let collision_type = Simulator::collide(e, &mut robot, &mut ball);
             let touch_normal = self.rules.arena.collide(&mut robot);
             robot.touch_normal = touch_normal;
-            if robot.ball_collision_type == CollisionType::None {
-                robot.ball_collision_type = collision_type;
+            if collision_type != RobotCollisionType::None {
+                robot.collision_type = robot.collision_type.with(collision_type);
+                ball.collision_type = ball.collision_type.with(BallCollisionType::Robot);
             }
             self.robots[i] = robot;
         }
 
-        self.rules.arena.collide(&mut ball);
+        if self.rules.arena.collide(&mut ball).is_some() {
+            ball.collision_type = ball.collision_type.with(BallCollisionType::Arena);
+        }
 
         self.ball = ball;
 
@@ -584,7 +624,7 @@ impl Simulator {
         self.current_micro_tick += 1;
     }
 
-    pub fn collide<F>(mut e: F, a: &mut Solid, b: &mut Solid) -> CollisionType
+    pub fn collide<F>(mut e: F, a: &mut Solid, b: &mut Solid) -> RobotCollisionType
         where F: FnMut() -> f64 {
 
         let delta_position = b.position() - a.position();
@@ -607,11 +647,11 @@ impl Simulator {
                 let b_velocity = b.velocity() - impulse * k_b;
                 a.set_velocity(a_velocity);
                 b.set_velocity(b_velocity);
-                return CollisionType::Kick;
+                return RobotCollisionType::KickBall;
             }
-            return CollisionType::Touch;
+            return RobotCollisionType::TouchBall;
         }
-        CollisionType::None
+        RobotCollisionType::None
     }
 
     #[cfg(feature = "enable_render")]

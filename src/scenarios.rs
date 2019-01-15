@@ -20,11 +20,11 @@ pub struct Context<'r> {
 
 impl Context<'_> {
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize) {
-        use crate::my_strategy::simulator::CollisionType;
+        use crate::my_strategy::simulator::RobotCollisionType;
 
         self.simulator.tick(time_interval, micro_ticks_per_tick, self.rng);
 
-        if self.simulator.me().ball_collision_type() != CollisionType::None && self.time_to_ball.is_none() {
+        if self.simulator.me().ball_collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
             *self.time_to_ball = Some(self.simulator.current_time());
         }
 
@@ -111,7 +111,7 @@ pub struct WalkToPosition {
 impl WalkToPosition {
     pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::entity::Entity;
-        use crate::my_strategy::simulator::CollisionType;
+        use crate::my_strategy::simulator::RobotCollisionType;
 
         let stored_action = ctx.simulator.me().action().clone();
 
@@ -139,7 +139,7 @@ impl WalkToPosition {
                 > max_distance_to_target
             && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
                 > max_distance_to_ball
-            && ctx.simulator.me().ball_collision_type() == CollisionType::None {
+            && ctx.simulator.me().ball_collision_type() == RobotCollisionType::None {
 
             let target_velocity = self.get_target_velocity(
                 ctx.simulator.me().position(),
@@ -194,7 +194,7 @@ pub struct Jump {
 impl Jump {
     pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::entity::Entity;
-        use crate::my_strategy::simulator::CollisionType;
+        use crate::my_strategy::simulator::RobotCollisionType;
 
         #[cfg(feature = "enable_stats")]
         {
@@ -224,7 +224,7 @@ impl Jump {
         while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
             && ctx.simulator.current_micro_tick() < self.max_micro_ticks
             && ctx.simulator.score() == 0
-            && ctx.simulator.me().ball_collision_type() == CollisionType::None {
+            && ctx.simulator.me().ball_collision_type() == RobotCollisionType::None {
 
             ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
             let target_velocity = ctx.simulator.me().velocity();

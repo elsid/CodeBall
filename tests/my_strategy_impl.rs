@@ -58,7 +58,7 @@ fn test_two_robots_first_action_to_go_for_ball() {
 fn test_two_robots_first_ball_kick() {
     use my_strategy::model::Ball;
     use my_strategy::examples::{GameType, example_world, example_rng};
-    use my_strategy::my_strategy::simulator::{Simulator, CollisionType, Solid};
+    use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, Solid};
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
     use my_strategy::my_strategy::entity::Entity;
 
@@ -80,7 +80,7 @@ fn test_two_robots_first_ball_kick() {
     assert_eq!(simulator.current_tick(), 44);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
-        simulator.me().ball_collision_type() == CollisionType::None
+        simulator.me().ball_collision_type() == RobotCollisionType::None
             && simulator.current_tick() < 100
     });
 

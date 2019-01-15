@@ -1,5 +1,5 @@
 use my_strategy::my_strategy::vec3::Vec3;
-use my_strategy::my_strategy::simulator::{Simulator, CollisionType, RobotExt, BallExt};
+use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, RobotExt, BallExt};
 use my_strategy::my_strategy::entity::Entity;
 use my_strategy::my_strategy::common::IsBetween;
 use my_strategy::examples::{GameType, example_world, example_rules, example_me, example_ball, example_rng};
@@ -130,7 +130,7 @@ fn test_simulator_robot_kick_ball() {
     );
     assert_eq!(simulator.ball().position(), Vec3::new(0.0, 2.694228217927261, 0.6398122069549653));
     assert_eq!(simulator.ball().velocity(), Vec3::new(0.0, 16.18748483167559, 36.05203378168932));
-    assert_eq!(simulator.me().ball_collision_type(), CollisionType::Kick);
+    assert_eq!(simulator.me().ball_collision_type(), RobotCollisionType::KickBall);
     while simulator.ball().position().y().is_between(
             world.rules.BALL_RADIUS + 0.1,
             world.rules.arena.goal_height - world.rules.BALL_RADIUS - 1e-2
