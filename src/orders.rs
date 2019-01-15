@@ -25,8 +25,8 @@ pub enum Order {
 }
 
 impl Order {
-    pub fn try_play(robot: &Robot, world: &World, rng: &mut XorShiftRng, order_id_generator: &mut IdGenerator) -> Option<Order> {
-        Play::try_new(robot, world, rng, order_id_generator)
+    pub fn try_play(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Order> {
+        Play::try_new(robot, world, ctx)
             .map(|v| Order::Play(v))
     }
 
@@ -115,20 +115,17 @@ pub struct Play {
 }
 
 impl Play {
-    pub fn try_new(robot: &Robot, world: &World, rng: &mut XorShiftRng,
-                   order_id_generator: &mut IdGenerator) -> Option<Self> {
+    pub fn try_new(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Self> {
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
 
-        let mut ctx = OrderContext::new(rng, order_id_generator);
-
-        let jump_at_position = Self::jump_at_position(robot, world, &mut ctx);
-        let jump_to_ball = Self::jump_to_ball(robot, world, &mut ctx);
+        let jump_at_position = Self::try_jump_at_position(robot, world, ctx);
+        let jump_to_ball = Self::try_jump_to_ball(robot, world, ctx);
 
         let mut order = Self::get_with_max_score(jump_at_position, jump_to_ball);
 
         if order.is_none() || order.as_ref().unwrap().score < 0 {
-            let do_nothing = Self::do_nothing(robot, world, &mut ctx);
-            order = Self::get_with_max_score(order, Some(do_nothing));
+            let do_nothing = Self::try_do_nothing(robot, world, ctx);
+            order = Self::get_with_max_score(order, do_nothing);
         }
 
         #[cfg(feature = "enable_stats")]
@@ -142,7 +139,7 @@ impl Play {
         order
     }
 
-    fn jump_at_position(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Self> {
+    fn try_jump_at_position(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Self> {
         use crate::my_strategy::scenarios::{Context, JumpAtPosition};
 
         let initial_simulator = make_initial_simulator(robot, world);
@@ -155,7 +152,8 @@ impl Play {
         let mut iterations = 0;
         while (iterations < 5 || order.is_none())
             && global_simulator.current_time() + time_interval < MAX_TIME
-            && ctx.total_micro_ticks < MAX_TOTAL_MICRO_TICKS - MAX_MICRO_TICK {
+            && ctx.total_micro_ticks < MAX_TOTAL_MICRO_TICKS - MAX_MICRO_TICK
+            && !world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
 
             log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
             let ball_y = global_simulator.ball().base().y;
@@ -233,6 +231,10 @@ impl Play {
                         micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
                         max_micro_tick: MAX_MICRO_TICK,
                     }.perform(&mut scenario_ctx);
+
+                    *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
+                    ctx.total_micro_ticks += local_simulator.current_micro_tick();
+
                     if local_simulator.score() != 0 {
                         log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
                     }
@@ -277,7 +279,6 @@ impl Play {
                             });
                         }
                     }
-                    ctx.total_micro_ticks += local_simulator.current_micro_tick();
                 }
             }
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
@@ -294,8 +295,12 @@ impl Play {
         order
     }
 
-    fn jump_to_ball(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Play> {
+    fn try_jump_to_ball(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, JumpToBall};
+
+        if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
+            return None;
+        }
 
         let action_id = ctx.order_id_generator.next();
         let mut local_simulator = make_initial_simulator(robot, world);
@@ -327,10 +332,8 @@ impl Play {
             max_micro_ticks: MAX_MICRO_TICK,
         }.perform(&mut scenario_ctx);
 
-        #[cfg(feature = "enable_stats")]
-        {
-            ctx.total_micro_ticks += local_simulator.current_micro_tick();
-        }
+        *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
+        ctx.total_micro_ticks += local_simulator.current_micro_tick();
 
         if let Some(action) = action {
             let action_score = get_action_score(
@@ -377,8 +380,12 @@ impl Play {
         }
     }
 
-    fn do_nothing(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Play {
+    fn try_do_nothing(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, DoNothing};
+
+        if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
+            return None;
+        }
 
         let action_id = ctx.order_id_generator.next();
         let mut local_simulator = make_initial_simulator(robot, world);
@@ -419,9 +426,11 @@ impl Play {
             action_id,
         );
 
+        *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
+        ctx.total_micro_ticks += local_simulator.current_micro_tick();
+
         #[cfg(feature = "enable_stats")]
         {
-            ctx.total_micro_ticks += local_simulator.current_micro_tick();
             stats.micro_ticks_to_end = local_simulator.current_micro_tick();
             stats.time_to_end = local_simulator.current_time();
             stats.time_to_score = if local_simulator.score() != 0 {
@@ -433,7 +442,7 @@ impl Play {
             stats.action_score = action_score;
         }
 
-        Play {
+        Some(Play {
             id: action_id,
             robot_id: robot.id,
             action,
@@ -442,7 +451,7 @@ impl Play {
             history,
             #[cfg(feature = "enable_stats")]
             stats,
-        }
+        })
     }
 
     fn get_with_max_score(lhs: Option<Play>, rhs: Option<Play>) -> Option<Play> {
@@ -570,18 +579,20 @@ impl WalkToGoalkeeperPosition {
     }
 }
 
-struct OrderContext<'r> {
+pub struct OrderContext<'r> {
     pub rng: &'r mut XorShiftRng,
     pub order_id_generator: &'r mut IdGenerator,
+    pub micro_ticks: &'r mut usize,
     pub total_micro_ticks: i32,
     pub total_iterations: usize,
 }
 
 impl<'r> OrderContext<'r> {
-    pub fn new(rng: &'r mut XorShiftRng, order_id_generator: &'r mut IdGenerator) -> Self {
+    pub fn new(rng: &'r mut XorShiftRng, order_id_generator: &'r mut IdGenerator, micro_ticks: &'r mut usize) -> Self {
         OrderContext {
             rng,
             order_id_generator,
+            micro_ticks,
             total_micro_ticks: 0,
             total_iterations: 0,
         }

@@ -2,7 +2,7 @@
 fn test_new() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::Order;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
     use my_strategy::my_strategy::common::IdGenerator;
 
     #[cfg(feature = "enable_stats")]
@@ -11,7 +11,10 @@ fn test_new() {
     let world = example_world(GameType::TwoRobots);
     let mut rng = example_rng();
     let mut order_id_generator = IdGenerator::new();
-    let result = Order::try_play(&world.me, &world, &mut rng, &mut order_id_generator).unwrap();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext::new(&mut rng, &mut order_id_generator, &mut micro_ticks);
+
+    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
     assert_eq!(result.action().target_velocity(), Vec3::new(-16.10559850972309, 0.0, 25.310268600779516));
     assert_eq!(result.action().jump_speed, 0.0);
@@ -42,7 +45,7 @@ fn test_new_should_not_jump_on_ball_top() {
     use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
-    use my_strategy::my_strategy::orders::Order;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
     use my_strategy::my_strategy::common::IdGenerator;
 
     #[cfg(feature = "enable_stats")]
@@ -56,6 +59,8 @@ fn test_new_should_not_jump_on_ball_top() {
         3684906436,
     ]);
     let mut order_id_generator = IdGenerator::new();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext::new(&mut rng, &mut order_id_generator, &mut micro_ticks);
 
     world.me.id = 2;
     world.me.set_position(Vec3::new(-5.838617159216834, 1.0, -10.508900380791133));
@@ -67,7 +72,7 @@ fn test_new_should_not_jump_on_ball_top() {
     world.game.ball.y = 5.233161866399729;
     world.game.ball.velocity_y = -12.500000000000554;
 
-    let result = Order::try_play(&world.me, &world, &mut rng, &mut order_id_generator).unwrap();
+    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
     assert_eq!(result.action().target_velocity(), Vec3::new(16.778350649872877, 0.0, 24.86939785097159));
     assert_eq!(result.action().jump_speed, 0.0);
@@ -98,7 +103,7 @@ fn test_new_far_jump() {
     use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
-    use my_strategy::my_strategy::orders::Order;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
     use my_strategy::my_strategy::common::IdGenerator;
 
     #[cfg(feature = "enable_stats")]
@@ -112,6 +117,8 @@ fn test_new_far_jump() {
         3684906436,
     ]);
     let mut order_id_generator = IdGenerator::new();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext::new(&mut rng, &mut order_id_generator, &mut micro_ticks);
 
     world.me.id = 2;
     world.me.set_position(Vec3::new(0.0, 1.0, -5.0));
@@ -123,7 +130,7 @@ fn test_new_far_jump() {
     world.game.ball.y = 6.0;
     world.game.ball.velocity_y = 0.0;
 
-    let result = Order::try_play(&world.me, &world, &mut rng, &mut order_id_generator).unwrap();
+    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
     assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 30.0));
     assert_eq!(result.action().jump_speed, 15.0);
