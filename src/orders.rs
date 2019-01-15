@@ -117,8 +117,8 @@ impl Play {
     pub fn try_new(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Self> {
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
 
-        let jump_at_position = Self::try_jump_at_position(robot, world, ctx);
         let jump_to_ball = Self::try_jump_to_ball(robot, world, ctx);
+        let jump_at_position = Self::try_jump_at_position(robot, world, ctx);
 
         let mut order = Self::get_with_max_score(jump_at_position, jump_to_ball);
 

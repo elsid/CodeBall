@@ -85,12 +85,12 @@ fn test_two_robots_first_ball_kick() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.035864024023793704,
-        y: 3.5300105856767168,
-        z: 0.14015026816816076,
-        velocity_x: 7.158450071597266,
-        velocity_y: 32.456013808113404,
-        velocity_z: 27.9739578731361,
+        x: 0.029039087525411567,
+        y: 3.536961829655799,
+        z: 0.15035227263381595,
+        velocity_x: 5.5852392434350815,
+        velocity_y: 32.95077289396642,
+        velocity_z: 28.9180372048256,
         radius: 2.0,
     });
     assert_eq!(simulator.current_tick(), 45);
