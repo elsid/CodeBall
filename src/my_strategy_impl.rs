@@ -34,7 +34,7 @@ impl Default for MyStrategyImpl {
 
 impl Drop for MyStrategyImpl {
     fn drop(&mut self) {
-        println!("{} {:?} {:?} {:?}", self.micro_ticks, self.time_spent, self.cpu_time_spent, self.max_cpu_time_spent);
+        eprintln!("{} {:?} {:?} {:?}", self.micro_ticks, self.time_spent, self.cpu_time_spent, self.max_cpu_time_spent);
     }
 }
 
