@@ -17,6 +17,7 @@ const MAX_TIME: f64 = 1.6666666666666667;
 const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 const MAX_MICRO_TICK: i32 = 1000;
+const MAX_TOTAL_MICRO_TICKS: i32 = 11000;
 
 pub enum Order {
     Play(Play),
@@ -151,6 +152,7 @@ impl Play {
         let mut iterations = 0;
         while (iterations < 5 || order.is_none())
             && global_simulator.current_time() + time_interval < MAX_TIME
+            && ctx.total_micro_ticks < MAX_TOTAL_MICRO_TICKS - MAX_MICRO_TICK
             && !world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
 
             log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
