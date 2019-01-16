@@ -14,5 +14,5 @@ pub struct Stats {
     pub far_jump_simulation: bool,
     pub action_score: i32,
     pub total_micro_ticks: i32,
-    pub current_step: i32,
+    pub current_step: usize,
 }

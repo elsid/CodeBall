@@ -148,147 +148,50 @@ impl Play {
     }
 
     fn try_jump_at_position(robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Self> {
-        use crate::my_strategy::scenarios::{Context, JumpAtPosition};
-
         let initial_simulator = make_initial_simulator(robot, world);
         let mut global_simulator = initial_simulator.clone();
         global_simulator.set_ignore_me(true);
         let time_interval = world.rules.tick_time_interval();
-        let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
         let mut order: Option<Play> = None;
-        let steps = [1, 3, 4, 8];
+        let steps = [1usize, 3, 4, 8];
         let mut iterations = 0;
+
         while (iterations < 5 || order.is_none())
             && global_simulator.current_time() + time_interval < MAX_TIME
             && ctx.total_micro_ticks < MAX_TOTAL_MICRO_TICKS - MAX_MICRO_TICK
             && !world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
 
-            log!(world.game.current_tick, "[{}] try time point {} {}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time());
+            log!(
+                world.game.current_tick, "[{}] try time point {} {}",
+                robot.id, global_simulator.current_micro_tick(), global_simulator.current_time()
+            );
+
             let ball_y = global_simulator.ball().base().y;
+
             if ball_y < world.rules.max_robot_jump_height() {
-                log!(world.game.current_tick, "[{}] use time point {} {} position={:?} velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, global_simulator.current_micro_tick(), global_simulator.current_time(), global_simulator.me().position(), global_simulator.me().velocity(), global_simulator.ball().position(), global_simulator.ball().velocity());
-                iterations += 1;
-                let points = get_points(
-                    global_simulator.ball(),
-                    global_simulator.me().base(),
-                    global_simulator.rules(),
-                    ctx.rng
+                log!(
+                    world.game.current_tick,
+                    "[{}] use time point {} {} position={:?} velocity={:?} ball_position={:?} ball_velocity={:?}",
+                    robot.id, global_simulator.current_micro_tick(), global_simulator.current_time(),
+                    global_simulator.me().position(), global_simulator.me().velocity(),
+                    global_simulator.ball().position(), global_simulator.ball().velocity()
                 );
-                for point in points {
-                    let target = {
-                        let mut robot = global_simulator.me().clone();
-                        robot.set_position(point);
-                        world.rules.arena.collide(&mut robot);
-                        robot.position()
-                    };
-                    let to_target = target - robot.position();
-                    let distance_to_target = to_target.norm();
-                    let required_speed = if global_simulator.current_time() > 0.0 {
-                        if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * 20.0 * time_interval {
-                            world.rules.ROBOT_MAX_GROUND_SPEED
-                        } else {
-                            distance_to_target / global_simulator.current_time()
-                        }
-                    } else {
-                        world.rules.ROBOT_MAX_GROUND_SPEED
-                    };
-                    let action_id = ctx.order_id_generator.next();
-                    log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", robot.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
-                    let mut local_simulator = initial_simulator.clone();
-                    let velocity = if distance_to_target > 1e-3 {
-                        to_target.normalized() * required_speed
-                    } else {
-                        Vec3::default()
-                    };
-                    log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
-                    let before_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
-                        log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
-                        FAR_MICRO_TICKS_PER_TICK
-                    } else {
-                        log!(world.game.current_tick, "[{}] <{}> near", robot.id, action_id);
-                        NEAR_MICRO_TICKS_PER_TICK
-                    };
-                    let mut time_to_ball = None;
-                    #[cfg(feature = "enable_render")]
-                    let mut history = vec![local_simulator.clone()];
+
+                iterations += 1;
+
+                let candidate = Self::try_jump_near_ball(&initial_simulator, &global_simulator, robot, world, ctx);
+
+                if candidate.is_some() && (order.is_none() || order.as_ref().unwrap().score < candidate.as_ref().unwrap().score) {
+                    order = candidate;
+
                     #[cfg(feature = "enable_stats")]
-                    let mut stats = Stats::default();
-
-                    let mut scenario_ctx = Context {
-                        current_tick: world.game.current_tick,
-                        robot_id: robot.id,
-                        action_id,
-                        simulator: &mut local_simulator,
-                        rng: ctx.rng,
-                        time_to_ball: &mut time_to_ball,
-                        #[cfg(feature = "enable_render")]
-                        history: &mut history,
-                        #[cfg(feature = "enable_stats")]
-                        stats: &mut stats,
-                    };
-
-                    let action = JumpAtPosition {
-                        ball: global_simulator.ball().base(),
-                        kick_ball_position: target,
-                        my_max_speed: required_speed,
-                        my_jump_speed: world.rules.ROBOT_MAX_JUMP_SPEED,
-                        ball_target: world.rules.get_goal_target(),
-                        max_time: MAX_TIME,
-                        tick_time_interval: time_interval,
-                        micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
-                        micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
-                        max_micro_tick: MAX_MICRO_TICK,
-                    }.perform(&mut scenario_ctx);
-
-                    *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
-                    ctx.total_micro_ticks += local_simulator.current_micro_tick();
-
-                    if local_simulator.score() != 0 {
-                        log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
-                    }
-
-                    if let Some(action) = action {
-                        let action_score = get_action_score(
-                            &world.rules,
-                            &local_simulator,
-                            time_to_ball,
-                            MAX_TIME + time_interval,
-                            world.game.current_tick,
-                            robot.id,
-                            action_id,
-                        );
-
-                        #[cfg(feature = "enable_stats")]
-                        {
-                            stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-                            stats.time_to_end = local_simulator.current_time();
-                            stats.time_to_score = if local_simulator.score() != 0 {
-                                Some(stats.time_to_end)
-                            } else {
-                                None
-                            };
-                            stats.score = local_simulator.score();
-                            stats.action_score = action_score;
-                            stats.iteration = iterations;
-                            stats.current_step = steps[iterations.min(steps.len() - 1)];
-                        }
-
-                        log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
-                        if order.is_none() || order.as_ref().unwrap().score < action_score {
-                            order = Some(Play {
-                                id: action_id,
-                                robot_id: robot.id,
-                                action,
-                                score: action_score,
-                                #[cfg(feature = "enable_render")]
-                                history,
-                                #[cfg(feature = "enable_stats")]
-                                stats,
-                            });
-                        }
+                    {
+                        order.as_mut().unwrap().stats.iteration = iterations;
+                        order.as_mut().unwrap().stats.current_step = steps[iterations.min(steps.len() - 1)];
                     }
                 }
             }
+
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
                 global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, ctx.rng);
                 ctx.total_micro_ticks += NEAR_MICRO_TICKS_PER_TICK as i32;
@@ -298,6 +201,138 @@ impl Play {
         #[cfg(feature = "enable_stats")]
         {
             ctx.total_iterations = iterations;
+        }
+
+        order
+    }
+
+    fn try_jump_near_ball(initial_simulator: &Simulator, global_simulator: &Simulator,
+                              robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
+        use crate::my_strategy::scenarios::{Context, JumpAtPosition};
+
+        let time_interval = world.rules.tick_time_interval();
+        let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
+
+        let points = get_points(
+            global_simulator.ball(),
+            global_simulator.me().base(),
+            global_simulator.rules(),
+            ctx.rng
+        );
+
+        let mut order: Option<Play> = None;
+
+        for point in points {
+            let target = {
+                let mut robot = global_simulator.me().clone();
+                robot.set_position(point);
+                world.rules.arena.collide(&mut robot);
+                robot.position()
+            };
+            let to_target = target - robot.position();
+            let distance_to_target = to_target.norm();
+            let required_speed = if global_simulator.current_time() > 0.0 {
+                if distance_to_target > world.rules.ROBOT_MAX_GROUND_SPEED * 20.0 * time_interval {
+                    world.rules.ROBOT_MAX_GROUND_SPEED
+                } else {
+                    distance_to_target / global_simulator.current_time()
+                }
+            } else {
+                world.rules.ROBOT_MAX_GROUND_SPEED
+            };
+            let action_id = ctx.order_id_generator.next();
+            log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", robot.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
+            let mut local_simulator = initial_simulator.clone();
+            let velocity = if distance_to_target > 1e-3 {
+                to_target.normalized() * required_speed
+            } else {
+                Vec3::default()
+            };
+            log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
+            let before_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
+                log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
+                FAR_MICRO_TICKS_PER_TICK
+            } else {
+                log!(world.game.current_tick, "[{}] <{}> near", robot.id, action_id);
+                NEAR_MICRO_TICKS_PER_TICK
+            };
+            let mut time_to_ball = None;
+            #[cfg(feature = "enable_render")]
+            let mut history = vec![local_simulator.clone()];
+            #[cfg(feature = "enable_stats")]
+            let mut stats = Stats::default();
+
+            let mut scenario_ctx = Context {
+                current_tick: world.game.current_tick,
+                robot_id: robot.id,
+                action_id,
+                simulator: &mut local_simulator,
+                rng: ctx.rng,
+                time_to_ball: &mut time_to_ball,
+                #[cfg(feature = "enable_render")]
+                history: &mut history,
+                #[cfg(feature = "enable_stats")]
+                stats: &mut stats,
+            };
+
+            let action = JumpAtPosition {
+                ball: global_simulator.ball().base(),
+                kick_ball_position: target,
+                my_max_speed: required_speed,
+                my_jump_speed: world.rules.ROBOT_MAX_JUMP_SPEED,
+                ball_target: world.rules.get_goal_target(),
+                max_time: MAX_TIME,
+                tick_time_interval: time_interval,
+                micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
+                micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
+                max_micro_tick: MAX_MICRO_TICK,
+            }.perform(&mut scenario_ctx);
+
+            *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
+            ctx.total_micro_ticks += local_simulator.current_micro_tick();
+
+            if local_simulator.score() != 0 {
+                log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
+            }
+
+            if let Some(action) = action {
+                let action_score = get_action_score(
+                    &world.rules,
+                    &local_simulator,
+                    time_to_ball,
+                    MAX_TIME + time_interval,
+                    world.game.current_tick,
+                    robot.id,
+                    action_id,
+                );
+
+                #[cfg(feature = "enable_stats")]
+                {
+                    stats.micro_ticks_to_end = local_simulator.current_micro_tick();
+                    stats.time_to_end = local_simulator.current_time();
+                    stats.time_to_score = if local_simulator.score() != 0 {
+                        Some(stats.time_to_end)
+                    } else {
+                        None
+                    };
+                    stats.score = local_simulator.score();
+                    stats.action_score = action_score;
+                }
+
+                log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
+                if order.is_none() || order.as_ref().unwrap().score < action_score {
+                    order = Some(Play {
+                        id: action_id,
+                        robot_id: robot.id,
+                        action,
+                        score: action_score,
+                        #[cfg(feature = "enable_render")]
+                        history,
+                        #[cfg(feature = "enable_stats")]
+                        stats,
+                    });
+                }
+            }
         }
 
         order
