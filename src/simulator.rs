@@ -250,6 +250,10 @@ impl BallExt {
         self.normal_to_arena
     }
 
+    pub fn collision_type(&self) -> BallCollisionType {
+        self.collision_type
+    }
+
     pub fn projected_to_arena_position_with_shift(&self, shift: f64) -> Vec3 {
         self.base().position() - self.normal_to_arena * (self.distance_to_arena - shift)
     }

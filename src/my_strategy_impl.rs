@@ -18,8 +18,8 @@ pub struct MyStrategyImpl {
     cpu_time_spent: Duration,
     max_cpu_time_spent: Duration,
     last_tick: i32,
-    active_order: Option<Order>,
-    passive_orders: Vec<Order>,
+    orders: Vec<Order>,
+    robots_priority: Vec<i32>,
     order_id_generator: IdGenerator,
     micro_ticks: usize,
     #[cfg(feature = "enable_render")]
@@ -45,12 +45,14 @@ impl Strategy for MyStrategyImpl {
             self.last_tick = game.current_tick;
             self.update_world(me, game);
             if self.world.is_reset_ticks() {
-                self.active_order = None;
+                self.robots_priority.clear();
+                self.orders.clear();
             } else {
+                self.init_robots_priority();
                 self.give_orders();
             }
             #[cfg(feature = "enable_stats")]
-            for v in self.active_order.iter() {
+            for v in self.orders.iter() {
                 println!("{}", serde_json::to_string(&v.stats()).unwrap());
             }
             #[cfg(feature = "enable_render")]
@@ -68,7 +70,9 @@ impl Strategy for MyStrategyImpl {
 impl MyStrategyImpl {
     pub fn new(me: &Robot, rules: &Rules, game: &Game) -> Self {
         let world = World::new(me.clone(), rules.clone(), game.clone());
+
         log!(game.current_tick, "start");
+
         MyStrategyImpl {
             world: world.clone(),
             rng: XorShiftRng::from_seed([
@@ -83,8 +87,8 @@ impl MyStrategyImpl {
             cpu_time_spent: Duration::default(),
             max_cpu_time_spent: Duration::default(),
             last_tick: -1,
-            active_order: None,
-            passive_orders: Vec::new(),
+            orders: Vec::new(),
+            robots_priority: Vec::new(),
             order_id_generator: IdGenerator::new(),
             micro_ticks: 0,
             #[cfg(feature = "enable_render")]
@@ -105,6 +109,30 @@ impl MyStrategyImpl {
         self.world.me = me.clone();
     }
 
+    fn init_robots_priority(&mut self) {
+        use crate::my_strategy::common::as_score;
+
+        if self.robots_priority.is_empty() {
+            let mut robots_with_distance_to_ball = self.world.game.robots.iter()
+                .filter(|v| v.is_teammate)
+                .map(|v| {
+                    let distance = self.world.game.ball.position().distance(v.position());
+                    (as_score(distance), v.id)
+                })
+                .collect::<Vec<_>>();
+
+            robots_with_distance_to_ball.sort();
+
+            self.robots_priority = robots_with_distance_to_ball.iter()
+                .map(|(_, id)| *id)
+                .collect();
+        } else {
+            self.robots_priority = self.orders.iter()
+                .map(|v| v.robot_id())
+                .collect();
+        }
+    }
+
     fn give_orders(&mut self) {
         use crate::my_strategy::orders::OrderContext;
 
@@ -114,63 +142,79 @@ impl MyStrategyImpl {
             order_id_generator: &mut self.order_id_generator,
             micro_ticks: &mut self.micro_ticks,
         };
-        self.active_order = if let Some(order) = &self.active_order {
-            let robot = world.get_robot(order.robot_id());
-            let current_robot_order = Order::try_play(robot, world, &mut ctx);
-            if let Some(current) = current_robot_order {
-                world.game.robots.iter()
-                    .filter(|v| v.is_teammate && v.id != order.robot_id())
-                    .filter_map(|v| Order::try_play(v, world, &mut ctx))
-                    .max_by_key(|v| v.score())
-                    .filter(|v| v.score() > current.score() + 116)
-                    .or(Some(current))
-            } else {
-                world.game.robots.iter()
-                    .filter(|v| v.is_teammate && v.id != order.robot_id())
-                    .filter_map(|v| Order::try_play(v, world, &mut ctx))
-                    .max_by_key(|v| v.score())
-            }
-        } else {
-            world.game.robots.iter()
-                .filter(|v| v.is_teammate)
-                .filter_map(|v| Order::try_play(v, world, &mut ctx))
-                .max_by_key(|v| v.score())
-        };
-        let active_order = self.active_order.as_ref();
-        self.passive_orders = world.game.robots.iter()
-            .filter(|robot| {
-                active_order
-                    .map(|v| v.robot_id() != robot.id)
-                    .unwrap_or(true)
-            })
-            .map(|robot| {
-                if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
-                    && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
-                        > world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS {
+        let team_size = world.game.robots.len() / 2;
+        let has_orders = !self.orders.is_empty();
 
-                    Order::try_take_nitro_pack(robot, world, ctx.order_id_generator)
-                        .unwrap_or_else(|| {
-                            Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
-                        })
+        let robots_max_z = self.robots_priority.iter()
+            .enumerate()
+            .map(|(n, id)| {
+                if has_orders && team_size > 1 && n == team_size - 1 {
+                    (*id, -world.rules.BALL_RADIUS)
                 } else {
-                    Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
+                    (*id, std::f64::MAX)
                 }
             })
-            .collect();
+            .collect::<Vec<_>>();
+
+        let mut orders = self.robots_priority.iter()
+            .enumerate()
+            .map(|(n, robot_id)| {
+                let robot = world.get_robot(*robot_id);
+                let max_z = robots_max_z.iter()
+                    .find(|(id, _)| *id == *robot_id)
+                    .map(|(_, v)| *v)
+                    .unwrap();
+                (n, Order::try_play(robot, world, &Vec::new(), max_z, &mut ctx))
+            })
+            .collect::<Vec<_>>();
+
+        orders.sort_by_key(|(n, order)| {
+            if has_orders {
+                -(order.score() - (*n * 116) as i32)
+            } else {
+                -order.score()
+            }
+        });
+
+        let mut orders = orders.into_iter()
+            .map(|(_, v)| v)
+            .collect::<Vec<_>>();
+
+        if orders.len() > 1 {
+            for i in 1..orders.len() {
+                let robot = world.get_robot(orders[i].robot_id());
+                let max_z = robots_max_z.iter()
+                    .find(|(id, _)| *id == orders[i].robot_id())
+                    .map(|(_, v)| *v)
+                    .unwrap();
+                orders[i] = Order::try_play(robot, world, &orders[0..i], max_z, &mut ctx);
+            }
+        }
+
+        if orders.len() > 1 && orders.last().unwrap().is_idle() {
+            let robot = world.get_robot(orders.last().unwrap().robot_id());
+            *orders.last_mut().unwrap() = if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
+                && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
+                    > world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS {
+
+                match Order::try_take_nitro_pack(robot, world, ctx.order_id_generator) {
+                    Order::Idle(_) => Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator),
+                    v => v,
+                }
+            } else {
+                Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
+            }
+        }
+
+        self.orders = orders;
     }
 
     fn apply_action(&mut self, action: &mut Action) {
-        self.active_order.iter()
+        self.orders.iter()
             .find(|v| v.robot_id() == self.world.me.id)
             .map(|v| {
                 *action = v.action().clone();
-                log!(self.world.game.current_tick, "[{}] <{}> apply active order {:?}", self.world.me.id, v.id(), action);
-            });
-        self.passive_orders.iter()
-            .find(|v| v.robot_id() == self.world.me.id)
-            .map(|v| {
-                *action = v.action().clone();
-                log!(self.world.game.current_tick, "[{}] <{}> apply passive order {:?}", self.world.me.id, v.id(), action);
+                log!(self.world.game.current_tick, "[{}] <{}> apply order {:?}", self.world.me.id, v.id(), action);
             });
     }
 
@@ -196,6 +240,12 @@ impl MyStrategyImpl {
 
         self.render.clear();
 
+        self.render.add(Object::text(format!("priority: {:?}", self.robots_priority)));
+        self.render.add(Object::text(format!(
+            "orders: {:?}",
+            self.orders.iter().map(|v| (v.robot_id(), v.id(), v.score())).collect::<Vec<_>>()
+        )));
+
         let mut robots: Vec<&Robot> = self.world.game.robots.iter().map(|v| v).collect();
         robots.sort_by_key(|v| v.id);
 
@@ -208,7 +258,7 @@ impl MyStrategyImpl {
         for robot in robots {
             robot.render(render);
 
-            let order = self.active_order.iter()
+            let order = self.orders.iter()
                 .find(|v| v.robot_id() == robot.id)
                 .map(|v| v);
 

@@ -5,7 +5,9 @@ use crate::my_strategy::vec3::Vec3;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-pub struct Context<'r> {
+pub struct Context<'r, 'a, G>
+    where G: Fn(i32, i32) -> Option<&'a Action> {
+
     pub current_tick: i32,
     pub robot_id: i32,
     pub action_id: i32,
@@ -13,15 +15,27 @@ pub struct Context<'r> {
     pub rng: &'r mut XorShiftRng,
     pub time_to_ball: &'r mut Option<f64>,
     pub time_to_goal: &'r mut Option<f64>,
+    pub get_robot_action_at: G,
+    pub actions: &'r mut Vec<Action>,
     #[cfg(feature = "enable_render")]
     pub history: &'r mut Vec<Simulator>,
     #[cfg(feature = "enable_stats")]
     pub stats: &'r mut Stats,
 }
 
-impl Context<'_> {
+impl<'r, 'a, G> Context<'r, 'a, G>
+    where G: Fn(i32, i32) -> Option<&'a Action> {
+
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize) {
         use crate::my_strategy::simulator::RobotCollisionType;
+
+        let current_tick = self.simulator.current_tick();
+
+        for robot in self.simulator.robots_mut().iter_mut() {
+            if let Some(action) = (self.get_robot_action_at)(robot.id(), current_tick) {
+                *robot.action_mut() = action.clone();
+            }
+        }
 
         self.simulator.tick(time_interval, micro_ticks_per_tick, self.rng);
 
@@ -32,6 +46,8 @@ impl Context<'_> {
         if self.simulator.score() != 0 && self.time_to_goal.is_none() {
             *self.time_to_goal = Some(self.simulator.current_time());
         }
+
+        self.actions.push(self.simulator.me().action().clone());
 
         #[cfg(feature = "enable_render")]
         self.history.push(self.simulator.clone());
@@ -52,7 +68,9 @@ pub struct JumpAtPosition<'r> {
 }
 
 impl JumpAtPosition<'_> {
-    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
         use crate::my_strategy::entity::Entity;
 
         log!(
@@ -121,7 +139,9 @@ pub struct WalkToPosition {
 }
 
 impl WalkToPosition {
-    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::RobotCollisionType;
 
@@ -202,7 +222,9 @@ pub struct Jump {
 }
 
 impl Jump {
-    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
         use crate::my_strategy::entity::Entity;
 
         #[cfg(feature = "enable_stats")]
@@ -262,7 +284,9 @@ pub struct WatchBallMove {
 }
 
 impl WatchBallMove {
-    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
         use crate::my_strategy::entity::Entity;
 
         #[cfg(feature = "enable_stats")]
@@ -322,7 +346,9 @@ pub struct JumpToBall {
 }
 
 impl JumpToBall {
-    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
         use crate::my_strategy::entity::Entity;
 
         log!(
@@ -371,7 +397,9 @@ impl JumpToBall {
         Some(action)
     }
 
-    pub fn does_jump_hit_ball(&self, ctx: &mut Context) -> bool {
+    pub fn does_jump_hit_ball<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> bool
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
         use crate::my_strategy::physics::MoveEquation;
         use crate::my_strategy::optimization::minimize1d;
 
@@ -423,7 +451,9 @@ pub struct FarJump {
 }
 
 impl FarJump {
-    pub fn perform(&self, ctx: &mut Context) -> Action {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Action
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
         use crate::my_strategy::entity::Entity;
 
         #[cfg(feature = "enable_stats")]
@@ -502,7 +532,8 @@ pub struct WatchMeJump {
 }
 
 impl WatchMeJump {
-    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+        where G: Fn(i32, i32) -> Option<&'a Action> {
         use crate::my_strategy::simulator::{Solid, RobotCollisionType};
         use crate::my_strategy::entity::Entity;
 
@@ -571,7 +602,9 @@ pub struct ContinueJump {
 }
 
 impl ContinueJump {
-    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
         let mut action = WatchMeJump {
             jump_speed: self.jump_speed,
             use_nitro: self.use_nitro,

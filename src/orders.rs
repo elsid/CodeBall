@@ -21,15 +21,19 @@ const MAX_TOTAL_MICRO_TICKS: i32 = 15000;
 const MAX_ITERATIONS: usize = 5;
 
 pub enum Order {
+    Idle(Idle),
     Play(Play),
     WalkToGoalkeeperPosition(WalkToGoalkeeperPosition),
     TakeNitroPack(TakeNitroPack),
 }
 
 impl Order {
-    pub fn try_play(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Order> {
-        Play::try_new(robot, world, ctx)
-            .map(|v| Order::Play(v))
+    pub fn try_play(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut OrderContext) -> Order {
+        if let Some(play) = Play::try_new(robot, world, other, max_z, ctx) {
+            Order::Play(play)
+        } else {
+            Self::idle(robot, world, ctx.order_id_generator)
+        }
     }
 
     pub fn walk_to_goalkeeper_position(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Order {
@@ -38,13 +42,21 @@ impl Order {
         )
     }
 
-    pub fn try_take_nitro_pack(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Option<Order> {
-        TakeNitroPack::try_new(robot, world, order_id_generator)
-            .map(|v| Order::TakeNitroPack(v))
+    pub fn try_take_nitro_pack(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Order {
+        if let Some(take_nitro_pack) = TakeNitroPack::try_new(robot, world, order_id_generator) {
+            Order::TakeNitroPack(take_nitro_pack)
+        } else {
+            Self::idle(robot, world, order_id_generator)
+        }
+    }
+
+    pub fn idle(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Order {
+        Order::Idle(Idle::new(robot, world, order_id_generator))
     }
 
     pub fn id(&self) -> i32 {
         match self {
+            Order::Idle(v) => v.id,
             Order::Play(v) => v.id,
             Order::WalkToGoalkeeperPosition(v) => v.id,
             Order::TakeNitroPack(v) => v.id,
@@ -53,6 +65,7 @@ impl Order {
 
     pub fn robot_id(&self) -> i32 {
         match self {
+            Order::Idle(v) => v.robot_id,
             Order::Play(v) => v.robot_id,
             Order::WalkToGoalkeeperPosition(v) => v.robot_id,
             Order::TakeNitroPack(v) => v.robot_id,
@@ -61,6 +74,7 @@ impl Order {
 
     pub fn score(&self) -> i32 {
         match self {
+            Order::Idle(v) => v.score,
             Order::Play(v) => v.score,
             Order::WalkToGoalkeeperPosition(v) => v.score,
             Order::TakeNitroPack(v) => v.score,
@@ -69,9 +83,39 @@ impl Order {
 
     pub fn action(&self) -> &Action {
         match self {
+            Order::Idle(v) => &v.action,
             Order::Play(v) => &v.action,
             Order::WalkToGoalkeeperPosition(v) => &v.action,
             Order::TakeNitroPack(v) => &v.action,
+        }
+    }
+
+    pub fn action_at(&self, tick: i32) -> Option<&Action> {
+        if tick == 0 {
+            Some(self.action())
+        } else {
+            match self {
+                Order::Idle(_) => None,
+                Order::Play(v) => v.action_at(tick),
+                Order::WalkToGoalkeeperPosition(_) => None,
+                Order::TakeNitroPack(_) => None,
+            }
+        }
+    }
+
+    pub fn time_to_ball(&self) -> Option<f64> {
+        match self {
+            Order::Idle(_) => None,
+            Order::Play(v) => v.time_to_ball,
+            Order::WalkToGoalkeeperPosition(_) => None,
+            Order::TakeNitroPack(_) => None,
+        }
+    }
+
+    pub fn is_idle(&self) -> bool {
+        match self {
+            Order::Idle(_) => true,
+            _ => false,
         }
     }
 
@@ -81,6 +125,7 @@ impl Order {
             Order::Play(v) => &v.stats,
             Order::WalkToGoalkeeperPosition(v) => &v.stats,
             Order::TakeNitroPack(v) => &v.stats,
+            Order::Idle(v) => &v.stats,
         }
     }
 
@@ -90,6 +135,7 @@ impl Order {
             Order::Play(v) => v.name,
             Order::WalkToGoalkeeperPosition(_) => "walk_to_goalkeeper_position",
             Order::TakeNitroPack(_) => "take_nitro_pack",
+            Order::Idle(v) => "idle",
         }
     }
 
@@ -119,8 +165,31 @@ impl Order {
     #[cfg(feature = "enable_render")]
     pub fn render_sub(&self, render: &mut Render) {
         match self {
+            Order::Idle(_) => (),
             Order::Play(v) => v.render(render),
             _ => (),
+        }
+    }
+}
+
+pub struct Idle {
+    pub id: i32,
+    pub robot_id: i32,
+    pub action: Action,
+    pub score: i32,
+    #[cfg(feature = "enable_stats")]
+    pub stats: Stats,
+}
+
+impl Idle {
+    pub fn new(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Self {
+        Idle {
+            id: order_id_generator.next(),
+            robot_id: robot.id,
+            action: Action::default(),
+            score: 0,
+            #[cfg(feature = "enable_stats")]
+            stats: Stats::new(robot.player_id, robot.id, world.game.current_tick, "idle"),
         }
     }
 }
@@ -131,6 +200,7 @@ pub struct Play {
     pub action: Action,
     pub score: i32,
     pub time_to_ball: Option<f64>,
+    pub actions: Vec<Action>,
     #[cfg(feature = "enable_render")]
     pub position_to_jump: Option<Vec3>,
     #[cfg(feature = "enable_render")]
@@ -142,7 +212,7 @@ pub struct Play {
 }
 
 impl Play {
-    pub fn try_new(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Self> {
+    pub fn try_new(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut OrderContext) -> Option<Self> {
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
 
         let mut ctx = InnerOrderContext {
@@ -155,15 +225,15 @@ impl Play {
 
         let mut order = if world.rules.is_flying(robot) {
             let without_nitro = {
-                let fly = Self::try_continue_jump(0.0, false, robot, world, &mut ctx);
-                let jump = Self::try_continue_jump(world.rules.ROBOT_MAX_JUMP_SPEED, false, robot, world, &mut ctx);
+                let fly = Self::try_continue_jump(0.0, false, robot, world, other, &mut ctx);
+                let jump = Self::try_continue_jump(world.rules.ROBOT_MAX_JUMP_SPEED, false, robot, world, other, &mut ctx);
 
                 Self::get_with_max_score(fly, jump)
             };
 
             let with_nitro = if robot.nitro_amount > 0.0 {
-                let fly = Self::try_continue_jump(0.0, true, robot, world, &mut ctx);
-                let jump = Self::try_continue_jump(world.rules.ROBOT_MAX_JUMP_SPEED, true, robot, world, &mut ctx);
+                let fly = Self::try_continue_jump(0.0, true, robot, world, other, &mut ctx);
+                let jump = Self::try_continue_jump(world.rules.ROBOT_MAX_JUMP_SPEED, true, robot, world, other, &mut ctx);
 
                 Self::get_with_max_score(fly, jump)
             } else {
@@ -172,8 +242,8 @@ impl Play {
 
             Self::get_with_max_score(without_nitro, with_nitro)
         } else {
-            let jump_to_ball = Self::try_jump_to_ball(robot, world, &mut ctx);
-            let jump_at_position = Self::try_jump_at_position(robot, world, &mut ctx);
+            let jump_to_ball = Self::try_jump_to_ball(robot, world, other, &mut ctx);
+            let jump_at_position = Self::try_jump_at_position(robot, world, other, max_z, &mut ctx);
 
             Self::get_with_max_score(jump_at_position, jump_to_ball)
         };
@@ -191,7 +261,13 @@ impl Play {
         order
     }
 
-    fn try_jump_at_position(robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Self> {
+    fn try_jump_at_position(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut InnerOrderContext) -> Option<Self> {
+        let time_to_play = get_min_time_to_play_ball(other, world);
+
+        if time_to_play > MAX_TIME {
+            return None;
+        }
+
         let initial_simulator = make_initial_simulator(robot, world);
         let mut global_simulator = initial_simulator.clone();
         global_simulator.set_ignore_me(true);
@@ -199,6 +275,7 @@ impl Play {
         let mut order: Option<Play> = None;
         let steps = [1usize, 3, 4, 8];
         let mut iterations = 0;
+        let get_robot_action_at = make_get_robot_action_at(other);
 
         while (iterations < MAX_ITERATIONS || order.is_none())
             && global_simulator.current_time() + time_interval < MAX_TIME
@@ -213,10 +290,14 @@ impl Play {
             let ball_position = global_simulator.ball().position();
             let (distance, normal) = world.rules.arena.distance_and_normal(ball_position);
 
-            if ball_position.y() < world.rules.max_robot_jump_height() || (
-                distance < world.rules.max_robot_jump_height()
-                && ball_position.y() < world.rules.max_robot_wall_walk_height()
-                && Vec3::j().cos(normal) >= 0.0
+            if global_simulator.current_time() >= time_to_play
+                && ball_position.z() < max_z
+                && (
+                    ball_position.y() < world.rules.max_robot_jump_height() || (
+                        distance < world.rules.max_robot_jump_height()
+                        && ball_position.y() < world.rules.max_robot_wall_walk_height()
+                        && Vec3::j().cos(normal) >= 0.0
+                    )
             ) {
 
                 log!(
@@ -229,7 +310,7 @@ impl Play {
 
                 iterations += 1;
 
-                let candidate = Self::try_jump_near_ball(&initial_simulator, &global_simulator, robot, world, ctx);
+                let candidate = Self::try_jump_near_ball(&initial_simulator, &global_simulator, robot, world, other, ctx);
 
                 if candidate.is_some() && (order.is_none() || order.as_ref().unwrap().score < candidate.as_ref().unwrap().score) {
                     order = candidate;
@@ -243,6 +324,14 @@ impl Play {
             }
 
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
+                let current_tick = global_simulator.current_tick();
+
+                for robot in global_simulator.robots_mut().iter_mut() {
+                    if let Some(action) = (get_robot_action_at)(robot.id(), current_tick) {
+                        *robot.action_mut() = action.clone();
+                    }
+                }
+
                 global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, ctx.rng);
                 ctx.total_micro_ticks += NEAR_MICRO_TICKS_PER_TICK as i32;
                 *ctx.micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
@@ -258,7 +347,7 @@ impl Play {
     }
 
     fn try_jump_near_ball(initial_simulator: &Simulator, global_simulator: &Simulator,
-                          robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
+                          robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, JumpAtPosition};
 
         let time_interval = world.rules.tick_time_interval();
@@ -309,6 +398,7 @@ impl Play {
             };
             let mut time_to_ball = None;
             let mut time_to_goal = None;
+            let mut actions = Vec::new();
             #[cfg(feature = "enable_render")]
             let mut history = vec![local_simulator.clone()];
             #[cfg(feature = "enable_stats")]
@@ -322,6 +412,8 @@ impl Play {
                 rng: ctx.rng,
                 time_to_ball: &mut time_to_ball,
                 time_to_goal: &mut time_to_goal,
+                get_robot_action_at: make_get_robot_action_at(other),
+                actions: &mut actions,
                 #[cfg(feature = "enable_render")]
                 history: &mut history,
                 #[cfg(feature = "enable_stats")]
@@ -382,6 +474,7 @@ impl Play {
                         action,
                         score: action_score,
                         time_to_ball,
+                        actions,
                         #[cfg(feature = "enable_render")]
                         position_to_jump: Some(target),
                         #[cfg(feature = "enable_render")]
@@ -398,18 +491,25 @@ impl Play {
         order
     }
 
-    fn try_jump_to_ball(robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
+    fn try_jump_to_ball(robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, JumpToBall};
 
         if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
             return None;
         }
 
+        let time_to_play = get_min_time_to_play_ball(other, world);
+
+        if time_to_play > 0.0 {
+            return None;
+        }
+
         let action_id = ctx.order_id_generator.next();
         let mut local_simulator = make_initial_simulator(robot, world);
+        let time_interval = world.rules.tick_time_interval();
         let mut time_to_ball = None;
         let mut time_to_goal = None;
-        let time_interval = world.rules.tick_time_interval();
+        let mut actions = Vec::new();
         #[cfg(feature = "enable_render")]
         let mut history = vec![local_simulator.clone()];
         #[cfg(feature = "enable_stats")]
@@ -423,6 +523,8 @@ impl Play {
             rng: ctx.rng,
             time_to_ball: &mut time_to_ball,
             time_to_goal: &mut time_to_goal,
+            get_robot_action_at: make_get_robot_action_at(other),
+            actions: &mut actions,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -478,6 +580,7 @@ impl Play {
                 action,
                 score: action_score,
                 time_to_ball,
+                actions,
                 #[cfg(feature = "enable_render")]
                 position_to_jump: None,
                 #[cfg(feature = "enable_render")]
@@ -492,7 +595,7 @@ impl Play {
         }
     }
 
-    fn try_continue_jump(jump_speed: f64, use_nitro: bool, robot: &Robot, world: &World,
+    fn try_continue_jump(jump_speed: f64, use_nitro: bool, robot: &Robot, world: &World, other: &[Order],
                          ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, ContinueJump};
 
@@ -505,6 +608,8 @@ impl Play {
         let mut time_to_ball = None;
         let mut time_to_goal = None;
         let time_interval = world.rules.tick_time_interval();
+        let get_robot_action_at = make_get_robot_action_at(other);
+        let mut actions = Vec::new();
         #[cfg(feature = "enable_render")]
         let mut history = vec![simulator.clone()];
         #[cfg(feature = "enable_stats")]
@@ -518,6 +623,8 @@ impl Play {
             rng: ctx.rng,
             time_to_ball: &mut time_to_ball,
             time_to_goal: &mut time_to_goal,
+            get_robot_action_at,
+            actions: &mut actions,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -575,6 +682,7 @@ impl Play {
                 action,
                 score: action_score,
                 time_to_ball,
+                actions,
                 #[cfg(feature = "enable_render")]
                 position_to_jump: None,
                 #[cfg(feature = "enable_render")]
@@ -602,6 +710,14 @@ impl Play {
             }
         } else {
             rhs
+        }
+    }
+
+    pub fn action_at(&self, tick: i32) -> Option<&Action> {
+        if 0 <= tick && (tick as usize) < self.actions.len() {
+            Some(&self.actions[tick as usize])
+        } else {
+            None
         }
     }
 
@@ -834,4 +950,26 @@ impl TakeNitroPack {
                 }
             })
     }
+}
+
+fn make_get_robot_action_at<'r>(other: &'r [Order]) -> impl Fn(i32, i32) -> Option<&'r Action> {
+    move |robot_id: i32, tick: i32| -> Option<&'r Action> {
+        other.iter()
+            .find(|v| v.robot_id() == robot_id)
+            .map(|v| v.action_at(tick))
+            .unwrap_or_default()
+    }
+}
+
+fn get_min_time_to_play_ball(other: &[Order], world: &World) -> f64 {
+    use crate::my_strategy::common::as_score;
+
+    other.iter()
+        .map(|v| {
+            v.time_to_ball().map(|v| {
+                v + 10.0 * world.rules.tick_time_interval()
+            }).unwrap_or_default()
+        })
+        .max_by_key(|v| as_score(*v))
+        .unwrap_or_default()
 }

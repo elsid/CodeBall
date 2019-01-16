@@ -18,7 +18,7 @@ fn test_new() {
         micro_ticks: &mut micro_ticks,
     };
 
-    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
+    let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
     assert_eq!(result.score(), 1145);
     assert_eq!(result.action().jump_speed, 0.0);
@@ -87,7 +87,7 @@ fn test_new_should_not_jump_on_ball_top() {
     world.game.ball.y = 5.233161866399729;
     world.game.ball.velocity_y = -12.500000000000554;
 
-    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
+    let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
     assert_eq!(result.score(), 1278);
     assert_eq!(result.action().jump_speed, 0.0);
@@ -156,7 +156,7 @@ fn test_new_far_jump() {
     world.game.ball.y = 6.0;
     world.game.ball.velocity_y = 0.0;
 
-    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
+    let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
     assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 30.0));
     assert_eq!(result.action().jump_speed, 15.0);
@@ -219,7 +219,7 @@ fn test_new_continue_jump() {
     world.game.ball.y = 2.123101000000013;
     world.game.ball.velocity_y = 12.815500000000347;
 
-    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
+    let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
     assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 0.0));
     assert_eq!(result.action().jump_speed, 15.0);
@@ -282,7 +282,7 @@ fn test_new_continue_jump_with_nitro() {
     world.game.ball.y = 2.123101000000013;
     world.game.ball.velocity_y = 12.815500000000347;
 
-    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
+    let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
     assert_eq!(result.score(), 2610);
     assert_eq!(result.action().use_nitro, true);
