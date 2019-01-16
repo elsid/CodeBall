@@ -166,9 +166,15 @@ impl Play {
                 robot.id, global_simulator.current_micro_tick(), global_simulator.current_time()
             );
 
-            let ball_y = global_simulator.ball().base().y;
+            let ball_position = global_simulator.ball().position();
+            let (distance, normal) = world.rules.arena.distance_and_normal(ball_position);
 
-            if ball_y < world.rules.max_robot_jump_height() {
+            if ball_position.y() < world.rules.max_robot_jump_height() || (
+                distance < world.rules.max_robot_jump_height()
+                && ball_position.y() < world.rules.max_robot_wall_walk_height()
+                && Vec3::j().cos(normal) >= 0.0
+            ) {
+
                 log!(
                     world.game.current_tick,
                     "[{}] use time point {} {} position={:?} velocity={:?} ball_position={:?} ball_velocity={:?}",

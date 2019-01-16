@@ -52,4 +52,13 @@ impl Rules {
 
         self.ROBOT_ACCELERATION * self.min_acceleration_time().square() / 2.0
     }
+
+    pub fn max_robot_wall_walk_height(&self) -> f64 {
+        use crate::my_strategy::common::Square;
+
+        let time = self.ROBOT_MAX_GROUND_SPEED / self.GRAVITY;
+        self.ROBOT_MAX_RADIUS
+            + self.ROBOT_MAX_GROUND_SPEED * time
+            - self.GRAVITY * time.square() / 2.0
+    }
 }
