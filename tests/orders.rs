@@ -16,9 +16,9 @@ fn test_new() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.action().target_velocity(), Vec3::new(-16.10559850972309, 0.0, 25.310268600779516));
+    assert_eq!(result.action().target_velocity(), Vec3::new(-16.315240592758546, 0.0, 25.175641489352437));
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.score(), 1133);
+    assert_eq!(result.score(), 1125);
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), Stats {
@@ -34,8 +34,8 @@ fn test_new() {
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1133,
-        total_micro_ticks: 7450,
+        action_score: 1125,
+        total_micro_ticks: 5950,
         current_step: 8,
     });
 }
@@ -74,26 +74,26 @@ fn test_new_should_not_jump_on_ball_top() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.action().target_velocity(), Vec3::new(16.778350649872877, 0.0, 24.86939785097159));
+    assert_eq!(result.action().target_velocity(), Vec3::new(17.284585080458342, 0.0, 24.520259350104695));
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.score(), 1356);
+    assert_eq!(result.score(), 1326);
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), Stats {
-        micro_ticks_to_jump: 57,
+        micro_ticks_to_jump: 51,
         micro_ticks_to_watch: 66,
         micro_ticks_to_end: 300,
-        time_to_jump: 0.31666666666666665,
+        time_to_jump: 0.2833333333333333,
         time_to_watch: 0.36666666666666664,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 5,
+        iteration: 3,
         total_iterations: 5,
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1356,
-        total_micro_ticks: 6825,
+        action_score: 1326,
+        total_micro_ticks: 5325,
         current_step: 8,
     });
 }
@@ -151,7 +151,7 @@ fn test_new_far_jump() {
         jump_simulation: false,
         far_jump_simulation: true,
         action_score: 1171,
-        total_micro_ticks: 8243,
+        total_micro_ticks: 6743,
         current_step: 0,
     });
 }

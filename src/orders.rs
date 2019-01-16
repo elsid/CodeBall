@@ -543,7 +543,7 @@ pub fn get_points(ball: &BallExt, robot: &Robot, rules: &Rules, rng: &mut XorShi
     let distance = rng.gen_range(min_distance, max_distance);
     let base_direction = Plane::projected(to_robot, ball.normal_to_arena()).normalized();
     let mut result = Vec::new();
-    for _ in 0..4 {
+    for _ in 0..3 {
         let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
         let rotation = Mat3::rotation(ball.normal_to_arena(), angle);
         let position = base_position + rotation * base_direction * distance;

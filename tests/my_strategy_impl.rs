@@ -46,9 +46,9 @@ fn test_two_robots_first_action_to_go_for_ball() {
     let mut action = Action::default();
     my_strategy.act(simulator.me().base(), simulator.rules(), &simulator.game(), &mut action);
     assert_eq!(action, Action {
-        target_velocity_x: 17.11659719766486,
+        target_velocity_x: 16.28549293405953,
         target_velocity_y: 0.0,
-        target_velocity_z: 24.637818498659566,
+        target_velocity_z: 25.19489471886511,
         jump_speed: 0.0,
         use_nitro: false,
     });
@@ -85,12 +85,12 @@ fn test_two_robots_first_ball_kick() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.01186280270860909,
-        y: 3.4666115851989527,
-        z: 0.06523799285902633,
-        velocity_x: 5.452951254417977,
-        velocity_y: 33.46442940970555,
-        velocity_z: 29.98782022549956,
+        x: 0.054987696231321916,
+        y: 3.587902646169355,
+        z: 0.20805867815500878,
+        velocity_x: 8.018268316012518,
+        velocity_y: 34.66278284658389,
+        velocity_z: 30.338974375352638,
         radius: 2.0,
     });
     assert_eq!(simulator.current_tick(), 45);
