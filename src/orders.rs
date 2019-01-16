@@ -195,6 +195,7 @@ impl Play {
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
                 global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, ctx.rng);
                 ctx.total_micro_ticks += NEAR_MICRO_TICKS_PER_TICK as i32;
+                *ctx.micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
             }
         }
 
