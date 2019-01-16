@@ -86,14 +86,12 @@ use self::my_test_strategy_impl::MyStrategyImpl;
 use self::my_strategy_impl::MyStrategyImpl;
 
 pub struct MyStrategy {
-//    start_time: Instant,
     strategy_impl: Option<MyStrategyImpl>,
 }
 
 impl Strategy for MyStrategy {
     fn act(&mut self, me: &Robot, rules: &Rules, game: &Game, action: &mut Action) {
         if self.strategy_impl.is_none() {
-//            self.strategy_impl = Some(MyStrategyImpl::new(me, rules, game, self.start_time));
             self.strategy_impl = Some(MyStrategyImpl::new(me, rules, game));
         }
         self.strategy_impl.as_mut().unwrap().act(me, rules, game, action);

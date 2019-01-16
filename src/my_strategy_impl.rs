@@ -1,3 +1,4 @@
+use std::time::{Instant, Duration};
 use crate::model::{Game, Action, Robot, Rules};
 use crate::strategy::Strategy;
 use crate::my_strategy::random::{XorShiftRng, SeedableRng};
@@ -11,9 +12,11 @@ use crate::my_strategy::render::Render;
 pub struct MyStrategyImpl {
     world: World,
     rng: XorShiftRng,
-//    start_time: Instant,
-//    tick_start_time: Instant,
-//    cpu_time_spent: Duration,
+    start_time: Instant,
+    tick_start_time: Instant,
+    time_spent: Duration,
+    cpu_time_spent: Duration,
+    max_cpu_time_spent: Duration,
     last_tick: i32,
     active_order: Option<Order>,
     passive_orders: Vec<Order>,
@@ -31,17 +34,13 @@ impl Default for MyStrategyImpl {
 
 impl Drop for MyStrategyImpl {
     fn drop(&mut self) {
-        println!("{}", self.micro_ticks);
+        println!("{} {:?} {:?} {:?}", self.micro_ticks, self.time_spent, self.cpu_time_spent, self.max_cpu_time_spent);
     }
 }
 
 impl Strategy for MyStrategyImpl {
     fn act(&mut self, me: &Robot, _rules: &Rules, game: &Game, action: &mut Action) {
-//        self.tick_start_time = if game.current_tick == 0 {
-//            self.start_time
-//        } else {
-//            Instant::now()
-//        };
+        self.on_start(game);
         if self.last_tick != game.current_tick {
             self.last_tick = game.current_tick;
             self.update_world(me, game);
@@ -62,14 +61,11 @@ impl Strategy for MyStrategyImpl {
         if !self.world.is_reset_ticks() {
             self.apply_action(action);
         }
-//        let finish = Instant::now();
-//        let cpu_time_spent = finish - self.tick_start_time;
-//        self.cpu_time_spent += cpu_time_spent;
+        self.on_finish();
     }
 }
 
 impl MyStrategyImpl {
-//    pub fn new(me: &Robot, rules: &Rules, game: &Game, start_time: Instant) -> Self {
     pub fn new(me: &Robot, rules: &Rules, game: &Game) -> Self {
         let world = World::new(me.clone(), rules.clone(), game.clone());
         log!(game.current_tick, "start");
@@ -81,9 +77,11 @@ impl MyStrategyImpl {
                 1841971383,
                 1904458926,
             ]),
-//            start_time,
-//            tick_start_time: start_time,
-//            cpu_time_spent: Duration::default(),
+            start_time: Instant::now(),
+            tick_start_time: Instant::now(),
+            time_spent: Duration::default(),
+            cpu_time_spent: Duration::default(),
+            max_cpu_time_spent: Duration::default(),
             last_tick: -1,
             active_order: None,
             passive_orders: Vec::new(),
@@ -164,6 +162,22 @@ impl MyStrategyImpl {
                 *action = v.action().clone();
                 log!(self.world.game.current_tick, "[{}] <{}> apply passive order {:?}", self.world.me.id, v.id(), action);
             });
+    }
+
+    fn on_start(&mut self, game: &Game) {
+        self.tick_start_time = if game.current_tick == 0 {
+            self.start_time
+        } else {
+            Instant::now()
+        };
+    }
+
+    fn on_finish(&mut self) {
+        let finish = Instant::now();
+        let cpu_time_spent = finish - self.tick_start_time;
+        self.max_cpu_time_spent = self.max_cpu_time_spent.max(cpu_time_spent);
+        self.cpu_time_spent += cpu_time_spent;
+        self.time_spent = finish - self.start_time;
     }
 
     #[cfg(feature = "enable_render")]
