@@ -20,7 +20,7 @@ fn test_new() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.score(), 1157);
+    assert_eq!(result.score(), 1189);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-15.811748664438161, 0.0, 25.494874076422462));
 
@@ -42,7 +42,7 @@ fn test_new() {
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1157,
+        action_score: 1189,
         total_micro_ticks: 5350,
         current_step: 8,
         reached_game_limit: false,
@@ -89,7 +89,7 @@ fn test_new_should_not_jump_on_ball_top() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.score(), 1296);
+    assert_eq!(result.score(), 1325);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(15.065425465228744, 0.0, 25.942878705950065));
 
@@ -111,7 +111,7 @@ fn test_new_should_not_jump_on_ball_top() {
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1296,
+        action_score: 1325,
         total_micro_ticks: 3525,
         current_step: 8,
         reached_game_limit: false,
@@ -160,7 +160,7 @@ fn test_new_far_jump() {
 
     assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 30.0));
     assert_eq!(result.action().jump_speed, 15.0);
-    assert_eq!(result.score(), 1257);
+    assert_eq!(result.score(), 1292);
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -180,7 +180,7 @@ fn test_new_far_jump() {
         score: 0,
         jump_simulation: false,
         far_jump_simulation: true,
-        action_score: 1257,
+        action_score: 1292,
         total_micro_ticks: 6113,
         current_step: 0,
         reached_game_limit: false,
@@ -223,7 +223,7 @@ fn test_new_continue_jump() {
 
     assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 0.0));
     assert_eq!(result.action().jump_speed, 15.0);
-    assert_eq!(result.score(), 2646);
+    assert_eq!(result.score(), 2671);
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -243,7 +243,7 @@ fn test_new_continue_jump() {
         score: 1,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 2646,
+        action_score: 2671,
         total_micro_ticks: 821,
         current_step: 0,
         reached_game_limit: false,

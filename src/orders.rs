@@ -615,18 +615,26 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
         .filter(|v| !v.is_teammate())
         .map(|v| v.position().distance(ball.position()) / rules.arena.max_distance())
         .sum::<f64>() / (simulator.robots().len() / 2) as f64;
+    let distance_to_teammate_score = 1.0 - simulator.robots().iter()
+        .filter(|v| v.is_teammate() && v.id() != simulator.me().id())
+        .map(|v| v.position().distance(ball.position()) / rules.arena.max_distance())
+        .min_by_key(|v| as_score(*v))
+        .unwrap_or_default();
     let score = 0.0
         + ball_goal_distance_score
         + 0.1 * ball_goal_direction_score
         + 0.5 * time_to_ball_score
         + 0.25 * time_to_goal_score
-        + 0.1 * distance_to_opponents_score;
+        + 0.1 * distance_to_opponents_score
+        + 0.05 * distance_to_teammate_score;
     log!(
         current_tick,
         "[{}] <{}> action ball_goal_distance_score={} ball_goal_direction_score={} \
-        time_to_ball_score={} time_to_goal_score={} distance_to_opponents_score={} total={}",
+        time_to_ball_score={} time_to_goal_score={} distance_to_opponents_score={} \
+        distance_to_teammate_score={} total={}",
         robot_id, action_id, ball_goal_distance_score, ball_goal_direction_score,
-        time_to_ball_score, time_to_goal_score, distance_to_opponents_score, score
+        time_to_ball_score, time_to_goal_score, distance_to_opponents_score,
+        distance_to_teammate_score, score
     );
     as_score(score)
 }
