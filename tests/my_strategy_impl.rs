@@ -55,7 +55,7 @@ fn test_two_robots_first_action_to_go_for_ball() {
 }
 
 #[test]
-fn test_two_robots_first_ball_kick() {
+fn test_two_robots_first_ball_kick_until_goal() {
     use my_strategy::model::Ball;
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, Solid};
@@ -73,7 +73,7 @@ fn test_two_robots_first_ball_kick() {
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().position().y() - simulator.me().radius() < 1e-3
-            && simulator.current_tick() < 100
+            && simulator.current_tick() < 150
     });
 
     assert_eq!(simulator.me().position().y(), 1.2931412499999937);
@@ -81,7 +81,7 @@ fn test_two_robots_first_ball_kick() {
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().ball_collision_type() == RobotCollisionType::None
-            && simulator.current_tick() < 100
+            && simulator.current_tick() < 150
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
@@ -94,6 +94,13 @@ fn test_two_robots_first_ball_kick() {
         radius: 2.0,
     });
     assert_eq!(simulator.current_tick(), 44);
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.score() == 0 && simulator.current_tick() < 150
+    });
+
+    assert_eq!(simulator.score(), 1);
+    assert_eq!(simulator.current_tick(), 112);
 }
 
 fn simulate_while<P>(my_strategy: &mut MyStrategyImpl, simulator: &mut Simulator,
