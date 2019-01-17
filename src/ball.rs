@@ -25,6 +25,18 @@ impl Ball {
         self.velocity_z = value.z();
     }
 
+    pub fn opposite(&self) -> Self {
+        Ball {
+            x: -self.x,
+            y: self.y,
+            z: -self.z,
+            velocity_x: -self.velocity_x,
+            velocity_y: self.velocity_y,
+            velocity_z: -self.velocity_z,
+            radius: self.radius,
+        }
+    }
+
     #[cfg(feature = "enable_render")]
     pub fn render(&self, render: &mut Render) {
         self.render_velocity(render);

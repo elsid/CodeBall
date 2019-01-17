@@ -110,6 +110,10 @@ impl Vec3 {
     pub fn normalized(&self) -> Vec3 {
         *self / self.norm()
     }
+
+    pub fn opposite(&self) -> Vec3 {
+        Vec3::new(-self.x, self.y, -self.z)
+    }
 }
 
 impl Add for Vec3 {

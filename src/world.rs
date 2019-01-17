@@ -43,4 +43,17 @@ impl World {
     pub fn get_micro_ticks_limit(&self) -> usize {
         (self.game.current_tick + 2) as usize * MICRO_TICKS_LIMIT_PER_TICK
     }
+
+    pub fn opposite(&self) -> Self {
+        World {
+            me: self.me.opposite(),
+            rules: self.rules.clone(),
+            game: self.game.opposite(),
+            reset_ticks_left: self.reset_ticks_left,
+        }
+    }
+
+    pub fn is_teammate(&self, robot_id: i32) -> bool {
+        self.get_robot(robot_id).is_teammate
+    }
 }

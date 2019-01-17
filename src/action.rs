@@ -18,6 +18,16 @@ impl Action {
         self.target_velocity_z = value.z();
     }
 
+    pub fn opposite(&self) -> Action {
+        Action {
+            target_velocity_x: -self.target_velocity_x,
+            target_velocity_y: self.target_velocity_y,
+            target_velocity_z: -self.target_velocity_z,
+            jump_speed: self.jump_speed,
+            use_nitro: self.use_nitro,
+        }
+    }
+
     #[cfg(feature = "enable_render")]
     pub fn render(&self, robot: &Robot, render: &mut Render) {
         self.render_target_velocity(robot, render);

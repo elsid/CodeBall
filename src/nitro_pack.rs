@@ -11,4 +11,16 @@ impl NitroPack {
         self.y = value.y();
         self.z = value.z();
     }
+
+    pub fn opposite(&self) -> Self {
+        NitroPack {
+            id: self.id,
+            x: -self.x,
+            y: self.y,
+            z: -self.z,
+            radius: self.radius,
+            nitro_amount: self.nitro_amount,
+            respawn_ticks: self.respawn_ticks,
+        }
+    }
 }

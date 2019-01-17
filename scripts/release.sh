@@ -30,6 +30,8 @@ cp src/physics.rs ${DIR}/src
 cp src/scenarios.rs ${DIR}/src
 cp src/mat3.rs ${DIR}/src
 cp src/nitro_pack.rs ${DIR}/src
+cp src/game.rs ${DIR}/src
+cp src/player.rs ${DIR}/src
 
 cd ${DIR}/src
 

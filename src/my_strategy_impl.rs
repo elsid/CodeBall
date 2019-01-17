@@ -135,6 +135,7 @@ impl MyStrategyImpl {
 
     fn give_orders(&mut self) {
         use crate::my_strategy::orders::OrderContext;
+        use crate::my_strategy::common::as_score;
 
         let world = &self.world;
         let mut ctx = OrderContext {
@@ -156,6 +157,20 @@ impl MyStrategyImpl {
             })
             .collect::<Vec<_>>();
 
+        let opposite_world = world.opposite();
+        let opponents_orders = world.game.robots.iter()
+            .filter(|v| {
+                !v.is_teammate && v.position().distance(world.game.ball.position()) < 10.0
+            })
+            .min_by_key(|v| {
+                as_score(v.position().distance(world.game.ball.position()))
+            })
+            .map(|robot| {
+                Order::try_play(&robot.opposite(), &opposite_world, &Vec::new(), std::f64::MAX, &mut ctx).opposite()
+            })
+            .into_iter()
+            .collect::<Vec<_>>();
+
         let mut orders = self.robots_priority.iter()
             .enumerate()
             .map(|(n, robot_id)| {
@@ -164,7 +179,7 @@ impl MyStrategyImpl {
                     .find(|(id, _)| *id == *robot_id)
                     .map(|(_, v)| *v)
                     .unwrap();
-                (n, Order::try_play(robot, world, &Vec::new(), max_z, &mut ctx))
+                (n, Order::try_play(robot, world, &opponents_orders[..], max_z, &mut ctx))
             })
             .collect::<Vec<_>>();
 
@@ -176,24 +191,28 @@ impl MyStrategyImpl {
             }
         });
 
-        let mut orders = orders.into_iter()
-            .map(|(_, v)| v)
-            .collect::<Vec<_>>();
+        let opponents_orders_num = opponents_orders.len();
+        let mut all_orders = opponents_orders;
 
-        if orders.len() > 1 {
-            for i in 1..orders.len() {
-                let robot = world.get_robot(orders[i].robot_id());
+        for (_, order) in orders.into_iter() {
+            all_orders.push(order);
+        }
+
+        if all_orders.len() > opponents_orders_num + 1 {
+            for i in opponents_orders_num + 1..all_orders.len() {
+                let robot = world.get_robot(all_orders[i].robot_id());
                 let max_z = robots_max_z.iter()
-                    .find(|(id, _)| *id == orders[i].robot_id())
+                    .find(|(id, _)| *id == all_orders[i].robot_id())
                     .map(|(_, v)| *v)
                     .unwrap();
-                orders[i] = Order::try_play(robot, world, &orders[0..i], max_z, &mut ctx);
+                all_orders[i] = Order::try_play(robot, world, &all_orders[0..i], max_z, &mut ctx);
             }
         }
 
-        if orders.len() > 1 && orders.last().unwrap().is_idle() {
-            let robot = world.get_robot(orders.last().unwrap().robot_id());
-            *orders.last_mut().unwrap() = if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
+        if all_orders.len() > opponents_orders_num + 1
+            && (all_orders.last().unwrap().is_idle() || all_orders.last().unwrap().time_to_ball().is_none()) {
+            let robot = world.get_robot(all_orders.last().unwrap().robot_id());
+            *all_orders.last_mut().unwrap() = if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
                 && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
                     > world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS {
 
@@ -203,10 +222,10 @@ impl MyStrategyImpl {
                 }
             } else {
                 Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
-            }
+            };
         }
 
-        self.orders = orders;
+        self.orders = all_orders.into_iter().skip(opponents_orders_num).collect();
     }
 
     fn apply_action(&mut self, action: &mut Action) {

@@ -76,6 +76,20 @@ impl RobotExt {
         }
     }
 
+    pub fn opposite(&self) -> Self {
+        RobotExt {
+            base: self.base.opposite(),
+            radius_change_speed: self.radius_change_speed,
+            action: self.action.opposite(),
+            mass: self.mass,
+            arena_e: self.arena_e,
+            is_me: self.is_me,
+            collision_type: self.collision_type,
+            distance_to_arena: self.distance_to_arena,
+            normal_to_arena: self.normal_to_arena.opposite(),
+        }
+    }
+
     pub fn id(&self) -> i32 {
         self.base.id
     }
@@ -235,6 +249,17 @@ impl BallExt {
             distance_to_arena: 0.0,
             normal_to_arena: Vec3::default(),
             collision_type: BallCollisionType::None,
+        }
+    }
+
+    pub fn opposite(&self) -> Self {
+        BallExt {
+            base: self.base.opposite(),
+            mass: self.mass,
+            arena_e: self.arena_e,
+            distance_to_arena: self.distance_to_arena,
+            normal_to_arena: self.normal_to_arena.opposite(),
+            collision_type: self.collision_type,
         }
     }
 
@@ -440,6 +465,22 @@ impl Simulator {
             score: 0,
             me_index,
             ignore_me: false,
+        }
+    }
+
+    pub fn opposite(self) -> Simulator {
+        Simulator {
+            players: self.players.into_iter().map(|v| v.opposite()).collect(),
+            robots: self.robots.into_iter().map(|v| v.opposite()).collect(),
+            ball: self.ball.opposite(),
+            nitro_packs: self.nitro_packs.into_iter().map(|v| v.opposite()).collect(),
+            rules: self.rules,
+            current_tick: self.current_tick,
+            current_micro_tick: self.current_micro_tick,
+            current_time: self.current_time,
+            score: self.score,
+            me_index: self.me_index,
+            ignore_me: self.ignore_me,
         }
     }
 

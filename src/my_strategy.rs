@@ -49,6 +49,12 @@ pub mod robot;
 #[path = "nitro_pack.rs"]
 pub mod nitro_pack;
 
+#[path = "player.rs"]
+pub mod player;
+
+#[path = "game.rs"]
+pub mod game;
+
 #[path = "world.rs"]
 pub mod world;
 

@@ -48,6 +48,7 @@ fn test_new() {
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
+        other_number: 0,
     });
 }
 
@@ -117,6 +118,7 @@ fn test_new_should_not_jump_on_ball_top() {
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
+        other_number: 0,
     });
 }
 
@@ -186,6 +188,7 @@ fn test_new_far_jump() {
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
+        other_number: 0,
     });
 }
 
@@ -249,6 +252,7 @@ fn test_new_continue_jump() {
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
+        other_number: 0,
     });
 }
 

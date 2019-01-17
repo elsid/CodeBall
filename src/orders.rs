@@ -119,6 +119,15 @@ impl Order {
         }
     }
 
+    pub fn opposite(self) -> Self {
+        match self {
+            Order::Idle(_) => self,
+            Order::Play(v) => Order::Play(v.opposite()),
+            Order::WalkToGoalkeeperPosition(v) => Order::WalkToGoalkeeperPosition(v.opposite()),
+            Order::TakeNitroPack(v) => Order::TakeNitroPack(v.opposite()),
+        }
+    }
+
     #[cfg(feature = "enable_stats")]
     pub fn stats(&self) -> &Stats {
         match self {
@@ -255,10 +264,30 @@ impl Play {
                 v.stats.total_micro_ticks += ctx.total_micro_ticks;
                 v.stats.reached_play_limit = ctx.total_micro_ticks >= MAX_TOTAL_MICRO_TICKS;
                 v.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.micro_ticks);
+                v.stats.other_number = other.len();
             }
         }
 
         order
+    }
+
+    pub fn opposite(self) -> Self {
+        Play {
+            id: self.id,
+            robot_id: self.robot_id,
+            action: self.action.opposite(),
+            score: self.score,
+            time_to_ball: self.time_to_ball,
+            actions: self.actions.into_iter().map(|v| v.opposite()).collect(),
+            #[cfg(feature = "enable_render")]
+            position_to_jump: self.position_to_jump.map(|v| v.opposite()),
+            #[cfg(feature = "enable_render")]
+            name: self.name,
+            #[cfg(feature = "enable_render")]
+            history: self.history.into_iter().map(|v| v.opposite()).collect(),
+            #[cfg(feature = "enable_stats")]
+            stats: self.stats,
+        }
     }
 
     fn try_jump_at_position(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut InnerOrderContext) -> Option<Self> {
@@ -884,6 +913,17 @@ impl WalkToGoalkeeperPosition {
             stats: Stats::new(robot.player_id, robot.id, world.game.current_tick, "walk_to_goalkeeper_position"),
         }
     }
+
+    pub fn opposite(self) -> Self {
+        WalkToGoalkeeperPosition {
+            id: self.id,
+            robot_id: self.robot_id,
+            action: self.action.opposite(),
+            score: self.score,
+            #[cfg(feature = "enable_stats")]
+            stats: self.stats,
+        }
+    }
 }
 
 pub struct OrderContext<'r> {
@@ -950,6 +990,17 @@ impl TakeNitroPack {
                 }
             })
     }
+
+    pub fn opposite(self) -> Self {
+        TakeNitroPack {
+            id: self.id,
+            robot_id: self.robot_id,
+            action: self.action.opposite(),
+            score: self.score,
+            #[cfg(feature = "enable_stats")]
+            stats: self.stats,
+        }
+    }
 }
 
 fn make_get_robot_action_at<'r>(other: &'r [Order]) -> impl Fn(i32, i32) -> Option<&'r Action> {
@@ -965,6 +1016,7 @@ fn get_min_time_to_play_ball(other: &[Order], world: &World) -> f64 {
     use crate::my_strategy::common::as_score;
 
     other.iter()
+        .filter(|v| world.is_teammate(v.robot_id()))
         .map(|v| {
             v.time_to_ball().map(|v| {
                 v + 10.0 * world.rules.tick_time_interval()

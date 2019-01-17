@@ -58,6 +58,26 @@ impl Robot {
             * jump_speed / rules.ROBOT_MAX_JUMP_SPEED;
     }
 
+    pub fn opposite(&self) -> Self {
+        Robot {
+            id: self.id,
+            player_id: self.player_id,
+            is_teammate: !self.is_teammate,
+            x: -self.x,
+            y: self.y,
+            z: -self.z,
+            velocity_x: -self.velocity_x,
+            velocity_y: self.velocity_y,
+            velocity_z: -self.velocity_z,
+            radius: self.radius,
+            nitro_amount: self.nitro_amount,
+            touch: self.touch,
+            touch_normal_x: self.touch_normal_x.map(|v| -v),
+            touch_normal_y: self.touch_normal_y,
+            touch_normal_z: self.touch_normal_z.map(|v| -v),
+        }
+    }
+
     #[cfg(feature = "enable_render")]
     pub fn render(&self, render: &mut Render) {
         self.render_velocity(render);
