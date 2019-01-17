@@ -131,11 +131,6 @@ impl Play {
 
         let mut order = Self::get_with_max_score(jump_at_position, jump_to_ball);
 
-        if order.is_none() || order.as_ref().unwrap().score < 0 {
-            let do_nothing = Self::try_do_nothing(robot, world, &mut ctx);
-            order = Self::get_with_max_score(order, do_nothing);
-        }
-
         #[cfg(feature = "enable_stats")]
         {
             if let Some(v) = &mut order {
@@ -428,80 +423,6 @@ impl Play {
         } else {
             None
         }
-    }
-
-    fn try_do_nothing(robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
-        use crate::my_strategy::scenarios::{Context, DoNothing};
-
-        if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
-            return None;
-        }
-
-        let action_id = ctx.order_id_generator.next();
-        let mut local_simulator = make_initial_simulator(robot, world);
-        let mut time_to_ball = None;
-        let time_interval = world.rules.tick_time_interval();
-        #[cfg(feature = "enable_render")]
-        let mut history = vec![local_simulator.clone()];
-        #[cfg(feature = "enable_stats")]
-        let mut stats = Stats::default();
-
-        let mut scenario_ctx = Context {
-            current_tick: world.game.current_tick,
-            robot_id: robot.id,
-            action_id,
-            simulator: &mut local_simulator,
-            rng: ctx.rng,
-            time_to_ball: &mut time_to_ball,
-            #[cfg(feature = "enable_render")]
-            history: &mut history,
-            #[cfg(feature = "enable_stats")]
-            stats: &mut stats,
-        };
-
-        let action = DoNothing {
-            max_time: MAX_TIME,
-            tick_time_interval: time_interval,
-            micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
-            max_micro_ticks: MAX_MICRO_TICK,
-        }.perform(&mut scenario_ctx);
-
-        let action_score = get_action_score(
-            &world.rules,
-            &local_simulator,
-            time_to_ball,
-            MAX_TIME + time_interval,
-            world.game.current_tick,
-            robot.id,
-            action_id,
-        );
-
-        *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
-        ctx.total_micro_ticks += local_simulator.current_micro_tick();
-
-        #[cfg(feature = "enable_stats")]
-        {
-            stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-            stats.time_to_end = local_simulator.current_time();
-            stats.time_to_score = if local_simulator.score() != 0 {
-                Some(stats.time_to_end)
-            } else {
-                None
-            };
-            stats.score = local_simulator.score();
-            stats.action_score = action_score;
-        }
-
-        Some(Play {
-            id: action_id,
-            robot_id: robot.id,
-            action,
-            score: action_score,
-            #[cfg(feature = "enable_render")]
-            history,
-            #[cfg(feature = "enable_stats")]
-            stats,
-        })
     }
 
     fn get_with_max_score(lhs: Option<Play>, rhs: Option<Play>) -> Option<Play> {
