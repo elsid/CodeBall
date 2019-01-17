@@ -15,14 +15,14 @@ fn test_new() {
     let mut ctx = OrderContext {
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
-        micro_ticks: &mut micro_ticks
+        micro_ticks: &mut micro_ticks,
     };
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.action().target_velocity(), Vec3::new(-16.315240592758546, 0.0, 25.175641489352437));
+    assert_eq!(result.score(), 1127);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.score(), 1125);
+    assert_eq!(result.action().target_velocity(), Vec3::new(-16.315240592758546, 0.0, 25.175641489352437));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), Stats {
@@ -38,7 +38,7 @@ fn test_new() {
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1125,
+        action_score: 1127,
         total_micro_ticks: 5950,
         current_step: 8,
     });
@@ -67,7 +67,7 @@ fn test_new_should_not_jump_on_ball_top() {
     let mut ctx = OrderContext {
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
-        micro_ticks: &mut micro_ticks
+        micro_ticks: &mut micro_ticks,
     };
 
     world.me.id = 2;
@@ -82,27 +82,27 @@ fn test_new_should_not_jump_on_ball_top() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.action().target_velocity(), Vec3::new(17.284585080458342, 0.0, 24.520259350104695));
+    assert_eq!(result.score(), 1339);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.score(), 1326);
+    assert_eq!(result.action().target_velocity(), Vec3::new(16.75163863699627, 0.0, 24.887398477452276));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), Stats {
-        micro_ticks_to_jump: 51,
+        micro_ticks_to_jump: 57,
         micro_ticks_to_watch: 66,
         micro_ticks_to_end: 300,
-        time_to_jump: 0.2833333333333333,
+        time_to_jump: 0.31666666666666665,
         time_to_watch: 0.36666666666666664,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 3,
+        iteration: 2,
         total_iterations: 5,
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1326,
+        action_score: 1339,
         total_micro_ticks: 5325,
-        current_step: 8,
+        current_step: 4,
     });
 }
 
@@ -129,7 +129,7 @@ fn test_new_far_jump() {
     let mut ctx = OrderContext {
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
-        micro_ticks: &mut micro_ticks
+        micro_ticks: &mut micro_ticks,
     };
 
     world.me.id = 2;

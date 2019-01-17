@@ -227,7 +227,10 @@ impl Jump {
             && ctx.simulator.me().ball_collision_type() == RobotCollisionType::None {
 
             ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
-            let target_velocity = ctx.simulator.me().velocity();
+            let target_velocity = ctx.simulator.rules().arena.projected_at(
+                ctx.simulator.ball().position(),
+                ctx.simulator.ball().position() - ctx.simulator.me().position()
+            ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
             if action.is_none() {
