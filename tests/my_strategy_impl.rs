@@ -76,7 +76,7 @@ fn test_two_robots_first_ball_kick_until_goal() {
             && simulator.current_tick() < 150
     });
 
-    assert_eq!(simulator.me().position().y(), 1.2931418435925501);
+    assert_eq!(simulator.me().position().y(), 1.2931418438593196);
     assert_eq!(simulator.current_tick(), 38);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
@@ -85,12 +85,12 @@ fn test_two_robots_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: -0.05824701286507063,
-        y: 3.313252805257567,
-        z: 0.25169059862901283,
-        velocity_x: -8.648695048877475,
-        velocity_y: 18.516875711049885,
-        velocity_z: 37.37179173899101,
+        x: -0.0583790545135037,
+        y: 3.3132734876168577,
+        z: 0.2517418351012374,
+        velocity_x: -8.665497601004759,
+        velocity_y: 18.517131604709142,
+        velocity_z: 37.367310695957066,
         radius: 2.0,
     });
     assert_eq!(simulator.me().action().jump_speed, 15.0);

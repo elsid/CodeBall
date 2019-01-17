@@ -122,7 +122,7 @@ impl MyStrategyImpl {
                     .filter(|v| v.is_teammate && v.id != order.robot_id())
                     .filter_map(|v| Order::try_play(v, world, &mut ctx))
                     .max_by_key(|v| v.score())
-                    .filter(|v| v.score() > current.score() + 116)
+                    .filter(|v| v.score() > current.score() + 122)
                     .or(Some(current))
             } else {
                 world.game.robots.iter()
