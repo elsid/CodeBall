@@ -109,11 +109,11 @@ impl MyStrategyImpl {
         use crate::my_strategy::orders::OrderContext;
 
         let world = &self.world;
-        let mut ctx = OrderContext::new(
-            &mut self.rng,
-            &mut self.order_id_generator,
-            &mut self.micro_ticks,
-        );
+        let mut ctx = OrderContext {
+            rng: &mut self.rng,
+            order_id_generator: &mut self.order_id_generator,
+            micro_ticks: &mut self.micro_ticks,
+        };
         self.active_order = if let Some(order) = &self.active_order {
             let robot = world.get_robot(order.robot_id());
             let current_robot_order = Order::try_play(robot, world, &mut ctx);

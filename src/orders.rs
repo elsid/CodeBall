@@ -118,13 +118,21 @@ impl Play {
     pub fn try_new(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Self> {
         log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
 
-        let jump_to_ball = Self::try_jump_to_ball(robot, world, ctx);
-        let jump_at_position = Self::try_jump_at_position(robot, world, ctx);
+        let mut ctx = InnerOrderContext {
+            rng: ctx.rng,
+            order_id_generator: ctx.order_id_generator,
+            micro_ticks: ctx.micro_ticks,
+            total_micro_ticks: 0,
+            total_iterations: 0,
+        };
+
+        let jump_to_ball = Self::try_jump_to_ball(robot, world, &mut ctx);
+        let jump_at_position = Self::try_jump_at_position(robot, world, &mut ctx);
 
         let mut order = Self::get_with_max_score(jump_at_position, jump_to_ball);
 
         if order.is_none() || order.as_ref().unwrap().score < 0 {
-            let do_nothing = Self::try_do_nothing(robot, world, ctx);
+            let do_nothing = Self::try_do_nothing(robot, world, &mut ctx);
             order = Self::get_with_max_score(order, do_nothing);
         }
 
@@ -139,7 +147,7 @@ impl Play {
         order
     }
 
-    fn try_jump_at_position(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Self> {
+    fn try_jump_at_position(robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Self> {
         use crate::my_strategy::scenarios::{Context, JumpAtPosition};
 
         let initial_simulator = make_initial_simulator(robot, world);
@@ -295,7 +303,7 @@ impl Play {
         order
     }
 
-    fn try_jump_to_ball(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Play> {
+    fn try_jump_to_ball(robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, JumpToBall};
 
         if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
@@ -380,7 +388,7 @@ impl Play {
         }
     }
 
-    fn try_do_nothing(robot: &Robot, world: &World, ctx: &mut OrderContext) -> Option<Play> {
+    fn try_do_nothing(robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, DoNothing};
 
         if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
@@ -583,20 +591,14 @@ pub struct OrderContext<'r> {
     pub rng: &'r mut XorShiftRng,
     pub order_id_generator: &'r mut IdGenerator,
     pub micro_ticks: &'r mut usize,
-    pub total_micro_ticks: i32,
-    pub total_iterations: usize,
 }
 
-impl<'r> OrderContext<'r> {
-    pub fn new(rng: &'r mut XorShiftRng, order_id_generator: &'r mut IdGenerator, micro_ticks: &'r mut usize) -> Self {
-        OrderContext {
-            rng,
-            order_id_generator,
-            micro_ticks,
-            total_micro_ticks: 0,
-            total_iterations: 0,
-        }
-    }
+struct InnerOrderContext<'r> {
+    pub rng: &'r mut XorShiftRng,
+    pub order_id_generator: &'r mut IdGenerator,
+    pub micro_ticks: &'r mut usize,
+    pub total_micro_ticks: i32,
+    pub total_iterations: usize,
 }
 
 fn make_initial_simulator(robot: &Robot, world: &World) -> Simulator {

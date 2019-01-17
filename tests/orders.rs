@@ -12,7 +12,11 @@ fn test_new() {
     let mut rng = example_rng();
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext::new(&mut rng, &mut order_id_generator, &mut micro_ticks);
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks
+    };
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
@@ -60,7 +64,11 @@ fn test_new_should_not_jump_on_ball_top() {
     ]);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext::new(&mut rng, &mut order_id_generator, &mut micro_ticks);
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks
+    };
 
     world.me.id = 2;
     world.me.set_position(Vec3::new(-5.838617159216834, 1.0, -10.508900380791133));
@@ -118,7 +126,11 @@ fn test_new_far_jump() {
     ]);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext::new(&mut rng, &mut order_id_generator, &mut micro_ticks);
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks
+    };
 
     world.me.id = 2;
     world.me.set_position(Vec3::new(0.0, 1.0, -5.0));
