@@ -108,6 +108,9 @@ pub struct Play {
     pub robot_id: i32,
     pub action: Action,
     pub score: i32,
+    pub time_to_ball: Option<f64>,
+    #[cfg(feature = "enable_render")]
+    pub position_to_jump: Option<Vec3>,
     #[cfg(feature = "enable_render")]
     pub history: Vec<Simulator>,
     #[cfg(feature = "enable_stats")]
@@ -323,6 +326,9 @@ impl Play {
                         robot_id: robot.id,
                         action,
                         score: action_score,
+                        time_to_ball,
+                        #[cfg(feature = "enable_render")]
+                        position_to_jump: Some(target),
                         #[cfg(feature = "enable_render")]
                         history,
                         #[cfg(feature = "enable_stats")]
@@ -410,6 +416,9 @@ impl Play {
                 robot_id: robot.id,
                 action,
                 score: action_score,
+                time_to_ball,
+                #[cfg(feature = "enable_render")]
+                position_to_jump: None,
                 #[cfg(feature = "enable_render")]
                 history,
                 #[cfg(feature = "enable_stats")]
@@ -438,6 +447,11 @@ impl Play {
 
     #[cfg(feature = "enable_render")]
     pub fn render(&self, render: &mut Render) {
+        use crate::my_strategy::render::{Object, Color};
+
+        if let Some(position) = self.position_to_jump {
+            render.add(Object::sphere(position, 1.0, Color::new(0.5, 0.0, 0.0, 0.8)));
+        }
         render_history(&self.history, render);
     }
 }
