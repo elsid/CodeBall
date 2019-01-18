@@ -18,6 +18,7 @@ const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 const MAX_MICRO_TICK: i32 = 1000;
 const MAX_TOTAL_MICRO_TICKS: i32 = 11000;
+const MAX_ITERATIONS: usize = 5;
 
 pub enum Order {
     Play(Play),
@@ -154,7 +155,7 @@ impl Play {
         let steps = [1usize, 3, 4, 8];
         let mut iterations = 0;
 
-        while (iterations < 5 || order.is_none())
+        while (iterations < MAX_ITERATIONS || order.is_none())
             && global_simulator.current_time() + time_interval < MAX_TIME
             && ctx.total_micro_ticks < MAX_TOTAL_MICRO_TICKS - MAX_MICRO_TICK
             && !world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
