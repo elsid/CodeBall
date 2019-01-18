@@ -267,6 +267,7 @@ impl Play {
                 NEAR_MICRO_TICKS_PER_TICK
             };
             let mut time_to_ball = None;
+            let mut time_to_goal = None;
             #[cfg(feature = "enable_render")]
             let mut history = vec![local_simulator.clone()];
             #[cfg(feature = "enable_stats")]
@@ -279,6 +280,7 @@ impl Play {
                 simulator: &mut local_simulator,
                 rng: ctx.rng,
                 time_to_ball: &mut time_to_ball,
+                time_to_goal: &mut time_to_goal,
                 #[cfg(feature = "enable_render")]
                 history: &mut history,
                 #[cfg(feature = "enable_stats")]
@@ -310,6 +312,7 @@ impl Play {
                     &world.rules,
                     &local_simulator,
                     time_to_ball,
+                    time_to_goal,
                     MAX_TIME + time_interval,
                     world.game.current_tick,
                     robot.id,
@@ -362,6 +365,7 @@ impl Play {
         let action_id = ctx.order_id_generator.next();
         let mut local_simulator = make_initial_simulator(robot, world);
         let mut time_to_ball = None;
+        let mut time_to_goal = None;
         let time_interval = world.rules.tick_time_interval();
         #[cfg(feature = "enable_render")]
         let mut history = vec![local_simulator.clone()];
@@ -375,6 +379,7 @@ impl Play {
             simulator: &mut local_simulator,
             rng: ctx.rng,
             time_to_ball: &mut time_to_ball,
+            time_to_goal: &mut time_to_goal,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -397,6 +402,7 @@ impl Play {
                 &world.rules,
                 &local_simulator,
                 time_to_ball,
+                time_to_goal,
                 MAX_TIME + time_interval,
                 world.game.current_tick,
                 robot.id,
@@ -451,6 +457,7 @@ impl Play {
         let action_id = ctx.order_id_generator.next();
         let mut simulator = make_initial_simulator(robot, world);
         let mut time_to_ball = None;
+        let mut time_to_goal = None;
         let time_interval = world.rules.tick_time_interval();
         #[cfg(feature = "enable_render")]
         let mut history = vec![simulator.clone()];
@@ -464,6 +471,7 @@ impl Play {
             simulator: &mut simulator,
             rng: ctx.rng,
             time_to_ball: &mut time_to_ball,
+            time_to_goal: &mut time_to_goal,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -486,6 +494,7 @@ impl Play {
             &world.rules,
             &simulator,
             time_to_ball,
+            time_to_goal,
             MAX_TIME + time_interval,
             world.game.current_tick,
             robot.id,
@@ -569,7 +578,8 @@ pub fn render_history(history: &Vec<Simulator>, render: &mut Render) {
     }
 }
 
-fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>, max_time: f64, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
+fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>,
+                    time_to_goal: Option<f64>, max_time: f64, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
     use crate::my_strategy::common::as_score;
 
     let ball = simulator.ball();
@@ -587,18 +597,28 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
     } else {
         0.0
     };
-    let time_score = if let Some(v) = time_to_ball {
+    let time_to_ball_score = if let Some(v) = time_to_ball {
         1.0 - v / max_time
+    } else {
+        0.0
+    };
+    let time_to_goal_score = if let Some(v) = time_to_goal {
+        if simulator.score() > 0 {
+            1.0 - v / max_time
+        } else {
+            v / max_time
+        }
     } else {
         0.0
     };
     let score = 0.0
         + ball_goal_distance_score
         + 0.1 * ball_goal_direction_score
-        + 0.5 * time_score;
+        + 0.5 * time_to_ball_score
+        + 0.25 * time_to_goal_score;
     log!(
-        current_tick, "[{}] <{}> action ball_goal_distance_score={} ball_goal_direction_score={} time_score={} total={}",
-        robot_id, action_id, ball_goal_distance_score, ball_goal_direction_score, time_score, score
+        current_tick, "[{}] <{}> action ball_goal_distance_score={} ball_goal_direction_score={} time_to_ball_score={} total={}",
+        robot_id, action_id, ball_goal_distance_score, ball_goal_direction_score, time_to_ball_score, score
     );
     as_score(score)
 }

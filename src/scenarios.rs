@@ -12,6 +12,7 @@ pub struct Context<'r> {
     pub simulator: &'r mut Simulator,
     pub rng: &'r mut XorShiftRng,
     pub time_to_ball: &'r mut Option<f64>,
+    pub time_to_goal: &'r mut Option<f64>,
     #[cfg(feature = "enable_render")]
     pub history: &'r mut Vec<Simulator>,
     #[cfg(feature = "enable_stats")]
@@ -26,6 +27,10 @@ impl Context<'_> {
 
         if self.simulator.me().collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
             *self.time_to_ball = Some(self.simulator.current_time());
+        }
+
+        if self.simulator.score() != 0 && self.time_to_goal.is_none() {
+            *self.time_to_goal = Some(self.simulator.current_time());
         }
 
         #[cfg(feature = "enable_render")]
