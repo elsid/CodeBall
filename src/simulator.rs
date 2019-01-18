@@ -368,26 +368,36 @@ pub struct Simulator {
 impl Simulator {
     pub fn new(world: &World, me_id: i32) -> Self {
         let robots: Vec<RobotExt> = world.game.robots.iter()
-            .map(|v| {
-                let touch_normal = if v.touch {
-                    Some(Vec3::new(
-                        v.touch_normal_x.unwrap(),
-                        v.touch_normal_y.unwrap(),
-                        v.touch_normal_z.unwrap()
-                    ))
+            .map(|robot| {
+                let (radius_change_speed, touch_normal) = if world.me.id == robot.id {
+                    (
+                        world.rules.get_approximate_robot_radius_change_speed(robot.radius),
+                        if robot.touch {
+                            Some(Vec3::new(
+                            robot.touch_normal_x.unwrap(),
+                            robot.touch_normal_y.unwrap(),
+                            robot.touch_normal_z.unwrap()
+                            ))
+                        } else {
+                            None
+                        }
+                    )
                 } else {
-                    None
+                    (
+                        world.rules.get_approximate_robot_radius_change_speed(robot.radius),
+                        world.rules.arena.get_approximate_touch_normal(robot)
+                    )
                 };
                 let (distance, normal) = world.rules.arena
-                    .distance_and_normal(v.position());
+                    .distance_and_normal(robot.position());
                 RobotExt {
-                    base: v.clone(),
+                    base: robot.clone(),
                     touch_normal,
-                    radius_change_speed: 0.0,
+                    radius_change_speed,
                     action: Action::default(),
                     mass: world.rules.ROBOT_MASS,
                     arena_e: world.rules.ROBOT_ARENA_E,
-                    is_me: v.id == me_id,
+                    is_me: robot.id == me_id,
                     collision_type: RobotCollisionType::None,
                     distance_to_arena: distance,
                     normal_to_arena: normal,

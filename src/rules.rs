@@ -93,4 +93,12 @@ impl Rules {
             acceleration_time
         }
     }
+
+    pub fn get_approximate_robot_radius_change_speed(&self, radius: f64) -> f64 {
+        self.ROBOT_MAX_JUMP_SPEED * (radius - self.ROBOT_MIN_RADIUS) / self.robot_radius_max_change()
+    }
+
+    pub fn robot_radius_max_change(&self) -> f64 {
+        self.ROBOT_MAX_RADIUS - self.ROBOT_MIN_RADIUS
+    }
 }

@@ -80,3 +80,23 @@ fn test_projected_with_shift() {
         Vec3::new(29.0, 5.0, 0.0),
     );
 }
+
+#[test]
+fn test_get_touch_normal() {
+    use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::examples::{GameType, example_arena, example_me, example_rules};
+
+    let rules = example_rules();
+
+    assert_eq!(
+        example_arena().get_approximate_touch_normal(&example_me(GameType::TwoRobots, &rules)),
+        Some(Vec3::new(0.0, 1.0, 0.0)),
+    );
+
+    {
+        let mut robot = example_me(GameType::TwoRobots, &rules);
+        robot.y = 2.0;
+
+        assert_eq!(example_arena().get_approximate_touch_normal(&robot), None);
+    }
+}

@@ -1,4 +1,4 @@
-use crate::model::Arena;
+use crate::model::{Arena, Robot};
 use crate::my_strategy::common::Clamp;
 use crate::my_strategy::plane::Plane;
 use crate::my_strategy::simulator::Solid;
@@ -56,6 +56,15 @@ impl Arena {
 
         let (_, normal) = self.distance_and_normal(position);
         Plane::projected(value, normal)
+    }
+
+    pub fn get_approximate_touch_normal(&self, robot: &Robot) -> Option<Vec3> {
+        let (distance, normal) = self.distance_and_normal(robot.position());
+        if robot.radius < distance {
+            None
+        } else {
+            Some(normal)
+        }
     }
 
     pub fn distance_and_normal(&self, mut position: Vec3) -> (f64, Vec3) {
