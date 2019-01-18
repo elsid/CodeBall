@@ -522,10 +522,10 @@ pub fn get_points(simulator: &Simulator, rng: &mut XorShiftRng) -> Vec<Vec3> {
     ).unwrap_or(0.0);
     let max_distance = base_position.distance(robot.position())
         .clamp(min_distance + 1e-3, rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS);
-    let distance = rng.gen_range(min_distance, max_distance);
     let base_direction = Plane::projected(to_robot, ball.normal_to_arena()).normalized();
     let mut result = Vec::new();
     for _ in 0..number {
+        let distance = rng.gen_range(min_distance, max_distance);
         let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
         let rotation = Mat3::rotation(ball.normal_to_arena(), angle);
         let position = base_position + rotation * base_direction * distance;

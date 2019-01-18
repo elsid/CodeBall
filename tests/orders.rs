@@ -20,16 +20,16 @@ fn test_new() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.score(), 1172);
+    assert_eq!(result.score(), 1145);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(-16.000687346910397, 0.0, 25.37672170368784));
+    assert_eq!(result.action().target_velocity(), Vec3::new(-15.811748664438161, 0.0, 25.494874076422462));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), Stats {
-        micro_ticks_to_jump: 129,
+        micro_ticks_to_jump: 132,
         micro_ticks_to_watch: 138,
         micro_ticks_to_end: 300,
-        time_to_jump: 0.7166666666666672,
+        time_to_jump: 0.733333333333334,
         time_to_watch: 0.7666666666666674,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
@@ -38,7 +38,7 @@ fn test_new() {
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1172,
+        action_score: 1145,
         total_micro_ticks: 5350,
         current_step: 8,
     });
@@ -82,17 +82,17 @@ fn test_new_should_not_jump_on_ball_top() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.score(), 1273);
+    assert_eq!(result.score(), 1278);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(17.524634972449043, 0.0, 24.349274508338357));
+    assert_eq!(result.action().target_velocity(), Vec3::new(15.065425465228744, 0.0, 25.942878705950065));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), Stats {
-        micro_ticks_to_jump: 60,
-        micro_ticks_to_watch: 69,
+        micro_ticks_to_jump: 57,
+        micro_ticks_to_watch: 63,
         micro_ticks_to_end: 300,
-        time_to_jump: 0.3333333333333333,
-        time_to_watch: 0.3833333333333333,
+        time_to_jump: 0.31666666666666665,
+        time_to_watch: 0.35,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
         iteration: 5,
@@ -100,7 +100,7 @@ fn test_new_should_not_jump_on_ball_top() {
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1273,
+        action_score: 1278,
         total_micro_ticks: 3525,
         current_step: 8,
     });
