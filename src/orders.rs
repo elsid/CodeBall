@@ -459,6 +459,8 @@ pub fn render_history(history: &Vec<Simulator>, render: &mut Render) {
 }
 
 fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>, max_time: f64, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
+    use crate::my_strategy::common::as_score;
+
     let ball = simulator.ball();
     let to_goal = rules.get_goal_target() - ball.position();
     let ball_goal_distance_score = if simulator.score() == 0 {
@@ -487,7 +489,7 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
         current_tick, "[{}] <{}> action ball_goal_distance_score={} ball_goal_direction_score={} time_score={} total={}",
         robot_id, action_id, ball_goal_distance_score, ball_goal_direction_score, time_score, score
     );
-    (1000.0 * score).round() as i32
+    as_score(score)
 }
 
 pub fn get_points(simulator: &Simulator, rng: &mut XorShiftRng) -> Vec<Vec3> {

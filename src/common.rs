@@ -80,3 +80,7 @@ impl IdGenerator {
         result
     }
 }
+
+pub fn as_score(value: f64) -> i32 {
+    (value * 1000.0).round() as i32
+}
