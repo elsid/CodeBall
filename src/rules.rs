@@ -1,4 +1,4 @@
-use crate::model::Rules;
+use crate::model::{Rules, Robot};
 use crate::my_strategy::vec3::Vec3;
 
 impl Rules {
@@ -100,5 +100,17 @@ impl Rules {
 
     pub fn robot_radius_max_change(&self) -> f64 {
         self.ROBOT_MAX_RADIUS - self.ROBOT_MIN_RADIUS
+    }
+
+    pub fn is_flying(&self, robot: &Robot) -> bool {
+        use crate::my_strategy::physics::MoveEquation;
+
+        (
+            robot.velocity_y > 0.0
+            && self.arena.distance(robot.position()) - robot.radius > 1e-3
+        ) || self.arena.distance(
+            MoveEquation::from_robot(robot, self)
+                .get_position(self.tick_time_interval())
+        ) - robot.radius > 1e-3
     }
 }

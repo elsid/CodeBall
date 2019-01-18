@@ -100,7 +100,7 @@ impl RobotExt {
         self.base.is_teammate
     }
 
-    pub fn ball_collision_type(&self) -> RobotCollisionType {
+    pub fn collision_type(&self) -> RobotCollisionType {
         self.collision_type
     }
 

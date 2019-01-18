@@ -24,7 +24,7 @@ impl Context<'_> {
 
         self.simulator.tick(time_interval, micro_ticks_per_tick, self.rng);
 
-        if self.simulator.me().ball_collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
+        if self.simulator.me().collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
             *self.time_to_ball = Some(self.simulator.current_time());
         }
 
@@ -139,7 +139,7 @@ impl WalkToPosition {
                 > max_distance_to_target
             && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
                 > max_distance_to_ball
-            && ctx.simulator.me().ball_collision_type() == RobotCollisionType::None {
+            && ctx.simulator.me().collision_type() == RobotCollisionType::None {
 
             let target_velocity = self.get_target_velocity(
                 ctx.simulator.me().position(),
@@ -224,7 +224,7 @@ impl Jump {
         while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
             && ctx.simulator.current_micro_tick() < self.max_micro_ticks
             && ctx.simulator.score() == 0
-            && ctx.simulator.me().ball_collision_type() == RobotCollisionType::None {
+            && ctx.simulator.me().collision_type() == RobotCollisionType::None {
 
             ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
             let target_velocity = ctx.simulator.rules().arena.projected_at(
@@ -527,13 +527,7 @@ pub struct WatchMeJump {
 
 impl WatchMeJump {
     pub fn perform(&self, ctx: &mut Context) -> Action {
-        use crate::my_strategy::entity::Entity;
-
-        #[cfg(feature = "enable_stats")]
-        {
-            ctx.stats.micro_ticks_to_watch = ctx.simulator.current_micro_tick();
-            ctx.stats.time_to_watch = ctx.simulator.current_time();
-        }
+        use crate::my_strategy::simulator::{Solid, RobotCollisionType};
 
         let stored_action = ctx.simulator.me().action().clone();
 
@@ -542,30 +536,69 @@ impl WatchMeJump {
         ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
 
         let action = ctx.simulator.me().action().clone();
+        let mut collided_with_ball = false;
 
         log!(
-            ctx.current_tick, "[{}] <{}> watch me move {}:{} velocity_y={}",
+            ctx.current_tick, "[{}] <{}> watch me move {}:{} distance_to_arena={}/{}",
             ctx.robot_id, ctx.action_id,
             ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
-            ctx.simulator.me().velocity().y().abs()
+            ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
         );
 
         while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
             && ctx.simulator.current_micro_tick() < self.max_micro_ticks
             && ctx.simulator.score() == 0
-            && ctx.simulator.me().velocity().y().abs() > 0.0 {
+            && ctx.simulator.me().distance_to_arena() - ctx.simulator.me().radius() > 1e-3
+            && !(
+                collided_with_ball
+                && ctx.simulator.me().collision_type() == RobotCollisionType::None
+        ) {
+            if !collided_with_ball {
+                collided_with_ball = ctx.simulator.me().collision_type() != RobotCollisionType::None;
+            }
 
             log!(
-                ctx.current_tick, "[{}] <{}> watch me move {}:{} velocity_y={}",
+                ctx.current_tick, "[{}] <{}> watch me move {}:{} distance_to_arena={}/{}",
                 ctx.robot_id, ctx.action_id,
                 ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
-                ctx.simulator.me().velocity().y().abs()
+                ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
             );
 
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
         }
 
         *ctx.simulator.me_mut().action_mut() = stored_action;
+
+        action
+    }
+}
+
+pub struct ContinueJump {
+    pub jump_speed: f64,
+    pub max_time: f64,
+    pub tick_time_interval: f64,
+    pub micro_ticks_per_tick_before_land: usize,
+    pub micro_ticks_per_tick_after_land: usize,
+    pub max_micro_ticks: i32,
+}
+
+impl ContinueJump {
+    pub fn perform(&self, ctx: &mut Context) -> Action {
+        let action = WatchMeJump {
+            jump_speed: self.jump_speed,
+            max_time: self.max_time,
+            tick_time_interval: self.tick_time_interval,
+            micro_ticks_per_tick: self.micro_ticks_per_tick_before_land,
+            max_micro_ticks: self.max_micro_ticks,
+        }.perform(ctx);
+
+        WatchBallMove {
+            max_time: self.max_time,
+            tick_time_interval: self.tick_time_interval,
+            micro_ticks_per_tick: self.micro_ticks_per_tick_after_land,
+            max_micro_ticks: self.max_micro_ticks,
+            stop: true,
+        }.perform(ctx);
 
         action
     }

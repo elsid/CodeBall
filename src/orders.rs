@@ -17,7 +17,7 @@ const MAX_TIME: f64 = 1.6666666666666667;
 const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 const MAX_MICRO_TICK: i32 = 1000;
-const MAX_TOTAL_MICRO_TICKS: i32 = 10000;
+const MAX_TOTAL_MICRO_TICKS: i32 = 15000;
 const MAX_ITERATIONS: usize = 5;
 
 pub enum Order {
@@ -130,10 +130,17 @@ impl Play {
             total_iterations: 0,
         };
 
-        let jump_to_ball = Self::try_jump_to_ball(robot, world, &mut ctx);
-        let jump_at_position = Self::try_jump_at_position(robot, world, &mut ctx);
+        let mut order = if world.rules.is_flying(robot) {
+            let fly = Self::try_continue_jump(0.0, robot, world, &mut ctx);
+            let jump = Self::try_continue_jump(world.rules.ROBOT_MAX_JUMP_SPEED, robot, world, &mut ctx);
 
-        let mut order = Self::get_with_max_score(jump_at_position, jump_to_ball);
+            Self::get_with_max_score(fly, jump)
+        } else {
+            let jump_to_ball = Self::try_jump_to_ball(robot, world, &mut ctx);
+            let jump_at_position = Self::try_jump_at_position(robot, world, &mut ctx);
+
+            Self::get_with_max_score(jump_at_position, jump_to_ball)
+        };
 
         #[cfg(feature = "enable_stats")]
         {
@@ -432,6 +439,91 @@ impl Play {
         } else {
             None
         }
+    }
+
+    fn try_continue_jump(jump_speed: f64, robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
+        use crate::my_strategy::scenarios::{Context, ContinueJump};
+
+        if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
+            return None;
+        }
+
+        let action_id = ctx.order_id_generator.next();
+        let mut simulator = make_initial_simulator(robot, world);
+        let mut time_to_ball = None;
+        let time_interval = world.rules.tick_time_interval();
+        #[cfg(feature = "enable_render")]
+        let mut history = vec![simulator.clone()];
+        #[cfg(feature = "enable_stats")]
+        let mut stats = Stats::default();
+
+        let mut scenario_ctx = Context {
+            current_tick: world.game.current_tick,
+            robot_id: robot.id,
+            action_id,
+            simulator: &mut simulator,
+            rng: ctx.rng,
+            time_to_ball: &mut time_to_ball,
+            #[cfg(feature = "enable_render")]
+            history: &mut history,
+            #[cfg(feature = "enable_stats")]
+            stats: &mut stats,
+        };
+
+        let action = ContinueJump {
+            jump_speed,
+            max_time: MAX_TIME,
+            tick_time_interval: time_interval,
+            micro_ticks_per_tick_before_land: NEAR_MICRO_TICKS_PER_TICK,
+            micro_ticks_per_tick_after_land: FAR_MICRO_TICKS_PER_TICK,
+            max_micro_ticks: MAX_MICRO_TICK,
+        }.perform(&mut scenario_ctx);
+
+        *ctx.micro_ticks += simulator.current_micro_tick() as usize;
+        ctx.total_micro_ticks += simulator.current_micro_tick();
+
+        let action_score = get_action_score(
+            &world.rules,
+            &simulator,
+            time_to_ball,
+            MAX_TIME + time_interval,
+            world.game.current_tick,
+            robot.id,
+            action_id,
+        );
+
+        #[cfg(feature = "enable_stats")]
+        {
+            stats.micro_ticks_to_end = simulator.current_micro_tick();
+            stats.time_to_end = simulator.current_time();
+            stats.time_to_score = if simulator.score() != 0 {
+                Some(stats.time_to_end)
+            } else {
+                None
+            };
+            stats.score = simulator.score();
+            stats.action_score = action_score;
+        }
+
+        log!(
+            world.game.current_tick, "[{}] <{}> suggest action jump with jump_speed {} {}:{} score={}",
+            robot.id, action_id, jump_speed,
+            simulator.current_time(), simulator.current_micro_tick(), action_score
+        );
+
+        Some(Play {
+            id: action_id,
+            robot_id: robot.id,
+            action,
+            score: action_score,
+            time_to_ball,
+            #[cfg(feature = "enable_render")]
+            position_to_jump: None,
+            #[cfg(feature = "enable_render")]
+            history,
+            #[cfg(feature = "enable_stats")]
+            stats,
+        })
     }
 
     fn get_with_max_score(lhs: Option<Play>, rhs: Option<Play>) -> Option<Play> {

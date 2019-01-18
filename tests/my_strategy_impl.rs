@@ -76,31 +76,32 @@ fn test_two_robots_first_ball_kick_until_goal() {
             && simulator.current_tick() < 150
     });
 
-    assert_eq!(simulator.me().position().y(), 1.2931735694800537);
-    assert_eq!(simulator.current_tick(), 44);
+    assert_eq!(simulator.me().position().y(), 1.2931423061355878);
+    assert_eq!(simulator.current_tick(), 38);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
-        simulator.me().ball_collision_type() == RobotCollisionType::None
+        simulator.me().collision_type() == RobotCollisionType::None
             && simulator.current_tick() < 150
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: -0.03048186566442618,
-        y: 3.5369072314839993,
-        z: 0.15003253313910284,
-        velocity_x: -5.869422997679267,
-        velocity_y: 32.96721682211139,
-        velocity_z: 28.889452177936583,
+        x: -0.04640111490360982,
+        y: 3.2903250333627923,
+        z: 0.14781253205069625,
+        velocity_x: -7.664355147397722,
+        velocity_y: 15.707997665187296,
+        velocity_z: 24.415097422249893,
         radius: 2.0,
     });
-    assert_eq!(simulator.current_tick(), 45);
+    assert_eq!(simulator.me().action().jump_speed, 0.0);
+    assert_eq!(simulator.current_tick(), 44);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.score() == 0 && simulator.current_tick() < 150
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 132);
+    assert_eq!(simulator.current_tick(), 147);
 }
 
 fn simulate_while<P>(my_strategy: &mut MyStrategyImpl, simulator: &mut Simulator,
