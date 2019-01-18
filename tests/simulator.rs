@@ -5,6 +5,25 @@ use my_strategy::my_strategy::common::IsBetween;
 use my_strategy::examples::{GameType, example_world, example_rules, example_me, example_ball, example_rng};
 
 #[test]
+fn test_simulator_tick_robot_walk() {
+    let world = example_world(GameType::TwoRobots);
+    let mut simulator = Simulator::new(&world, world.me.id);
+    let mut rng = example_rng();
+    let max_speed = simulator.rules().ROBOT_MAX_GROUND_SPEED;
+    simulator.me_mut().action_mut().set_target_velocity(Vec3::only_z(max_speed));
+    simulator.tick(
+        simulator.rules().tick_time_interval(),
+        simulator.rules().MICROTICKS_PER_TICK,
+        &mut rng
+    );
+    assert_eq!(
+        simulator.me().position(),
+        Vec3::new(9.748591261158683, 1.0, -17.449218438858473)
+    );
+    assert_eq!(simulator.me().touch_normal(), Some(Vec3::new(0.0, 1.0, 0.0)));
+}
+
+#[test]
 fn test_simulator_tick_robot_jump() {
     let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
@@ -19,6 +38,7 @@ fn test_simulator_tick_robot_jump() {
         simulator.me().position(),
         Vec3::new(9.748591261158683, 1.2931412499999937, -17.463246216636257)
     );
+    assert_eq!(simulator.me().touch_normal(), None);
 }
 
 #[test]
