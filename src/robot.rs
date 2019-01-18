@@ -26,6 +26,32 @@ impl Robot {
         self.velocity_z = value.z();
     }
 
+    pub fn touch_normal(&self) -> Option<Vec3> {
+        if self.touch {
+            Some(Vec3::new(
+                self.touch_normal_x.unwrap(),
+                self.touch_normal_y.unwrap(),
+                self.touch_normal_z.unwrap(),
+            ))
+        } else {
+            None
+        }
+    }
+
+    pub fn set_touch_normal(&mut self, value: Option<Vec3>) {
+        if let Some(value) = value {
+            self.touch = true;
+            self.touch_normal_x = Some(value.x());
+            self.touch_normal_y = Some(value.y());
+            self.touch_normal_z = Some(value.z());
+        } else {
+            self.touch = false;
+            self.touch_normal_x = None;
+            self.touch_normal_y = None;
+            self.touch_normal_z = None;
+        }
+    }
+
     pub fn jump(&mut self, jump_speed: f64, rules: &Rules) {
         self.radius = rules.ROBOT_MIN_RADIUS
             + (rules.ROBOT_MAX_RADIUS - rules.ROBOT_MIN_RADIUS)

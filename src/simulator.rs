@@ -51,7 +51,6 @@ impl RobotCollisionType {
 #[derive(Clone, Debug)]
 pub struct RobotExt {
     base: Robot,
-    touch_normal: Option<Vec3>,
     radius_change_speed: f64,
     action: Action,
     mass: f64,
@@ -66,7 +65,6 @@ impl RobotExt {
     pub fn from_robot(robot: &Robot, rules: &Rules) -> Self {
         RobotExt {
             base: robot.clone(),
-            touch_normal: None,
             radius_change_speed: 0.0,
             action: Action::default(),
             mass: rules.ROBOT_MASS,
@@ -84,6 +82,14 @@ impl RobotExt {
 
     pub fn base(&self) -> &Robot {
         &self.base
+    }
+
+    pub fn touch_normal(&self) -> Option<Vec3> {
+        self.base.touch_normal()
+    }
+
+    pub fn set_touch_normal(&mut self, value: Option<Vec3>) {
+        self.base.set_touch_normal(value)
     }
 
     pub fn is_me(&self) -> bool {
@@ -390,9 +396,10 @@ impl Simulator {
                 };
                 let (distance, normal) = world.rules.arena
                     .distance_and_normal(robot.position());
+                let mut base = robot.clone();
+                base.set_touch_normal(touch_normal);
                 RobotExt {
                     base: robot.clone(),
-                    touch_normal,
                     radius_change_speed,
                     action: Action::default(),
                     mass: world.rules.ROBOT_MASS,
@@ -531,7 +538,7 @@ impl Simulator {
             if robot.is_me && self.ignore_me {
                 continue;
             }
-            if let Some(touch_normal) = robot.touch_normal {
+            if let Some(touch_normal) = robot.touch_normal() {
                 let target_velocity = robot.action.target_velocity()
                     .clamp(self.rules.ROBOT_MAX_GROUND_SPEED);
                 let velocity = Plane::projected(target_velocity, touch_normal);
@@ -594,7 +601,7 @@ impl Simulator {
             let e = || { rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E) };
             let collision_type = Simulator::collide(e, &mut robot, &mut ball);
             let touch_normal = self.rules.arena.collide(&mut robot);
-            robot.touch_normal = touch_normal;
+            robot.set_touch_normal(touch_normal);
             if collision_type != RobotCollisionType::None {
                 robot.collision_type = robot.collision_type.with(collision_type);
                 ball.collision_type = ball.collision_type.with(BallCollisionType::Robot);
