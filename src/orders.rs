@@ -1,7 +1,7 @@
 use crate::model::{Robot, Action, Rules};
 use crate::my_strategy::world::World;
 use crate::my_strategy::random::XorShiftRng;
-use crate::my_strategy::simulator::{Simulator, BallExt};
+use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::entity::Entity;
@@ -215,12 +215,7 @@ impl Play {
         let time_interval = world.rules.tick_time_interval();
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
 
-        let points = get_points(
-            global_simulator.ball(),
-            global_simulator.me().base(),
-            global_simulator.rules(),
-            ctx.rng
-        );
+        let points = get_points(&global_simulator, ctx.rng);
 
         let mut order: Option<Play> = None;
 
@@ -495,13 +490,29 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
     (1000.0 * score).round() as i32
 }
 
-pub fn get_points(ball: &BallExt, robot: &Robot, rules: &Rules, rng: &mut XorShiftRng) -> Vec<Vec3> {
+pub fn get_points(simulator: &Simulator, rng: &mut XorShiftRng) -> Vec<Vec3> {
     use crate::my_strategy::physics::get_min_distance_between_spheres;
     use crate::my_strategy::random::Rng;
     use crate::my_strategy::common::Clamp;
     use crate::my_strategy::plane::Plane;
     use crate::my_strategy::mat3::Mat3;
 
+    let ball = simulator.ball();
+    let robot = simulator.me();
+    let rules = simulator.rules();
+
+    let distance_to_ball = ball.position().distance(robot.position());
+    let time_to_ball = rules.time_for_distance(rules.ROBOT_MAX_GROUND_SPEED, distance_to_ball);
+    let max_time_diff = 2.0 * (rules.ROBOT_RADIUS + rules.BALL_RADIUS) / rules.ROBOT_MAX_GROUND_SPEED;
+    let number = if time_to_ball < simulator.current_time() + max_time_diff {
+        if time_to_ball < rules.tick_time_interval() * 10.0 {
+            7
+        } else {
+            3
+        }
+    } else {
+        1
+    };
     let base_position = ball.projected_to_arena_position_with_shift(rules.ROBOT_MIN_RADIUS);
     let to_robot = (robot.position() - base_position).normalized();
     let min_distance = get_min_distance_between_spheres(
@@ -514,12 +525,13 @@ pub fn get_points(ball: &BallExt, robot: &Robot, rules: &Rules, rng: &mut XorShi
     let distance = rng.gen_range(min_distance, max_distance);
     let base_direction = Plane::projected(to_robot, ball.normal_to_arena()).normalized();
     let mut result = Vec::new();
-    for _ in 0..3 {
+    for _ in 0..number {
         let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
         let rotation = Mat3::rotation(ball.normal_to_arena(), angle);
         let position = base_position + rotation * base_direction * distance;
         result.push(rules.arena.projected_with_shift(position, rules.ROBOT_MAX_RADIUS));
     }
+
     result
 }
 

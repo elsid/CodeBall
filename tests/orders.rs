@@ -20,26 +20,26 @@ fn test_new() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.score(), 1127);
+    assert_eq!(result.score(), 1172);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(-16.315240592758546, 0.0, 25.175641489352437));
+    assert_eq!(result.action().target_velocity(), Vec3::new(-16.000687346910397, 0.0, 25.37672170368784));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), Stats {
-        micro_ticks_to_jump: 132,
-        micro_ticks_to_watch: 141,
+        micro_ticks_to_jump: 129,
+        micro_ticks_to_watch: 138,
         micro_ticks_to_end: 300,
-        time_to_jump: 0.733333333333334,
-        time_to_watch: 0.7833333333333341,
+        time_to_jump: 0.7166666666666672,
+        time_to_watch: 0.7666666666666674,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 3,
+        iteration: 4,
         total_iterations: 5,
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1127,
-        total_micro_ticks: 5950,
+        action_score: 1172,
+        total_micro_ticks: 5350,
         current_step: 8,
     });
 }
@@ -82,27 +82,27 @@ fn test_new_should_not_jump_on_ball_top() {
 
     let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
 
-    assert_eq!(result.score(), 1339);
+    assert_eq!(result.score(), 1273);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(16.75163863699627, 0.0, 24.887398477452276));
+    assert_eq!(result.action().target_velocity(), Vec3::new(17.524634972449043, 0.0, 24.349274508338357));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), Stats {
-        micro_ticks_to_jump: 57,
-        micro_ticks_to_watch: 66,
+        micro_ticks_to_jump: 60,
+        micro_ticks_to_watch: 69,
         micro_ticks_to_end: 300,
-        time_to_jump: 0.31666666666666665,
-        time_to_watch: 0.36666666666666664,
+        time_to_jump: 0.3333333333333333,
+        time_to_watch: 0.3833333333333333,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 2,
+        iteration: 5,
         total_iterations: 5,
         score: 0,
         jump_simulation: false,
         far_jump_simulation: false,
-        action_score: 1339,
-        total_micro_ticks: 5325,
-        current_step: 4,
+        action_score: 1273,
+        total_micro_ticks: 3525,
+        current_step: 8,
     });
 }
 

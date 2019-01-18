@@ -11,7 +11,7 @@ fn test_two_robots_first_action_to_go_to_goalkeeper_position() {
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
 
     let world = example_world(GameType::TwoRobots);
-    let simulator = Simulator::new(&world, 1);
+    let simulator = Simulator::new(&world, 2);
     let mut my_strategy = MyStrategyImpl::new(
         &simulator.me().base(),
         &simulator.rules(),
@@ -20,9 +20,9 @@ fn test_two_robots_first_action_to_go_to_goalkeeper_position() {
     let mut action = Action::default();
     my_strategy.act(simulator.me().base(), simulator.rules(), &simulator.game(), &mut action);
     assert_eq!(action, Action {
-        target_velocity_x: -11.91038935845869,
+        target_velocity_x: 12.288688718619582,
         target_velocity_y: 0.0,
-        target_velocity_z: -27.53438986667244,
+        target_velocity_z: -27.367647498038114,
         jump_speed: 0.0,
         use_nitro: false,
     });
@@ -37,7 +37,7 @@ fn test_two_robots_first_action_to_go_for_ball() {
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
 
     let world = example_world(GameType::TwoRobots);
-    let simulator = Simulator::new(&world, 2);
+    let simulator = Simulator::new(&world, 1);
     let mut my_strategy = MyStrategyImpl::new(
         &simulator.me().base(),
         &simulator.rules(),
@@ -46,9 +46,9 @@ fn test_two_robots_first_action_to_go_for_ball() {
     let mut action = Action::default();
     my_strategy.act(simulator.me().base(), simulator.rules(), &simulator.game(), &mut action);
     assert_eq!(action, Action {
-        target_velocity_x: 16.28549293405953,
+        target_velocity_x: -16.000687346910397,
         target_velocity_y: 0.0,
-        target_velocity_z: 25.19489471886511,
+        target_velocity_z: 25.37672170368784,
         jump_speed: 0.0,
         use_nitro: false,
     });
@@ -64,7 +64,7 @@ fn test_two_robots_first_ball_kick_until_goal() {
 
     let world = example_world(GameType::TwoRobots);
     let mut rng = example_rng();
-    let mut simulator = Simulator::new(&world, 2);
+    let mut simulator = Simulator::new(&world, 1);
     let mut my_strategy = MyStrategyImpl::new(
         &simulator.me().base(),
         &simulator.rules(),
@@ -76,8 +76,8 @@ fn test_two_robots_first_ball_kick_until_goal() {
             && simulator.current_tick() < 150
     });
 
-    assert_eq!(simulator.me().position().y(), 1.2931761725863404);
-    assert_eq!(simulator.current_tick(), 39);
+    assert_eq!(simulator.me().position().y(), 1.2931696527314658);
+    assert_eq!(simulator.current_tick(), 44);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().ball_collision_type() == RobotCollisionType::None
@@ -85,22 +85,22 @@ fn test_two_robots_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.013974177630897151,
-        y: 3.2879866510318707,
-        z: 0.11183522547747986,
-        velocity_x: 4.616383125574309,
-        velocity_y: 20.827964630672774,
-        velocity_z: 36.94487513866609,
+        x: -0.005282419325361849,
+        y: 3.4450897162130674,
+        z: 0.03891694314966517,
+        velocity_x: -3.9266103949896825,
+        velocity_y: 32.36909968003137,
+        velocity_z: 28.92834970124794,
         radius: 2.0,
     });
-    assert_eq!(simulator.current_tick(), 44);
+    assert_eq!(simulator.current_tick(), 45);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.score() == 0 && simulator.current_tick() < 150
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 114);
+    assert_eq!(simulator.current_tick(), 133);
 }
 
 fn simulate_while<P>(my_strategy: &mut MyStrategyImpl, simulator: &mut Simulator,
