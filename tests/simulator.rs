@@ -518,3 +518,25 @@ fn test_simulator_tick_robot_walk_to_nitro_pack() {
         .find(|v| v.id == nearest_nitro_pack.id).unwrap();
     assert_eq!(nitro_pack.respawn_ticks, Some(597));
 }
+
+#[test]
+fn test_simulator_ball_hit_bottom_corner() {
+    let mut world = example_world(GameType::TwoRobots);
+    world.game.ball.set_position(Vec3::new(-24.4378654601576, 2.462833999159444, 34.82362575766481));
+    world.game.ball.set_velocity(Vec3::new(6.239753468929283, 2.5046756681021467, 43.74873027140119));
+    let mut simulator = Simulator::new(&world, world.me.id);
+    let mut rng = example_rng();
+    simulator.tick(
+        simulator.rules().tick_time_interval(),
+        simulator.rules().MICROTICKS_PER_TICK,
+        &mut rng
+    );
+    assert_eq!(
+        simulator.ball().position(),
+        Vec3::new(-24.0123078567098, 2.79461722629136, 35.210174346110826)
+    );
+    assert_eq!(
+        simulator.ball().velocity(),
+        Vec3::new(28.051208402063356, 21.960551576178723, 20.51046243838915)
+    );
+}
