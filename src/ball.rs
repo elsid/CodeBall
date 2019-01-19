@@ -47,9 +47,10 @@ impl Ball {
     pub fn render_text(&self, render: &mut Render) {
         use crate::my_strategy::render::Object;
 
-        render.add(Object::text(
-            format!("ball:\n  speed: {}", self.velocity().norm())
-        ));
+        render.add(Object::text(format!(
+            "ball:\n  speed: {}\n  position: {:?}\n  velocity: {:?}\n",
+            self.velocity().norm(), self.position(), self.velocity()
+        )));
     }
 }
 
