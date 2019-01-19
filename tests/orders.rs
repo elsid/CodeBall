@@ -41,6 +41,9 @@ fn test_new() {
         action_score: 1145,
         total_micro_ticks: 5350,
         current_step: 8,
+        reached_game_limit: false,
+        reached_play_limit: false,
+        reached_scenario_limit: false,
     });
 }
 
@@ -103,6 +106,9 @@ fn test_new_should_not_jump_on_ball_top() {
         action_score: 1278,
         total_micro_ticks: 3525,
         current_step: 8,
+        reached_game_limit: false,
+        reached_play_limit: false,
+        reached_scenario_limit: false,
     });
 }
 
@@ -165,5 +171,8 @@ fn test_new_far_jump() {
         action_score: 1171,
         total_micro_ticks: 6743,
         current_step: 0,
+        reached_game_limit: false,
+        reached_play_limit: false,
+        reached_scenario_limit: true,
     });
 }

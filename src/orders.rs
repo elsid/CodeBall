@@ -140,6 +140,8 @@ impl Play {
             if let Some(v) = &mut order {
                 v.stats.total_iterations = ctx.total_iterations;
                 v.stats.total_micro_ticks += ctx.total_micro_ticks;
+                v.stats.reached_play_limit = ctx.total_micro_ticks >= MAX_TOTAL_MICRO_TICKS;
+                v.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.micro_ticks);
             }
         }
 
@@ -318,6 +320,7 @@ impl Play {
                     };
                     stats.score = local_simulator.score();
                     stats.action_score = action_score;
+                    stats.reached_scenario_limit = local_simulator.current_micro_tick() >= MAX_MICRO_TICK;
                 }
 
                 log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
@@ -404,6 +407,7 @@ impl Play {
                 };
                 stats.score = local_simulator.score();
                 stats.action_score = action_score;
+                stats.reached_scenario_limit = local_simulator.current_micro_tick() >= MAX_MICRO_TICK;
             }
 
             log!(
