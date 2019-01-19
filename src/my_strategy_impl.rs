@@ -291,7 +291,7 @@ impl MyStrategyImpl {
                     },
                     Role::Goalkeeper(_) => {
                         if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
-                            && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
+                            && world.game.ball.position().distance(world.rules.get_goalkeeper_position(world.game.ball.position()))
                                 > world.rules.arena.depth / 2.0 + 6.0 {
 
                             match Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator) {

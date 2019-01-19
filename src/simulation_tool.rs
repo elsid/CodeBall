@@ -56,7 +56,7 @@ fn check_goalkeeper() {
 fn simulate_goalkeeper(ball_position: Vec3, ball_velocity: Vec3, mut world: World) -> Result {
     use crate::examples::example_rng;
 
-    world.me.set_position(world.rules.get_goalkeeper_position());
+    world.me.set_position(world.rules.get_goalkeeper_position(ball_position));
     let me = world.me.clone();
     world.game.robots.iter_mut()
         .find(|v| v.id == me.id)
@@ -204,11 +204,6 @@ fn simulate_empty(ball_position: Vec3, ball_velocity: Vec3, mut world: World) ->
     use crate::examples::example_rng;
     use crate::my_strategy::simulator::Simulator;
 
-    world.me.set_position(world.rules.get_goalkeeper_position());
-    let me = world.me.clone();
-    world.game.robots.iter_mut()
-        .find(|v| v.id == me.id)
-        .map(|v| *v = me.clone());
     world.game.ball.set_position(ball_position);
     world.game.ball.set_velocity(ball_velocity);
 

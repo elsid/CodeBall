@@ -476,21 +476,21 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         micro_ticks: &mut micro_ticks,
     };
 
-    world.me.set_position(world.rules.get_goalkeeper_position());
+    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
+    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 16.6258312833173, -42.698087751137));
+    world.me.set_position(world.rules.get_goalkeeper_position(world.game.ball.position()));
     world.me.nitro_amount = 50.0;
     let me = world.me.clone();
     world.game.robots.iter_mut()
         .find(|v| v.id == me.id)
         .map(|v| *v = me.clone());
-    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
-    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 16.6258312833173, -42.698087751137));
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 488);
+    assert_eq!(result.score(), 143);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(11.693888968138127, 0.0, -27.62703315234659));
+    assert_eq!(result.action().target_velocity(), Vec3::new(5.203589045050307, 0.0, -0.5952380952381013));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -498,17 +498,17 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         robot_id: 1,
         current_tick: 0,
         order: "play",
-        time_to_jump: 0.5666666666666668,
-        time_to_watch: 0.9500000000000013,
-        time_to_end: 1.6666666666666656,
-        time_to_score: None,
-        iteration: 19,
-        total_iterations: 40,
-        game_score: 0,
-        order_score: 488,
-        path_micro_ticks: 300,
-        plan_micro_ticks: 5553,
-        game_micro_ticks: 5553,
+        time_to_jump: 0.0,
+        time_to_watch: 0.0,
+        time_to_end: 0.9500000000000013,
+        time_to_score: Some(0.9500000000000013),
+        iteration: 4,
+        total_iterations: 32,
+        game_score: -1,
+        order_score: 143,
+        path_micro_ticks: 171,
+        plan_micro_ticks: 5424,
+        game_micro_ticks: 5424,
         game_micro_ticks_limit: 30000,
         current_step: 1,
         reached_game_limit: false,
@@ -516,7 +516,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         reached_path_limit: false,
         other_number: 0,
         ticks_with_near_micro_ticks: 63,
-        ticks_with_far_micro_ticks: 100,
+        ticks_with_far_micro_ticks: 57,
         path_type: Some("walk_to_position"),
     });
 }

@@ -1,6 +1,8 @@
 use crate::model::{Rules, Robot};
+use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::arena::ArenaCollisionMask;
+use crate::my_strategy::line2::Line2;
 
 impl Rules {
     pub fn tick_time_interval(&self) -> f64 {
@@ -31,8 +33,34 @@ impl Rules {
         )
     }
 
-    pub fn get_goalkeeper_position(&self) -> Vec3 {
-        Vec3::new(0.0, self.ROBOT_MIN_RADIUS, -self.arena.depth / 2.0)
+    pub fn get_my_goal_target(&self) -> Vec3 {
+        self.get_goal_target().opposite()
+    }
+
+    pub fn get_my_goalkeeper_line(&self) -> Line2 {
+        Line2::new(
+            Vec2::new(-self.arena.goal_width / 2.0, -self.arena.depth / 2.0 - 1.375),
+            Vec2::new(self.arena.goal_width / 2.0, -self.arena.depth / 2.0 - 1.375),
+        )
+    }
+
+    pub fn get_goalkeeper_position(&self, ball_position: Vec3) -> Vec3 {
+        use crate::my_strategy::line2::Line2;
+        use crate::my_strategy::common::Clamp;
+
+        self.get_my_goalkeeper_line()
+            .possible_intersection(&Line2::new(
+                ball_position.xz(),
+                self.get_my_goal_target().xz() - Vec2::new(0.0, self.arena.depth / 2.0 - self.arena.goal_depth)
+            ))
+            .map(|v| {
+                Vec3::new(
+                    v.x().clamp(-6.0, 6.0),
+                    self.ROBOT_RADIUS,
+                    v.y()
+                )
+            })
+            .unwrap_or(Vec3::new(0.0, self.ROBOT_RADIUS, -self.arena.depth / 2.0))
     }
 
     pub fn max_robot_jump_height(&self) -> f64 {

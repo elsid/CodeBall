@@ -54,6 +54,10 @@ impl Vec3 {
         Vec2::new(self.x, self.y)
     }
 
+    pub const fn xz(&self) -> Vec2 {
+        Vec2::new(self.x, self.z)
+    }
+
     pub const fn with_x(&self, x: f64) -> Vec3 {
         Vec3::new(x, self.y, self.z)
     }

@@ -15,6 +15,9 @@ pub mod vec3;
 #[path = "mat3.rs"]
 pub mod mat3;
 
+#[path = "line2.rs"]
+pub mod line2;
+
 #[path = "plane.rs"]
 pub mod plane;
 

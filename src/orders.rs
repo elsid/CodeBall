@@ -355,7 +355,7 @@ pub struct WalkToGoalkeeperPosition {
 
 impl WalkToGoalkeeperPosition {
     pub fn new(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Self {
-        let target = world.rules.get_goalkeeper_position();
+        let target = world.rules.get_goalkeeper_position(world.game.ball.position());
         let to_target = target - robot.position();
         let velocity = if to_target.norm() > world.rules.min_running_distance() {
             to_target.normalized() * world.rules.ROBOT_MAX_GROUND_SPEED

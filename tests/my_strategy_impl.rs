@@ -20,9 +20,9 @@ fn test_two_robots_first_action_to_go_to_goalkeeper_position() {
     let mut action = Action::default();
     my_strategy.act(simulator.me().base(), simulator.rules(), &simulator.game(), &mut action);
     assert_eq!(action, Action {
-        target_velocity_x: -11.91038935845869,
+        target_velocity_x: -11.32564751448835,
         target_velocity_y: 0.0,
-        target_velocity_z: -27.53438986667244,
+        target_velocity_z: -27.780023548902257,
         jump_speed: 0.0,
         use_nitro: false,
     });
@@ -109,14 +109,14 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_1() {
 
     let mut world = example_world(GameType::TwoRobotsWithNitro);
 
-    world.me.set_position(world.rules.get_goalkeeper_position());
+    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
+    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 16.6258312833173, -42.698087751137));
+    world.me.set_position(world.rules.get_goalkeeper_position(world.game.ball.position()));
     world.me.nitro_amount = 50.0;
     let me = world.me.clone();
     world.game.robots.iter_mut()
         .find(|v| v.id == me.id)
         .map(|v| *v = me.clone());
-    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
-    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 16.6258312833173, -42.698087751137));
 
     let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 1);
@@ -143,14 +143,14 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch() {
 
     let mut world = example_world(GameType::TwoRobotsWithNitro);
 
-    world.me.set_position(world.rules.get_goalkeeper_position());
+    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
+    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 14.6258312833173, -42.698087751137));
+    world.me.set_position(world.rules.get_goalkeeper_position(world.game.ball.position()));
     world.me.nitro_amount = 50.0;
     let me = world.me.clone();
     world.game.robots.iter_mut()
         .find(|v| v.id == me.id)
         .map(|v| *v = me.clone());
-    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
-    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 14.6258312833173, -42.698087751137));
 
     let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 1);

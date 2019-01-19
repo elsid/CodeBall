@@ -35,6 +35,7 @@ cp src/player.rs ${DIR}/src
 cp src/roles.rs ${DIR}/src
 cp src/search.rs ${DIR}/src
 cp src/plan.rs ${DIR}/src
+cp src/line2.rs ${DIR}/src
 
 cd ${DIR}/src
 

@@ -12,11 +12,11 @@ impl Vec2 {
         Vec2 { x, y }
     }
 
-    pub fn x(&self) -> f64 {
+    pub const fn x(&self) -> f64 {
         self.x
     }
 
-    pub fn y(&self) -> f64 {
+    pub const fn y(&self) -> f64 {
         self.y
     }
 
@@ -26,6 +26,10 @@ impl Vec2 {
 
     pub fn normalized(&self) -> Vec2 {
         *self / self.norm()
+    }
+
+    pub fn det(&self, other: Vec2) -> f64 {
+        self.x * other.y - self.y * other.x
     }
 }
 
