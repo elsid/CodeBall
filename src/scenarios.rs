@@ -83,9 +83,16 @@ impl JumpAtPosition<'_> {
         }
 
         action = action.or(Jump {
-            target: self.kick_ball_position,
-            max_speed: self.my_max_speed,
             jump_speed: self.my_jump_speed,
+            max_time: self.max_time,
+            tick_time_interval: self.tick_time_interval,
+            micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
+            max_micro_ticks: self.max_micro_tick,
+        }.perform(ctx));
+
+        action = action.or(WatchMeJump {
+            jump_speed: self.my_jump_speed,
+            use_nitro: false,
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
@@ -187,8 +194,6 @@ impl WalkToPosition {
 }
 
 pub struct Jump {
-    pub target: Vec3,
-    pub max_speed: f64,
     pub jump_speed: f64,
     pub max_time: f64,
     pub tick_time_interval: f64,
@@ -199,7 +204,6 @@ pub struct Jump {
 impl Jump {
     pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::entity::Entity;
-        use crate::my_strategy::simulator::RobotCollisionType;
 
         #[cfg(feature = "enable_stats")]
         {
@@ -213,23 +217,15 @@ impl Jump {
 
         let mut action = None;
 
-        let min_distance_to_target = self.max_speed * self.tick_time_interval;
-        let min_distance_to_ball = ctx.simulator.rules().ball_distance_limit()
-            + min_distance_to_target;
-
         log!(
-            ctx.current_tick, "[{}] <{}> jump {}:{} target={}/{} ball={}/{}",
+            ctx.current_tick, "[{}] <{}> jump {}:{}",
             ctx.robot_id, ctx.action_id,
-            ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
-            ctx.simulator.me().position().distance(self.target), min_distance_to_target,
-            ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
-            min_distance_to_ball
+            ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
         );
 
-        while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
+        if ctx.simulator.current_time() + self.tick_time_interval < self.max_time
             && ctx.simulator.current_micro_tick() < self.max_micro_ticks
-            && ctx.simulator.score() == 0
-            && ctx.simulator.me().collision_type() == RobotCollisionType::None {
+            && ctx.simulator.score() == 0 {
 
             ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
             let target_velocity = ctx.simulator.rules().arena.projected_at(
@@ -245,36 +241,9 @@ impl Jump {
             ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
 
             log!(
-                ctx.current_tick, "[{}] <{}> jump {}:{} target={}/{} ball={}/{}",
+                ctx.current_tick, "[{}] <{}> jump {}:{}",
                 ctx.robot_id, ctx.action_id,
-                ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
-                ctx.simulator.me().position().distance(self.target), min_distance_to_target,
-                ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
-                min_distance_to_ball
-            );
-        }
-
-        *ctx.simulator.me_mut().action_mut() = Action::default();
-
-        while ctx.simulator.current_time() + self.tick_time_interval < self.max_time
-            && ctx.simulator.current_micro_tick() < self.max_micro_ticks
-            && ctx.simulator.score() == 0
-            && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
-                    <= min_distance_to_ball {
-
-            if action.is_none() {
-                action = Some(ctx.simulator.me().action().clone());
-            }
-
-            ctx.tick(self.tick_time_interval, self.micro_ticks_per_tick);
-
-            log!(
-                ctx.current_tick, "[{}] <{}> jump {}:{} target={}/{} ball={}/{}",
-                ctx.robot_id, ctx.action_id,
-                ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
-                ctx.simulator.me().position().distance(self.target), min_distance_to_target,
-                ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
-                min_distance_to_ball
+                ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
             );
         }
 
