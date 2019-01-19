@@ -517,50 +517,54 @@ impl Play {
         *ctx.micro_ticks += simulator.current_micro_tick() as usize;
         ctx.total_micro_ticks += simulator.current_micro_tick();
 
-        let action_score = get_action_score(
-            &world.rules,
-            &simulator,
-            time_to_ball,
-            time_to_goal,
-            MAX_TIME + time_interval,
-            world.game.current_tick,
-            robot.id,
-            action_id,
-        );
+        if let Some(action) = action {
+            let action_score = get_action_score(
+                &world.rules,
+                &simulator,
+                time_to_ball,
+                time_to_goal,
+                MAX_TIME + time_interval,
+                world.game.current_tick,
+                robot.id,
+                action_id,
+            );
 
-        #[cfg(feature = "enable_stats")]
-        {
-            stats.micro_ticks_to_end = simulator.current_micro_tick();
-            stats.time_to_end = simulator.current_time();
-            stats.time_to_score = if simulator.score() != 0 {
-                Some(stats.time_to_end)
-            } else {
-                None
-            };
-            stats.score = simulator.score();
-            stats.action_score = action_score;
-        }
-
-        log!(
-            world.game.current_tick,
-            "[{}] <{}> suggest action continue jump {}:{} score={} jump_speed={} nitro={}",
-            robot.id, action_id, simulator.current_time(), simulator.current_micro_tick(),
-            action_score, jump_speed, use_nitro
-        );
-
-        Some(Play {
-            id: action_id,
-            robot_id: robot.id,
-            action,
-            score: action_score,
-            time_to_ball,
-            #[cfg(feature = "enable_render")]
-            position_to_jump: None,
-            #[cfg(feature = "enable_render")]
-            history,
             #[cfg(feature = "enable_stats")]
-            stats,
-        })
+            {
+                stats.micro_ticks_to_end = simulator.current_micro_tick();
+                stats.time_to_end = simulator.current_time();
+                stats.time_to_score = if simulator.score() != 0 {
+                    Some(stats.time_to_end)
+                } else {
+                    None
+                };
+                stats.score = simulator.score();
+                stats.action_score = action_score;
+            }
+
+            log!(
+                world.game.current_tick,
+                "[{}] <{}> suggest action continue jump {}:{} score={} jump_speed={} nitro={}",
+                robot.id, action_id, simulator.current_time(), simulator.current_micro_tick(),
+                action_score, jump_speed, use_nitro
+            );
+
+            Some(Play {
+                id: action_id,
+                robot_id: robot.id,
+                action,
+                score: action_score,
+                time_to_ball,
+                #[cfg(feature = "enable_render")]
+                position_to_jump: None,
+                #[cfg(feature = "enable_render")]
+                history,
+                #[cfg(feature = "enable_stats")]
+                stats,
+            })
+        } else {
+            None
+        }
     }
 
     fn get_with_max_score(lhs: Option<Play>, rhs: Option<Play>) -> Option<Play> {

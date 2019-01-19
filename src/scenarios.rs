@@ -533,7 +533,7 @@ pub struct WatchMeJump {
 }
 
 impl WatchMeJump {
-    pub fn perform(&self, ctx: &mut Context) -> Action {
+    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
         use crate::my_strategy::simulator::{Solid, RobotCollisionType};
         use crate::my_strategy::entity::Entity;
 
@@ -541,15 +541,7 @@ impl WatchMeJump {
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
-        if self.use_nitro && ctx.simulator.me().nitro_amount() > 0.0 {
-            let target_velocity = (ctx.simulator.ball().position() - ctx.simulator.me().position())
-                .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
-            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
-            ctx.simulator.me_mut().action_mut().use_nitro = true;
-        }
-
-        let action = ctx.simulator.me().action().clone();
+        let mut action = None;
         let mut collided_with_ball = false;
 
         log!(
@@ -571,11 +563,16 @@ impl WatchMeJump {
                 collided_with_ball = ctx.simulator.me().collision_type() != RobotCollisionType::None;
             }
 
+            ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
             if self.use_nitro && ctx.simulator.me().nitro_amount() > 0.0 {
                 let target_velocity = (ctx.simulator.ball().position() - ctx.simulator.me().position())
                     .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
                 ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
                 ctx.simulator.me_mut().action_mut().use_nitro = true;
+            }
+
+            if action.is_none() {
+                action = Some(ctx.simulator.me().action().clone());
             }
 
             log!(
@@ -605,8 +602,8 @@ pub struct ContinueJump {
 }
 
 impl ContinueJump {
-    pub fn perform(&self, ctx: &mut Context) -> Action {
-        let action = WatchMeJump {
+    pub fn perform(&self, ctx: &mut Context) -> Option<Action> {
+        let mut action = WatchMeJump {
             jump_speed: self.jump_speed,
             use_nitro: self.use_nitro,
             max_time: self.max_time,
@@ -615,13 +612,13 @@ impl ContinueJump {
             max_micro_ticks: self.max_micro_ticks,
         }.perform(ctx);
 
-        WatchBallMove {
+        action = action.or(WatchBallMove {
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_after_land,
             max_micro_ticks: self.max_micro_ticks,
             stop: true,
-        }.perform(ctx);
+        }.perform(ctx));
 
         action
     }
