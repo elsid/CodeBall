@@ -150,7 +150,7 @@ impl Arena {
     }
 
     pub fn collide_goal_back_corners(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
-        if position.z() >= (self.depth / 2.0) + self.goal_depth - self.bottom_radius {
+        if position.z() > (self.depth / 2.0) + self.goal_depth - self.bottom_radius {
             Sphere::new(
                 Vec3::new(
                     position.x().clamp(
@@ -170,7 +170,7 @@ impl Arena {
 
     pub fn collide_corner(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
         if position.x() > (self.width / 2.0) - self.corner_radius
-            && position.z() >= (self.depth / 2.0) - self.corner_radius {
+            && position.z() > (self.depth / 2.0) - self.corner_radius {
             Sphere::new(
                 Vec3::new(
                     (self.width / 2.0) - self.corner_radius,
