@@ -192,12 +192,16 @@ impl MyStrategyImpl {
 
     #[cfg(feature = "enable_render")]
     fn render(&mut self) {
+        use crate::my_strategy::render::Object;
+
         self.render.clear();
 
         let mut robots: Vec<&Robot> = self.world.game.robots.iter().map(|v| v).collect();
         robots.sort_by_key(|v| v.id);
 
         let render = &mut self.render;
+
+        render.add(Object::text(format!("current_tick: {}", self.world.game.current_tick)));
 
         self.world.game.ball.render(render);
 
