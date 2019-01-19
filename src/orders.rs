@@ -66,10 +66,10 @@ impl Order {
     }
 
     #[cfg(feature = "enable_stats")]
-    pub fn stats(&self) -> Stats {
+    pub fn stats(&self) -> &Stats {
         match self {
-            Order::Play(v) => v.stats.clone(),
-            Order::WalkToGoalkeeperPosition(_) => Stats::default(),
+            Order::Play(v) => &v.stats,
+            Order::WalkToGoalkeeperPosition(v) => &v.stats,
         }
     }
 
@@ -271,7 +271,7 @@ impl Play {
             #[cfg(feature = "enable_render")]
             let mut history = vec![local_simulator.clone()];
             #[cfg(feature = "enable_stats")]
-            let mut stats = Stats::default();
+            let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick);
 
             let mut scenario_ctx = Context {
                 current_tick: world.game.current_tick,
@@ -370,7 +370,7 @@ impl Play {
         #[cfg(feature = "enable_render")]
         let mut history = vec![local_simulator.clone()];
         #[cfg(feature = "enable_stats")]
-        let mut stats = Stats::default();
+        let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick);
 
         let mut scenario_ctx = Context {
             current_tick: world.game.current_tick,
@@ -462,7 +462,7 @@ impl Play {
         #[cfg(feature = "enable_render")]
         let mut history = vec![simulator.clone()];
         #[cfg(feature = "enable_stats")]
-        let mut stats = Stats::default();
+        let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick);
 
         let mut scenario_ctx = Context {
             current_tick: world.game.current_tick,
@@ -673,6 +673,8 @@ pub struct WalkToGoalkeeperPosition {
     pub robot_id: i32,
     pub action: Action,
     pub score: i32,
+    #[cfg(feature = "enable_stats")]
+    pub stats: Stats,
 }
 
 impl WalkToGoalkeeperPosition {
@@ -691,6 +693,8 @@ impl WalkToGoalkeeperPosition {
             robot_id: robot.id,
             action,
             score: 0,
+            #[cfg(feature = "enable_stats")]
+            stats: Stats::new(robot.player_id, robot.id, world.game.current_tick),
         }
     }
 }

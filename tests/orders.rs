@@ -25,7 +25,10 @@ fn test_new() {
     assert_eq!(result.action().target_velocity(), Vec3::new(-15.811748664438161, 0.0, 25.494874076422462));
 
     #[cfg(feature = "enable_stats")]
-    assert_eq!(result.stats(), Stats {
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 1,
+        current_tick: 0,
         micro_ticks_to_jump: 132,
         micro_ticks_to_watch: 138,
         micro_ticks_to_end: 300,
@@ -90,7 +93,10 @@ fn test_new_should_not_jump_on_ball_top() {
     assert_eq!(result.action().target_velocity(), Vec3::new(15.065425465228744, 0.0, 25.942878705950065));
 
     #[cfg(feature = "enable_stats")]
-    assert_eq!(result.stats(), Stats {
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 2,
+        current_tick: 0,
         micro_ticks_to_jump: 57,
         micro_ticks_to_watch: 63,
         micro_ticks_to_end: 300,
@@ -155,7 +161,10 @@ fn test_new_far_jump() {
     assert_eq!(result.score(), 1248);
 
     #[cfg(feature = "enable_stats")]
-    assert_eq!(result.stats(), Stats {
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 2,
+        current_tick: 0,
         micro_ticks_to_jump: 0,
         micro_ticks_to_watch: 118,
         micro_ticks_to_end: 388,
@@ -214,7 +223,10 @@ fn test_new_continue_jump() {
     assert_eq!(result.score(), 2621);
 
     #[cfg(feature = "enable_stats")]
-    assert_eq!(result.stats(), Stats {
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 1,
+        current_tick: 0,
         micro_ticks_to_jump: 0,
         micro_ticks_to_watch: 175,
         micro_ticks_to_end: 367,

@@ -1,5 +1,8 @@
 #[derive(Debug, PartialEq, Default, Serialize, Clone)]
 pub struct Stats {
+    pub player_id: i32,
+    pub robot_id: i32,
+    pub current_tick: i32,
     pub micro_ticks_to_jump: i32,
     pub micro_ticks_to_watch: i32,
     pub micro_ticks_to_end: i32,
@@ -18,4 +21,14 @@ pub struct Stats {
     pub reached_game_limit: bool,
     pub reached_play_limit: bool,
     pub reached_scenario_limit: bool,
+}
+
+impl Stats {
+    pub fn new(player_id: i32, robot_id: i32, current_tick: i32) -> Self {
+        let mut result = Stats::default();
+        result.player_id = player_id;
+        result.robot_id = robot_id;
+        result.current_tick = current_tick;
+        result
+    }
 }
