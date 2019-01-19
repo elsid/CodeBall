@@ -85,6 +85,15 @@ impl Order {
     }
 
     #[cfg(feature = "enable_render")]
+    pub fn name(&self) -> &'static str {
+        match self {
+            Order::Play(v) => v.name,
+            Order::WalkToGoalkeeperPosition(_) => "walk_to_goalkeeper_position",
+            Order::TakeNitroPack(_) => "take_nitro_pack",
+        }
+    }
+
+    #[cfg(feature = "enable_render")]
     pub fn render(&self, robot: &Robot, render: &mut Render) {
         self.render_text(render);
         self.render_action(robot, render);
@@ -96,9 +105,9 @@ impl Order {
         use crate::my_strategy::render::Object;
 
         render.add(Object::text(format!(
-            "  order: {}\n    score: {}\n    speed: {}\n    jump: {}\n    nitro: {}\n",
-            self.id(), self.score(), self.action().target_velocity().norm(), self.action().jump_speed,
-            self.action().use_nitro
+            "  order:\n    name: {}\n    id: {}\n    score: {}\n    speed: {}\n    jump: {}\n    nitro: {}\n",
+            self.name(), self.id(), self.score(), self.action().target_velocity().norm(),
+            self.action().jump_speed, self.action().use_nitro
         )));
     }
 
@@ -124,6 +133,8 @@ pub struct Play {
     pub time_to_ball: Option<f64>,
     #[cfg(feature = "enable_render")]
     pub position_to_jump: Option<Vec3>,
+    #[cfg(feature = "enable_render")]
+    pub name: &'static str,
     #[cfg(feature = "enable_render")]
     pub history: Vec<Simulator>,
     #[cfg(feature = "enable_stats")]
@@ -374,6 +385,8 @@ impl Play {
                         #[cfg(feature = "enable_render")]
                         position_to_jump: Some(target),
                         #[cfg(feature = "enable_render")]
+                        name: "jump_at_position",
+                        #[cfg(feature = "enable_render")]
                         history,
                         #[cfg(feature = "enable_stats")]
                         stats,
@@ -467,6 +480,8 @@ impl Play {
                 time_to_ball,
                 #[cfg(feature = "enable_render")]
                 position_to_jump: None,
+                #[cfg(feature = "enable_render")]
+                name: "jump_to_ball",
                 #[cfg(feature = "enable_render")]
                 history,
                 #[cfg(feature = "enable_stats")]
@@ -562,6 +577,8 @@ impl Play {
                 time_to_ball,
                 #[cfg(feature = "enable_render")]
                 position_to_jump: None,
+                #[cfg(feature = "enable_render")]
+                name: "continue_jump",
                 #[cfg(feature = "enable_render")]
                 history,
                 #[cfg(feature = "enable_stats")]
