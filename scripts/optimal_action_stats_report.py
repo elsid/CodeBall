@@ -16,10 +16,12 @@ def main():
     records = [v for v in raw if isinstance(v, dict)]
     result = [v for v in raw if isinstance(v, list)]
     values = {k: [v.get(k) for v in records if v.get(k) is not None] for k in records[0]}
-    values['time_to_score'] = [v for v in values['time_to_score'] if v < 2]
-    values['jump_simulation'] = [v for v in values['jump_simulation'] if v]
+    values['time_to_score'] = [v for v in values['time_to_score']]
+    values['jump_simulation'] = [v for v in values['jump_simulation']]
     row('', 'n', 'sum', 'q95', 'min', 'max', 'mean', 'median', 'stdev')
     for k, v in values.items():
+        if not v or not isinstance(v[0], (int, float)):
+            continue
         row(
             k,
             len(v),
@@ -38,6 +40,8 @@ def main():
             row(*[player[k] for k in sorted(result[0][0].keys())])
     print()
     for k, v in values.items():
+        if not v or not isinstance(v[0], (int, float)):
+            continue
         fig, ax = matplotlib.pyplot.subplots()
         fig.canvas.set_window_title(k)
         if v and k in ('iteration', 'step', 'total_iterations'):

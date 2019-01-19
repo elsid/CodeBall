@@ -271,7 +271,7 @@ impl Play {
             #[cfg(feature = "enable_render")]
             let mut history = vec![local_simulator.clone()];
             #[cfg(feature = "enable_stats")]
-            let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick);
+            let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick, "jump_at_position");
 
             let mut scenario_ctx = Context {
                 current_tick: world.game.current_tick,
@@ -370,7 +370,7 @@ impl Play {
         #[cfg(feature = "enable_render")]
         let mut history = vec![local_simulator.clone()];
         #[cfg(feature = "enable_stats")]
-        let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick);
+        let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick, "jump_to_ball");
 
         let mut scenario_ctx = Context {
             current_tick: world.game.current_tick,
@@ -462,7 +462,7 @@ impl Play {
         #[cfg(feature = "enable_render")]
         let mut history = vec![simulator.clone()];
         #[cfg(feature = "enable_stats")]
-        let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick);
+        let mut stats = Stats::new(robot.player_id, robot.id, world.game.current_tick, "continue_jump");
 
         let mut scenario_ctx = Context {
             current_tick: world.game.current_tick,
@@ -694,7 +694,7 @@ impl WalkToGoalkeeperPosition {
             action,
             score: 0,
             #[cfg(feature = "enable_stats")]
-            stats: Stats::new(robot.player_id, robot.id, world.game.current_tick),
+            stats: Stats::new(robot.player_id, robot.id, world.game.current_tick, "walk_to_goalkeeper_position"),
         }
     }
 }
