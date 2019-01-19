@@ -189,6 +189,8 @@ impl MyStrategyImpl {
 
         let render = &mut self.render;
 
+        self.world.game.ball.render(render);
+
         for robot in robots {
             robot.render(render);
 
@@ -200,8 +202,6 @@ impl MyStrategyImpl {
                 order.render(robot, render);
             }
         }
-
-        self.world.game.ball.render(render);
     }
 
 //    fn real_time_spent(&self) -> Duration {

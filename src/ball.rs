@@ -28,6 +28,7 @@ impl Ball {
     #[cfg(feature = "enable_render")]
     pub fn render(&self, render: &mut Render) {
         self.render_velocity(render);
+        self.render_text(render);
     }
 
     #[cfg(feature = "enable_render")]
@@ -39,6 +40,15 @@ impl Ball {
             self.position() + self.velocity() * VELOCITY_FACTOR,
             3.0,
             Color::new(0.0, 0.6, 0.0, 1.0),
+        ));
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_text(&self, render: &mut Render) {
+        use crate::my_strategy::render::Object;
+
+        render.add(Object::text(
+            format!("ball:\n  speed: {}", self.velocity().norm())
         ));
     }
 }
