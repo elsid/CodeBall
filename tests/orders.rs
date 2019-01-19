@@ -251,3 +251,68 @@ fn test_new_continue_jump() {
         reached_scenario_limit: false,
     });
 }
+
+#[test]
+fn test_new_continue_jump_with_nitro() {
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::common::IdGenerator;
+
+    #[cfg(feature = "enable_stats")]
+    use my_strategy::my_strategy::stats::Stats;
+
+    let mut world = example_world(GameType::TwoRobotsWithNitro);
+    let mut rng = example_rng();
+    let mut order_id_generator = IdGenerator::new();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks,
+    };
+
+    world.me.set_position(Vec3::new(2.1244535492642953, 1.2931418435925501, -5.178084712824993));
+    world.me.set_velocity(Vec3::new(-15.58616134845358, 14.488369308639712, 24.472022729043868));
+    world.me.radius = 1.05;
+    let me = world.me.clone();
+    world.game.robots.iter_mut()
+        .find(|v| v.id == me.id)
+        .map(|v| *v = me.clone());
+    world.game.ball.y = 2.123101000000013;
+    world.game.ball.velocity_y = 12.815500000000347;
+
+    let result = Order::try_play(&world.me, &world, &mut ctx).unwrap();
+
+    assert_eq!(result.score(), 2610);
+    assert_eq!(result.action().use_nitro, true);
+    assert_eq!(result.action().jump_speed, 15.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(-37.54676686691887, 14.6683757644347, 91.51545798538402));
+
+    #[cfg(feature = "enable_stats")]
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 1,
+        current_tick: 0,
+        order: "continue_jump",
+        micro_ticks_to_jump: 0,
+        micro_ticks_to_watch: 175,
+        micro_ticks_to_end: 361,
+        time_to_jump: 0.0,
+        time_to_watch: 0.11666666666666665,
+        time_to_end: 1.1500000000000008,
+        time_to_score: Some(1.1500000000000008),
+        iteration: 0,
+        total_iterations: 0,
+        score: 1,
+        jump_simulation: false,
+        far_jump_simulation: false,
+        action_score: 2610,
+        total_micro_ticks: 1621,
+        current_step: 0,
+        reached_game_limit: false,
+        reached_play_limit: false,
+        reached_scenario_limit: false,
+    });
+}
+

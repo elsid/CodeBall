@@ -143,10 +143,23 @@ impl Play {
         };
 
         let mut order = if world.rules.is_flying(robot) {
-            let fly = Self::try_continue_jump(0.0, robot, world, &mut ctx);
-            let jump = Self::try_continue_jump(world.rules.ROBOT_MAX_JUMP_SPEED, robot, world, &mut ctx);
+            let without_nitro = {
+                let fly = Self::try_continue_jump(0.0, false, robot, world, &mut ctx);
+                let jump = Self::try_continue_jump(world.rules.ROBOT_MAX_JUMP_SPEED, false, robot, world, &mut ctx);
 
-            Self::get_with_max_score(fly, jump)
+                Self::get_with_max_score(fly, jump)
+            };
+
+            let with_nitro = if robot.nitro_amount > 0.0 {
+                let fly = Self::try_continue_jump(0.0, true, robot, world, &mut ctx);
+                let jump = Self::try_continue_jump(world.rules.ROBOT_MAX_JUMP_SPEED, true, robot, world, &mut ctx);
+
+                Self::get_with_max_score(fly, jump)
+            } else {
+                None
+            };
+
+            Self::get_with_max_score(without_nitro, with_nitro)
         } else {
             let jump_to_ball = Self::try_jump_to_ball(robot, world, &mut ctx);
             let jump_at_position = Self::try_jump_at_position(robot, world, &mut ctx);
@@ -459,7 +472,8 @@ impl Play {
         }
     }
 
-    fn try_continue_jump(jump_speed: f64, robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
+    fn try_continue_jump(jump_speed: f64, use_nitro: bool, robot: &Robot, world: &World,
+                         ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, ContinueJump};
 
         if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
@@ -492,6 +506,7 @@ impl Play {
 
         let action = ContinueJump {
             jump_speed,
+            use_nitro,
             max_time: MAX_TIME,
             tick_time_interval: time_interval,
             micro_ticks_per_tick_before_land: NEAR_MICRO_TICKS_PER_TICK,
@@ -527,9 +542,10 @@ impl Play {
         }
 
         log!(
-            world.game.current_tick, "[{}] <{}> suggest action jump with jump_speed {} {}:{} score={}",
-            robot.id, action_id, jump_speed,
-            simulator.current_time(), simulator.current_micro_tick(), action_score
+            world.game.current_tick,
+            "[{}] <{}> suggest action continue jump {}:{} score={} jump_speed={} nitro={}",
+            robot.id, action_id, simulator.current_time(), simulator.current_micro_tick(),
+            action_score, jump_speed, use_nitro
         );
 
         Some(Play {

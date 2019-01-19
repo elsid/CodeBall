@@ -384,6 +384,7 @@ impl JumpToBall {
 
         WatchMeJump {
             jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
+            use_nitro: false,
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
@@ -524,6 +525,7 @@ impl FarJump {
 
 pub struct WatchMeJump {
     pub jump_speed: f64,
+    pub use_nitro: bool,
     pub max_time: f64,
     pub tick_time_interval: f64,
     pub micro_ticks_per_tick: usize,
@@ -533,18 +535,25 @@ pub struct WatchMeJump {
 impl WatchMeJump {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         use crate::my_strategy::simulator::{Solid, RobotCollisionType};
+        use crate::my_strategy::entity::Entity;
 
         let stored_action = ctx.simulator.me().action().clone();
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
         ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
+        if self.use_nitro && ctx.simulator.me().nitro_amount() > 0.0 {
+            let target_velocity = (ctx.simulator.ball().position() - ctx.simulator.me().position())
+                .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+            ctx.simulator.me_mut().action_mut().use_nitro = true;
+        }
 
         let action = ctx.simulator.me().action().clone();
         let mut collided_with_ball = false;
 
         log!(
-            ctx.current_tick, "[{}] <{}> watch me move {}:{} distance_to_arena={}/{}",
+            ctx.current_tick, "[{}] <{}> watch me jump {}:{} distance_to_arena={}/{}",
             ctx.robot_id, ctx.action_id,
             ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
             ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
@@ -562,8 +571,15 @@ impl WatchMeJump {
                 collided_with_ball = ctx.simulator.me().collision_type() != RobotCollisionType::None;
             }
 
+            if self.use_nitro && ctx.simulator.me().nitro_amount() > 0.0 {
+                let target_velocity = (ctx.simulator.ball().position() - ctx.simulator.me().position())
+                    .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
+                ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+                ctx.simulator.me_mut().action_mut().use_nitro = true;
+            }
+
             log!(
-                ctx.current_tick, "[{}] <{}> watch me move {}:{} distance_to_arena={}/{}",
+                ctx.current_tick, "[{}] <{}> watch me jump {}:{} distance_to_arena={}/{}",
                 ctx.robot_id, ctx.action_id,
                 ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
                 ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
@@ -580,6 +596,7 @@ impl WatchMeJump {
 
 pub struct ContinueJump {
     pub jump_speed: f64,
+    pub use_nitro: bool,
     pub max_time: f64,
     pub tick_time_interval: f64,
     pub micro_ticks_per_tick_before_land: usize,
@@ -591,6 +608,7 @@ impl ContinueJump {
     pub fn perform(&self, ctx: &mut Context) -> Action {
         let action = WatchMeJump {
             jump_speed: self.jump_speed,
+            use_nitro: self.use_nitro,
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_before_land,
