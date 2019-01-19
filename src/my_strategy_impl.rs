@@ -203,12 +203,4 @@ impl MyStrategyImpl {
             }
         }
     }
-
-//    fn real_time_spent(&self) -> Duration {
-//        Instant::now() - self.start_time
-//    }
-//
-//    fn cpu_time_spent(&self) -> Duration {
-//        self.cpu_time_spent + (Instant::now() - self.tick_start_time)
-//    }
 }

@@ -1,5 +1,3 @@
-use std::hash::{BuildHasher};
-use std::collections::hash_map::DefaultHasher;
 use std::ops::Mul;
 
 macro_rules! log {
@@ -52,18 +50,6 @@ pub trait Clamp: PartialOrd + Sized {
 }
 
 impl Clamp for f64 {}
-
-#[derive(Debug, Default, Clone)]
-pub struct ConstState;
-
-impl BuildHasher for ConstState {
-    type Hasher = DefaultHasher;
-
-    #[inline]
-    fn build_hasher(&self) -> DefaultHasher {
-        DefaultHasher::new()
-    }
-}
 
 pub struct IdGenerator {
     next: i32,

@@ -7,10 +7,6 @@ use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 
 impl Arena {
-    pub fn get_my_goal_target(&self) -> Vec3 {
-        Vec3::new(0.0, self.goal_height / 2.0, -self.depth / 2.0 - self.goal_depth / 2.0)
-    }
-
     pub fn max_distance(&self) -> f64 {
         Vec3::new(self.width, self.depth + 2.0 * self.goal_depth, self.height).norm()
     }
@@ -35,16 +31,6 @@ impl Arena {
             None
         }
     }
-
-//    pub fn get_penetration(&self, e: &Solid) -> f64 {
-//        let (distance, normal) = self.distance_and_normal_to_arena(e.position());
-//        e.radius() - distance
-//    }
-
-//    pub fn contains(&self, position: Vec3) -> bool {
-//        let (distance, _) = self.distance_and_normal_to_arena(position);
-//        distance > 0.0
-//    }
 
     pub fn projected_with_shift(&self, position: Vec3, shift: f64) -> Vec3 {
         let (distance, normal) = self.distance_and_normal(position);
