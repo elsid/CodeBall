@@ -13,7 +13,7 @@ trait Shiftable : Entity {
         let clamped_velocity = self.velocity().clamp(max_entity_speed);
         let next_position = self.position() + clamped_velocity * time_interval
             - Vec3::default().with_y(gravity * time_interval.square() / 2.0);
-        let next_velocity = self.velocity()
+        let next_velocity = clamped_velocity
             - Vec3::default().with_y(gravity * time_interval);
         self.set_position(next_position);
         self.set_velocity(next_velocity);
