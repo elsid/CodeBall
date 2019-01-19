@@ -412,8 +412,8 @@ impl JumpToBall {
             ctx.stats.total_micro_ticks += self.micro_ticks_per_tick_before_jump as i32;
         }
 
-        let my_move_equation = MoveEquation::from_entity(simulator.me(), simulator.rules());
-        let ball_move_equation = MoveEquation::from_entity(simulator.ball(), simulator.rules());
+        let my_move_equation = MoveEquation::from_robot(simulator.me().base(), simulator.rules());
+        let ball_move_equation = MoveEquation::from_ball(simulator.ball().base(), simulator.rules());
         let my_min_y = simulator.rules().ROBOT_MIN_RADIUS;
         let ball_min_y = simulator.rules().BALL_RADIUS;
 

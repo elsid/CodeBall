@@ -1,6 +1,5 @@
-use crate::model::Rules;
+use crate::model::{Rules, Robot, Ball};
 use crate::my_strategy::vec3::Vec3;
-use crate::my_strategy::entity::Entity;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MoveEquation {
@@ -10,11 +9,32 @@ pub struct MoveEquation {
 }
 
 impl MoveEquation {
-    pub fn from_entity(entity: &Entity, rules: &Rules) -> Self {
+    pub fn from_ball(ball: &Ball, rules: &Rules) -> Self {
         MoveEquation {
-            initial_position: entity.position(),
-            initial_velocity: entity.velocity(),
+            initial_position: ball.position(),
+            initial_velocity: ball.velocity(),
             acceleration: rules.gravity_acceleration()
+        }
+    }
+
+    pub fn from_robot(robot: &Robot, rules: &Rules) -> Self {
+        MoveEquation {
+            initial_position: robot.position(),
+            initial_velocity: robot.velocity(),
+            acceleration: rules.gravity_acceleration()
+        }
+    }
+
+    pub fn from_robot_with_nitro(robot: &Robot, rules: &Rules) -> Self {
+        let nitro_acceleration = if robot.nitro_amount > 0.0 && robot.velocity().norm() > 0.0 {
+            robot.velocity().normalized() * rules.ROBOT_NITRO_ACCELERATION
+        } else {
+            Vec3::default()
+        };
+        MoveEquation {
+            initial_position: robot.position(),
+            initial_velocity: robot.velocity(),
+            acceleration: rules.gravity_acceleration() + nitro_acceleration
         }
     }
 
