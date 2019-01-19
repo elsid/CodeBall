@@ -590,12 +590,18 @@ impl Play {
 
     #[cfg(feature = "enable_render")]
     pub fn render(&self, render: &mut Render) {
+        self.render_position_to_jump(render);
+        render_history(&self.history, render);
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_position_to_jump(&self, render: &mut Render) {
         use crate::my_strategy::render::{Object, Color};
 
         if let Some(position) = self.position_to_jump {
             render.add(Object::sphere(position, 1.0, Color::new(0.5, 0.0, 0.0, 0.8)));
         }
-        render_history(&self.history, render);
+        render.add(Object::text(format!("    position_to_jump: {:?}", self.position_to_jump)));
     }
 }
 
