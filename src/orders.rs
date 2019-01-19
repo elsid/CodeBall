@@ -247,21 +247,27 @@ impl Play {
     }
 
     fn try_jump_near_ball(initial_simulator: &Simulator, global_simulator: &Simulator,
-                              robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
+                          robot: &Robot, world: &World, ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, JumpAtPosition};
 
         let time_interval = world.rules.tick_time_interval();
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
 
-        let points = get_points(&global_simulator, ctx.rng);
+        let points = get_points(&global_simulator, world, ctx.rng);
 
         let mut order: Option<Play> = None;
 
         for point in points {
+            let action_id = ctx.order_id_generator.next();
             let target = {
                 let mut robot = global_simulator.me().clone();
                 robot.set_position(point);
                 world.rules.arena.collide(&mut robot);
+                log!(
+                    world.game.current_tick, "[{}] <{}> adjust target {}:{} target={:?} new={:?}",
+                    robot.id(), action_id, global_simulator.current_time(), global_simulator.current_micro_tick(),
+                    point, robot.position()
+                );
                 robot.position()
             };
             let to_target = target - robot.position();
@@ -275,7 +281,6 @@ impl Play {
             } else {
                 world.rules.ROBOT_MAX_GROUND_SPEED
             };
-            let action_id = ctx.order_id_generator.next();
             log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", robot.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
             let mut local_simulator = initial_simulator.clone();
             let velocity = if distance_to_target > 1e-3 {
@@ -655,7 +660,7 @@ fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f
     as_score(score)
 }
 
-pub fn get_points(simulator: &Simulator, rng: &mut XorShiftRng) -> Vec<Vec3> {
+pub fn get_points(simulator: &Simulator, world: &World, rng: &mut XorShiftRng) -> Vec<Vec3> {
     use crate::my_strategy::physics::get_min_distance_between_spheres;
     use crate::my_strategy::random::Rng;
     use crate::my_strategy::common::Clamp;
@@ -688,13 +693,24 @@ pub fn get_points(simulator: &Simulator, rng: &mut XorShiftRng) -> Vec<Vec3> {
     let max_distance = base_position.distance(robot.position())
         .clamp(min_distance + 1e-3, rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS);
     let base_direction = Plane::projected(to_robot, ball.normal_to_arena()).normalized();
+    log!(
+        world.game.current_tick,
+        "[{}] get_points base_position={:?} base_direction={:?} min_distance={} max_distance={}",
+        robot.id(), base_position, base_direction, min_distance, max_distance
+    );
     let mut result = Vec::new();
     for _ in 0..number {
         let distance = rng.gen_range(min_distance, max_distance);
         let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
         let rotation = Mat3::rotation(ball.normal_to_arena(), angle);
         let position = base_position + rotation * base_direction * distance;
-        result.push(rules.arena.projected_with_shift(position, rules.ROBOT_MAX_RADIUS));
+        let projected = rules.arena.projected_with_shift(position, rules.ROBOT_MAX_RADIUS);
+        log!(
+            world.game.current_tick,
+            "[{}] get_points distance={} angle={} position={:?} projected={:?} distance_to_ball={}",
+            robot.id(), distance, angle, position, projected, projected.distance(ball.position())
+        );
+        result.push(projected);
     }
 
     result
