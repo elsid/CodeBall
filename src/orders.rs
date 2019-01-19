@@ -96,8 +96,8 @@ impl Order {
         use crate::my_strategy::render::Object;
 
         render.add(Object::text(format!(
-            "  order:\n    score: {}\n    speed: {}\n    jump: {}\n    nitro: {}\n",
-            self.score(), self.action().target_velocity().norm(), self.action().jump_speed,
+            "  order: {}\n    score: {}\n    speed: {}\n    jump: {}\n    nitro: {}\n",
+            self.id(), self.score(), self.action().target_velocity().norm(), self.action().jump_speed,
             self.action().use_nitro
         )));
     }
