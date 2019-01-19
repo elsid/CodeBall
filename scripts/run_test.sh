@@ -4,6 +4,7 @@ ID=${1}
 OTHER=${2}
 NITRO=${3}
 PORTS_SHIFT=${4}
+SUFFIX=
 
 if ! [[ "${OTHER}" ]] || ! [[ "${ID}" ]]; then
     echo "other is not set, usage: ${0} <id> <other> [nitro] [ports_shift]"
@@ -12,6 +13,7 @@ fi
 
 if ! [[ "${NITRO}" ]]; then
     NITRO=false
+    SUFFIX=_nitro
 fi
 
 if ! [[ "${PORTS_SHIFT}" ]]; then
@@ -19,7 +21,7 @@ if ! [[ "${PORTS_SHIFT}" ]]; then
 fi
 
 VERSION=$(git rev-parse --short HEAD)
-LOG_DIR=${PWD}/log/${OTHER}_vs_${VERSION}
+LOG_DIR=${PWD}/log/${OTHER}_vs_${VERSION}${SUFFIX}
 RESULT=${LOG_DIR}/result.${ID}.txt
 
 mkdir -p ${LOG_DIR}
