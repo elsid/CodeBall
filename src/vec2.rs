@@ -1,5 +1,4 @@
 use std::ops::{Add, Sub, Mul, Div, Neg};
-//use std::hash::{Hash, Hasher};
 use crate::my_strategy::common::{Square};
 
 #[derive(Default, Clone, Copy, Debug, PartialOrd)]
