@@ -144,7 +144,7 @@ impl Order {
             Order::Play(v) => v.name,
             Order::WalkToGoalkeeperPosition(_) => "walk_to_goalkeeper_position",
             Order::TakeNitroPack(_) => "take_nitro_pack",
-            Order::Idle(v) => "idle",
+            Order::Idle(_) => "idle",
         }
     }
 

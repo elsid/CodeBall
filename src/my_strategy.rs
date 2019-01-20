@@ -71,6 +71,9 @@ pub mod simulator;
 #[path = "scenarios.rs"]
 pub mod scenarios;
 
+#[path = "roles.rs"]
+pub mod roles;
+
 #[path = "orders.rs"]
 pub mod orders;
 

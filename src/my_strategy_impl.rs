@@ -5,9 +5,13 @@ use crate::my_strategy::random::{XorShiftRng, SeedableRng};
 use crate::my_strategy::world::World;
 use crate::my_strategy::orders::Order;
 use crate::my_strategy::common::IdGenerator;
+use crate::my_strategy::roles::Role;
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
+
+const ROBOT_PRIORITY_CHANGE_GAP: i32 = 0;
+const ROBOT_ROLE_CHANGE_GAP: i32 = 0;
 
 pub struct MyStrategyImpl {
     world: World,
@@ -20,6 +24,7 @@ pub struct MyStrategyImpl {
     last_tick: i32,
     orders: Vec<Order>,
     robots_priority: Vec<i32>,
+    roles: Vec<Role>,
     order_id_generator: IdGenerator,
     micro_ticks: usize,
     #[cfg(feature = "enable_render")]
@@ -48,7 +53,8 @@ impl Strategy for MyStrategyImpl {
                 self.robots_priority.clear();
                 self.orders.clear();
             } else {
-                self.init_robots_priority();
+                self.assign_roles();
+                self.set_priority();
                 self.give_orders();
             }
             #[cfg(feature = "enable_stats")]
@@ -89,6 +95,7 @@ impl MyStrategyImpl {
             last_tick: -1,
             orders: Vec::new(),
             robots_priority: Vec::new(),
+            roles: Vec::new(),
             order_id_generator: IdGenerator::new(),
             micro_ticks: 0,
             #[cfg(feature = "enable_render")]
@@ -109,7 +116,90 @@ impl MyStrategyImpl {
         self.world.me = me.clone();
     }
 
-    fn init_robots_priority(&mut self) {
+    fn assign_roles(&mut self) {
+        let current_score = self.roles.iter()
+            .map(|v| v.get_score(&self.world))
+            .sum::<i32>();
+        let new_roles = self.get_roles();
+        let new_score = new_roles.iter()
+            .map(|v| {
+                if v.can_quit(&self.world) {
+                    v.get_score(&self.world)
+                } else {
+                    0
+                }
+            })
+            .sum::<i32>();
+
+        let is_same = self.roles.len() == new_roles.len()
+            && self.roles.iter().zip(new_roles.iter())
+                .all(|(l, r)| l == r);
+
+        if !is_same {
+            if self.roles.is_empty() || new_score > current_score + ROBOT_ROLE_CHANGE_GAP {
+                log!(
+                    self.world.game.current_tick, "assign roles {:?} with total score {} ({})",
+                    new_roles, new_score, new_score - current_score
+                );
+                self.roles = new_roles;
+            } else {
+                log!(
+                    self.world.game.current_tick, "reject roles {:?} with total score {} ({})",
+                    new_roles, new_score, new_score - current_score
+                );
+            }
+        } else {
+            log!(self.world.game.current_tick, "use roles {:?}", self.roles);
+        }
+    }
+
+    fn get_roles(&self) -> Vec<Role> {
+        use crate::my_strategy::roles::{Forward, Goalkeeper};
+
+        let mut robots_ids: Vec<i32> = self.world.game.robots.iter()
+            .filter(|v| v.is_teammate)
+            .map(|v| v.id)
+            .collect();
+
+        robots_ids.sort();
+
+        if robots_ids.is_empty() {
+            Vec::new()
+        } else if robots_ids.len() == 1 {
+            vec![Role::forward(robots_ids[0])]
+        } else {
+            let robots = robots_ids.iter()
+                .map(|v| self.world.get_robot(*v))
+                .collect::<Vec<_>>();
+
+            let forwards = robots.iter()
+                .map(|v| Forward::get_score(*v, &self.world))
+                .collect::<Vec<_>>();
+
+            let goalkeepers = robots.iter()
+                .map(|v| Goalkeeper::get_score(*v, &self.world))
+                .collect::<Vec<_>>();
+
+            let goalkeeper = goalkeepers.iter()
+                .enumerate()
+                .map(|(n, goalkeeper_score)| {
+                    (*goalkeeper_score + forwards[0..n].iter().chain(forwards[n + 1..forwards.len()].iter()).sum::<i32>(), n)
+                })
+                .max()
+                .map(|(_, n)| n)
+                .unwrap();
+
+            robots_ids[0..goalkeeper].iter().chain(robots_ids[goalkeeper + 1..robots_ids.len()].iter())
+                .map(|v| Role::forward(*v))
+                .chain(
+                    [Role::goalkeeper(robots_ids[goalkeeper])].iter()
+                        .map(|v| v.clone())
+                )
+                .collect()
+        }
+    }
+
+    fn set_priority(&mut self) {
         use crate::my_strategy::common::as_score;
 
         if self.robots_priority.is_empty() {
@@ -143,21 +233,10 @@ impl MyStrategyImpl {
             order_id_generator: &mut self.order_id_generator,
             micro_ticks: &mut self.micro_ticks,
         };
-        let team_size = world.game.robots.len() / 2;
         let has_orders = !self.orders.is_empty();
-
-        let robots_max_z = self.robots_priority.iter()
-            .enumerate()
-            .map(|(n, id)| {
-                if has_orders && team_size > 1 && n == team_size - 1 {
-                    (*id, -world.rules.BALL_RADIUS)
-                } else {
-                    (*id, std::f64::MAX)
-                }
-            })
-            .collect::<Vec<_>>();
-
         let opposite_world = world.opposite();
+        let roles = &self.roles;
+
         let opponents_orders = world.game.robots.iter()
             .filter(|v| {
                 !v.is_teammate && v.position().distance(world.game.ball.position()) < 10.0
@@ -175,17 +254,17 @@ impl MyStrategyImpl {
             .enumerate()
             .map(|(n, robot_id)| {
                 let robot = world.get_robot(*robot_id);
-                let max_z = robots_max_z.iter()
-                    .find(|(id, _)| *id == *robot_id)
-                    .map(|(_, v)| *v)
-                    .unwrap();
+                let max_z = roles.iter()
+                    .find(|v| v.robot_id() == *robot_id)
+                    .unwrap()
+                    .max_z(world);
                 (n, Order::try_play(robot, world, &opponents_orders[..], max_z, &mut ctx))
             })
             .collect::<Vec<_>>();
 
         orders.sort_by_key(|(n, order)| {
             if has_orders {
-                -(order.score() - (*n * 116) as i32)
+                -(order.score() - *n as i32 * ROBOT_PRIORITY_CHANGE_GAP)
             } else {
                 -order.score()
             }
@@ -200,29 +279,35 @@ impl MyStrategyImpl {
 
         if all_orders.len() > opponents_orders_num + 1 {
             for i in opponents_orders_num + 1..all_orders.len() {
-                let robot = world.get_robot(all_orders[i].robot_id());
-                let max_z = robots_max_z.iter()
-                    .find(|(id, _)| *id == all_orders[i].robot_id())
-                    .map(|(_, v)| *v)
+                let robot_id = all_orders[i].robot_id();
+                let robot = world.get_robot(robot_id);
+                let role = roles.iter()
+                    .find(|v| v.robot_id() == robot_id)
                     .unwrap();
-                all_orders[i] = Order::try_play(robot, world, &all_orders[0..i], max_z, &mut ctx);
-            }
-        }
+                all_orders[i] = {
+                    let order = Order::try_play(robot, world, &all_orders[0..i], role.max_z(world), &mut ctx);
+                    if order.is_idle() {
+                        match role {
+                            Role::Forward(_) => Order::try_take_nitro_pack(robot, world, ctx.order_id_generator),
+                            Role::Goalkeeper(_) => {
+                                if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
+                                    && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
+                                        > world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS {
 
-        if all_orders.len() > opponents_orders_num + 1
-            && (all_orders.last().unwrap().is_idle() || all_orders.last().unwrap().time_to_ball().is_none()) {
-            let robot = world.get_robot(all_orders.last().unwrap().robot_id());
-            *all_orders.last_mut().unwrap() = if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
-                && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
-                    > world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS {
-
-                match Order::try_take_nitro_pack(robot, world, ctx.order_id_generator) {
-                    Order::Idle(_) => Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator),
-                    v => v,
+                                    match Order::try_take_nitro_pack(robot, world, ctx.order_id_generator) {
+                                        Order::Idle(_) => Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator),
+                                        v => v,
+                                    }
+                                } else {
+                                    Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
+                                }
+                            },
+                        }
+                    } else {
+                        order
+                    }
                 }
-            } else {
-                Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
-            };
+            }
         }
 
         self.orders = all_orders.into_iter().skip(opponents_orders_num).collect();
@@ -256,6 +341,8 @@ impl MyStrategyImpl {
     #[cfg(feature = "enable_render")]
     fn render(&mut self) {
         use crate::my_strategy::render::Object;
+        use crate::my_strategy::vec3::Vec3;
+        use crate::my_strategy::roles::Goalkeeper;
 
         self.render.clear();
 
@@ -277,6 +364,14 @@ impl MyStrategyImpl {
         for robot in robots {
             robot.render(render);
 
+            let role = self.roles.iter()
+                .find(|v| v.robot_id() == robot.id)
+                .map(|v| v);
+
+            if let Some(role) = role {
+                role.render(robot, render);
+            }
+
             let order = self.orders.iter()
                 .find(|v| v.robot_id() == robot.id)
                 .map(|v| v);
@@ -285,5 +380,20 @@ impl MyStrategyImpl {
                 order.render(robot, render);
             }
         }
+
+        render.add(Object::line(
+            Vec3::new(
+                -self.world.rules.arena.width / 2.0,
+                self.world.rules.ROBOT_RADIUS,
+                Goalkeeper::max_z(&self.world)
+            ),
+            Vec3::new(
+                self.world.rules.arena.width / 2.0,
+                self.world.rules.ROBOT_RADIUS,
+                Goalkeeper::max_z(&self.world)
+            ),
+            3.0,
+            Goalkeeper::get_color()
+        ));
     }
 }
