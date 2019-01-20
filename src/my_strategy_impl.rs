@@ -45,7 +45,7 @@ impl Drop for MyStrategyImpl {
 
 impl Strategy for MyStrategyImpl {
     fn act(&mut self, me: &Robot, _rules: &Rules, game: &Game, action: &mut Action) {
-        self.on_start(game);
+        self.on_start();
         if self.last_tick != game.current_tick {
             self.last_tick = game.current_tick;
             self.update_world(me, game);
@@ -322,12 +322,8 @@ impl MyStrategyImpl {
             });
     }
 
-    fn on_start(&mut self, game: &Game) {
-        self.tick_start_time = if game.current_tick == 0 {
-            self.start_time
-        } else {
-            Instant::now()
-        };
+    fn on_start(&mut self) {
+        self.tick_start_time = Instant::now();
     }
 
     fn on_finish(&mut self) {
