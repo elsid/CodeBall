@@ -317,6 +317,7 @@ fn test_new_continue_jump_with_nitro() {
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
+        other_number: 0,
     });
 }
 
