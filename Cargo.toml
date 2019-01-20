@@ -19,6 +19,7 @@ criterion = "0.2.5"
 enable_log = []
 enable_stats = []
 enable_render = []
+enable_time = []
 use_test_strategy = []
 
 [[bench]]

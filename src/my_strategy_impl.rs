@@ -27,6 +27,8 @@ pub struct MyStrategyImpl {
     roles: Vec<Role>,
     order_id_generator: IdGenerator,
     micro_ticks: usize,
+    #[cfg(feature = "enable_time")]
+    micro_ticks_before: usize,
     #[cfg(feature = "enable_render")]
     render: Render,
 }
@@ -98,6 +100,8 @@ impl MyStrategyImpl {
             roles: Vec::new(),
             order_id_generator: IdGenerator::new(),
             micro_ticks: 0,
+            #[cfg(feature = "enable_time")]
+            micro_ticks_before: 0,
             #[cfg(feature = "enable_render")]
             render: Render::new(),
         }
@@ -324,14 +328,27 @@ impl MyStrategyImpl {
 
     fn on_start(&mut self) {
         self.tick_start_time = Instant::now();
+        #[cfg(feature = "enable_time")]
+        {
+            self.micro_ticks_before = self.micro_ticks;
+        }
     }
 
     fn on_finish(&mut self) {
+        #[cfg(feature = "enable_time")]
+        use crate::my_strategy::common::milliseconds;
+
         let finish = Instant::now();
         let cpu_time_spent = finish - self.tick_start_time;
         self.max_cpu_time_spent = self.max_cpu_time_spent.max(cpu_time_spent);
         self.cpu_time_spent += cpu_time_spent;
         self.time_spent = finish - self.start_time;
+
+        #[cfg(feature = "enable_time")]
+        {
+            let micro_ticks = self.micro_ticks - self.micro_ticks_before;
+            println!("{} {}", milliseconds(&cpu_time_spent), micro_ticks);
+        }
     }
 
     #[cfg(feature = "enable_render")]
