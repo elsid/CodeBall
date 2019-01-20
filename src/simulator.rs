@@ -441,7 +441,7 @@ impl Simulator {
             })
             .collect();
         let me_index = robots.iter()
-            .position(|v| v.id() == me_id)
+            .position(|v| v.is_me)
             .unwrap();
         let (distance, normal) = world.rules.arena
             .distance_and_normal(world.game.ball.position());
@@ -535,15 +535,11 @@ impl Simulator {
     }
 
     pub fn me(&self) -> &RobotExt {
-        self.robots.iter()
-            .find(|v| v.is_me)
-            .unwrap()
+        &self.robots[self.me_index]
     }
 
     pub fn me_mut(&mut self) -> &mut RobotExt {
-        self.robots.iter_mut()
-            .find(|v| v.is_me)
-            .unwrap()
+        &mut self.robots[self.me_index]
     }
 
     pub fn set_ignore_me(&mut self, value: bool) {
@@ -572,6 +568,7 @@ impl Simulator {
         }
         self.current_tick += 1;
         self.current_time += time_interval;
+        self.me_index = self.robots.iter().position(|v| v.is_me).unwrap();
     }
 
     fn micro_tick(&mut self, time_interval: f64, rng: &mut XorShiftRng) {
