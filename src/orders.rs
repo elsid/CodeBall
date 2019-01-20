@@ -964,13 +964,15 @@ pub struct TakeNitroPack {
 
 impl TakeNitroPack {
     pub fn try_new(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Option<Self> {
+        use crate::my_strategy::common::as_score;
+
         world.game.nitro_packs.iter()
             .filter(|v| {
                 v.respawn_ticks.map(|v| v < 100).unwrap_or(true)
             })
             .map(|v| (v.position().distance(robot.position()), v))
-            .filter(|(distance, _)| *distance < world.rules.arena.depth)
-            .min_by_key(|(distance, _)| (distance.round() * 100.0) as i32)
+            .filter(|(distance, _)| *distance < world.rules.arena.depth / 2.0)
+            .min_by_key(|(distance, _)| as_score(*distance))
             .map(|(_, nitro_pack)| {
                 let to_target = nitro_pack.position() - robot.position();
                 let velocity = if to_target.norm() > world.rules.min_running_distance() {
