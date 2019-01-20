@@ -42,8 +42,8 @@ impl Order {
         )
     }
 
-    pub fn try_take_nitro_pack(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Order {
-        if let Some(take_nitro_pack) = TakeNitroPack::try_new(robot, world, order_id_generator) {
+    pub fn try_take_nitro_pack(robot: &Robot, world: &World, max_z: f64, order_id_generator: &mut IdGenerator) -> Order {
+        if let Some(take_nitro_pack) = TakeNitroPack::try_new(robot, world, max_z, order_id_generator) {
             Order::TakeNitroPack(take_nitro_pack)
         } else {
             Self::idle(robot, world, order_id_generator)
@@ -963,12 +963,12 @@ pub struct TakeNitroPack {
 }
 
 impl TakeNitroPack {
-    pub fn try_new(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Option<Self> {
+    pub fn try_new(robot: &Robot, world: &World, max_z: f64, order_id_generator: &mut IdGenerator) -> Option<Self> {
         use crate::my_strategy::common::as_score;
 
         world.game.nitro_packs.iter()
             .filter(|v| {
-                v.respawn_ticks.map(|v| v < 100).unwrap_or(true)
+                 v.z < max_z && v.respawn_ticks.map(|v| v < 100).unwrap_or(true)
             })
             .map(|v| (v.position().distance(robot.position()), v))
             .filter(|(distance, _)| *distance < world.rules.arena.depth / 2.0)

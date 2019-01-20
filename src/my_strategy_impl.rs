@@ -288,17 +288,18 @@ impl MyStrategyImpl {
                 let role = roles.iter()
                     .find(|v| v.robot_id() == robot_id)
                     .unwrap();
+                let max_z = role.max_z(world);
                 all_orders[i] = {
-                    let order = Order::try_play(robot, world, &all_orders[0..i], role.max_z(world), &mut ctx);
+                    let order = Order::try_play(robot, world, &all_orders[0..i], max_z, &mut ctx);
                     if order.is_idle() {
                         match role {
-                            Role::Forward(_) => Order::try_take_nitro_pack(robot, world, ctx.order_id_generator),
+                            Role::Forward(_) => Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator),
                             Role::Goalkeeper(_) => {
                                 if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
                                     && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
                                         > world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS {
 
-                                    match Order::try_take_nitro_pack(robot, world, ctx.order_id_generator) {
+                                    match Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator) {
                                         Order::Idle(_) => Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator),
                                         v => v,
                                     }
