@@ -71,7 +71,7 @@ pub fn as_score(value: f64) -> i32 {
     (value * 1000.0).round() as i32
 }
 
-#[cfg(feature = "enable_time")]
-pub fn milliseconds(value: &std::time::Duration) -> f64 {
+#[cfg(any(feature = "enable_time", feature = "enable_profiler"))]
+pub fn milliseconds(value: std::time::Duration) -> f64 {
     (value.as_secs() * 1000) as f64 + value.subsec_nanos() as f64 / 1_000_000.0
 }

@@ -11,6 +11,9 @@ use crate::my_strategy::config::Config;
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
 
+#[cfg(feature = "enable_profiler")]
+use crate::my_strategy::profiler::Profiler;
+
 pub struct MyStrategyImpl {
     config: Config,
     world: World,
@@ -29,6 +32,8 @@ pub struct MyStrategyImpl {
     micro_ticks_before: usize,
     #[cfg(feature = "enable_render")]
     render: Render,
+    #[cfg(feature = "enable_profiler")]
+    profiler: Profiler,
 }
 
 impl Default for MyStrategyImpl {
@@ -100,6 +105,8 @@ impl MyStrategyImpl {
             micro_ticks_before: 0,
             #[cfg(feature = "enable_render")]
             render: Render::new(),
+            #[cfg(feature = "enable_profiler")]
+            profiler: Profiler::new(Instant::now()),
         }
     }
 
@@ -110,10 +117,16 @@ impl MyStrategyImpl {
 
     fn update_world(&mut self, me: &Robot, game: &Game) {
         self.world.update(me, game);
+
+        #[cfg(feature = "enable_profiler")]
+        self.profiler.stage("update_world", Instant::now());
     }
 
     fn update_world_me(&mut self, me: &Robot) {
         self.world.me = me.clone();
+
+        #[cfg(feature = "enable_profiler")]
+        self.profiler.stage("update_world_me", Instant::now());
     }
 
     fn assign_roles(&mut self) {
@@ -151,6 +164,9 @@ impl MyStrategyImpl {
         } else {
             log!(self.world.game.current_tick, "use roles {:?}", self.roles);
         }
+
+        #[cfg(feature = "enable_profiler")]
+        self.profiler.stage("assign_roles", Instant::now());
     }
 
     fn get_roles(&self) -> Vec<Role> {
@@ -235,6 +251,9 @@ impl MyStrategyImpl {
                 .map(|(_, id)| *id)
                 .collect();
         }
+
+        #[cfg(feature = "enable_profiler")]
+        self.profiler.stage("set_priority", Instant::now());
     }
 
     fn give_orders(&mut self) {
@@ -311,6 +330,9 @@ impl MyStrategyImpl {
         }
 
         self.orders = other_orders;
+
+        #[cfg(feature = "enable_profiler")]
+        self.profiler.stage("give_orders", Instant::now());
     }
 
     fn apply_order(&mut self, action: &mut Action) {
@@ -320,11 +342,17 @@ impl MyStrategyImpl {
                 *action = v.action().clone();
                 log!(self.world.game.current_tick, "[{}] <{}> apply order {:?}", self.world.me.id, v.id(), action);
             });
+
+        #[cfg(feature = "enable_profiler")]
+        self.profiler.stage("apply_action", Instant::now());
     }
 
     fn on_start(&mut self) {
         self.tick_start_time = Instant::now();
         self.micro_ticks_before = self.micro_ticks;
+
+        #[cfg(feature = "enable_profiler")]
+        self.profiler.reset(self.tick_start_time);
     }
 
     fn on_finish(&mut self) {
@@ -340,8 +368,11 @@ impl MyStrategyImpl {
         #[cfg(feature = "enable_time")]
         {
             let micro_ticks = self.micro_ticks - self.micro_ticks_before;
-            println!("{} {}", milliseconds(&cpu_time_spent), micro_ticks);
+            println!("{} {}", milliseconds(cpu_time_spent), micro_ticks);
         }
+
+        #[cfg(feature = "enable_profiler")]
+        println!("{}", serde_json::to_string(&self.profiler.report()).unwrap());
     }
 
     #[cfg(feature = "enable_stats")]

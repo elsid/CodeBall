@@ -92,6 +92,10 @@ pub mod roles;
 #[path = "orders.rs"]
 pub mod orders;
 
+#[cfg(feature = "enable_profiler")]
+#[path = "profiler.rs"]
+pub mod profiler;
+
 #[cfg(not(feature = "use_test_strategy"))]
 #[path = "my_strategy_impl.rs"]
 pub mod my_strategy_impl;
