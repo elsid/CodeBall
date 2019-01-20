@@ -125,7 +125,6 @@ impl Strategy for MyStrategy {
 impl Default for MyStrategy {
     fn default() -> Self {
         MyStrategy {
-//            start_time: Instant::now(),
             strategy_impl: None,
         }
     }
