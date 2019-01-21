@@ -7,10 +7,6 @@ import numpy
 import matplotlib.pyplot
 
 
-def row(*args):
-    print(('{:>20}' * len(args)).format(*args))
-
-
 def main():
     raw = [json.loads(v) for v in sys.stdin]
     records = [v for v in raw if isinstance(v, dict)]
@@ -51,6 +47,10 @@ def main():
             ax.hist(v, bins='auto')
         ax.grid(True)
     matplotlib.pyplot.show()
+
+
+def row(*args):
+    print(('{:>20}' * len(args)).format(*args))
 
 
 if __name__ == '__main__':
