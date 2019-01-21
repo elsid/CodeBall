@@ -7,6 +7,11 @@ edition = "2018"
 name = "my_strategy"
 edition = "2018"
 
+[[bin]]
+name = "repeater"
+edition = "2018"
+path = "src/repeater.rs"
+
 [dependencies]
 log = "0.4.6"
 env_logger = "0.6.0"
