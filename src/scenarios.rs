@@ -59,7 +59,6 @@ pub struct JumpAtPosition<'r> {
     pub kick_ball_position: Vec3,
     pub my_max_speed: f64,
     pub my_jump_speed: f64,
-    pub ball_target: Vec3,
     pub max_time: f64,
     pub tick_time_interval: f64,
     pub micro_ticks_per_tick_before_jump: usize,
