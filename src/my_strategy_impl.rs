@@ -52,6 +52,7 @@ impl Strategy for MyStrategyImpl {
             self.last_tick = game.current_tick;
             self.update_world(me, game);
             if self.world.is_reset_ticks() {
+                self.roles.clear();
                 self.robots_priority.clear();
                 self.orders.clear();
             } else {
