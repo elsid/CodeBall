@@ -568,6 +568,8 @@ impl WatchMeJump {
                     .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
                 ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
                 ctx.simulator.me_mut().action_mut().use_nitro = true;
+            } else {
+                ctx.simulator.me_mut().action_mut().use_nitro = false;
             }
 
             if action.is_none() {
