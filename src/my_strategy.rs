@@ -85,13 +85,27 @@ pub mod my_strategy_impl;
 #[path = "my_test_strategy_impl.rs"]
 pub mod my_test_strategy_impl;
 
+#[cfg(feature = "use_goalkeeper_strategy")]
+#[path = "my_goalkeeper_strategy_impl.rs"]
+pub mod my_goalkeeper_strategy_impl;
+
+#[cfg(feature = "use_forward_strategy")]
+#[path = "my_forward_strategy_impl.rs"]
+pub mod my_forward_strategy_impl;
+
 use crate::model::{Game, Action, Robot, Rules};
 use crate::strategy::Strategy;
 
 #[cfg(feature = "use_test_strategy")]
 use self::my_test_strategy_impl::MyStrategyImpl;
 
-#[cfg(not(feature = "use_test_strategy"))]
+#[cfg(feature = "use_goalkeeper_strategy")]
+use self::my_goalkeeper_strategy_impl::MyStrategyImpl;
+
+#[cfg(feature = "use_forward_strategy")]
+use self::my_forward_strategy_impl::MyStrategyImpl;
+
+#[cfg(all(not(feature = "use_test_strategy"), not(feature = "use_goalkeeper_strategy"), not(feature = "use_forward_strategy")))]
 use self::my_strategy_impl::MyStrategyImpl;
 
 pub struct MyStrategy {

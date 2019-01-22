@@ -26,6 +26,8 @@ enable_stats = []
 enable_render = []
 enable_time = []
 use_test_strategy = []
+use_goalkeeper_strategy = []
+use_forward_strategy = []
 
 [[bench]]
 name = "simulator"
