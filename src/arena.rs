@@ -77,7 +77,7 @@ impl Arena {
     }
 
     pub fn distance_and_normal_to_quarter(&self, position: Vec3) -> (f64, Vec3) {
-        let (mut distance, mut normal) = Arena::distance_and_normal_to_ground(position);
+        let (mut distance, mut normal) = Self::distance_and_normal_to_ground(position);
         self.collide_ceiling(position, &mut distance, &mut normal);
         self.collide_side_x(position, &mut distance, &mut normal);
         self.collide_goal_side_z(position, &mut distance, &mut normal);
