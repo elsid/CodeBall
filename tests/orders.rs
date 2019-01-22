@@ -51,7 +51,7 @@ fn test_new() {
 }
 
 #[test]
-fn test_new_should_not_jump_on_ball_top() {
+fn test_try_play_should_not_jump_on_ball_top() {
     use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
@@ -119,7 +119,7 @@ fn test_new_should_not_jump_on_ball_top() {
 }
 
 #[test]
-fn test_new_far_jump() {
+fn test_try_play_far_jump() {
     use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
@@ -187,7 +187,7 @@ fn test_new_far_jump() {
 }
 
 #[test]
-fn test_new_continue_jump() {
+fn test_try_play_continue_jump() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::orders::{Order, OrderContext};
@@ -249,7 +249,7 @@ fn test_new_continue_jump() {
 }
 
 #[test]
-fn test_new_continue_jump_with_nitro() {
+fn test_try_play_continue_jump_with_nitro() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::orders::{Order, OrderContext};
@@ -310,4 +310,3 @@ fn test_new_continue_jump_with_nitro() {
         other_number: 0,
     });
 }
-

@@ -105,7 +105,7 @@ fn test_two_robots_first_ball_kick_until_goal() {
 }
 
 #[test]
-fn test_two_robots_first_ball_kick_until_goal_with_nitro() {
+fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     use my_strategy::model::Ball;
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, Solid};
