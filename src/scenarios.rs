@@ -458,7 +458,6 @@ impl FarJump {
 
         #[cfg(feature = "enable_stats")]
         {
-            ctx.stats.far_jump_simulation = true;
             ctx.stats.micro_ticks_to_jump = ctx.simulator.current_micro_tick();
             ctx.stats.time_to_jump = ctx.simulator.current_time();
         }

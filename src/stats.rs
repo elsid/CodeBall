@@ -14,8 +14,6 @@ pub struct Stats {
     pub iteration: usize,
     pub total_iterations: usize,
     pub score: i32,
-    pub jump_simulation: bool,
-    pub far_jump_simulation: bool,
     pub action_score: i32,
     pub total_micro_ticks: i32,
     pub current_step: usize,

@@ -15,7 +15,6 @@ def main():
     result = [v for v in raw if isinstance(v, list)]
     values = {k: [v.get(k) for v in records if v.get(k) is not None] for k in records[0]}
     values['time_to_score'] = [v for v in values['time_to_score']]
-    values['jump_simulation'] = [v for v in values['jump_simulation']]
     row('', 'n', 'sum', 'q95', 'min', 'max', 'mean', 'median', 'stdev')
     for k, v in values.items():
         if not v:
