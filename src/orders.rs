@@ -453,7 +453,6 @@ impl Play {
                 ball: global_simulator.ball().base(),
                 kick_ball_position: target,
                 my_max_speed: required_speed,
-                my_jump_speed: world.rules.ROBOT_MAX_JUMP_SPEED,
                 max_time: MAX_TIME,
                 tick_time_interval: time_interval,
                 micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,

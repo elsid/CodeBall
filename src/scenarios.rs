@@ -58,7 +58,6 @@ pub struct JumpAtPosition<'r> {
     pub ball: &'r Ball,
     pub kick_ball_position: Vec3,
     pub my_max_speed: f64,
-    pub my_jump_speed: f64,
     pub max_time: f64,
     pub tick_time_interval: f64,
     pub micro_ticks_per_tick_before_jump: usize,
@@ -100,7 +99,6 @@ impl JumpAtPosition<'_> {
         }
 
         action = action.or(Jump {
-            jump_speed: self.my_jump_speed,
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick: self.micro_ticks_per_tick_before_jump,
@@ -108,7 +106,7 @@ impl JumpAtPosition<'_> {
         }.perform(ctx));
 
         action = action.or(WatchMeJump {
-            jump_speed: self.my_jump_speed,
+            jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
             use_nitro: false,
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
@@ -213,7 +211,6 @@ impl WalkToPosition {
 }
 
 pub struct Jump {
-    pub jump_speed: f64,
     pub max_time: f64,
     pub tick_time_interval: f64,
     pub micro_ticks_per_tick: usize,
@@ -248,7 +245,7 @@ impl Jump {
             && ctx.simulator.current_micro_tick() < self.max_micro_ticks
             && ctx.simulator.score() == 0 {
 
-            ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
+            ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
             let target_velocity = ctx.simulator.rules().arena.projected_at(
                 ctx.simulator.ball().position(),
                 ctx.simulator.ball().position() - ctx.simulator.me().position()
@@ -368,7 +365,6 @@ impl JumpToBall {
         );
 
         let action = FarJump {
-            jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
             micro_ticks_per_tick_before_jump: self.micro_ticks_per_tick_before_jump,
@@ -441,7 +437,6 @@ impl JumpToBall {
 }
 
 pub struct FarJump {
-    pub jump_speed: f64,
     pub max_time: f64,
     pub tick_time_interval: f64,
     pub micro_ticks_per_tick_before_jump: usize,
@@ -465,7 +460,7 @@ impl FarJump {
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        ctx.simulator.me_mut().action_mut().jump_speed = self.jump_speed;
+        ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
 
         let velocity = ctx.simulator.me().velocity();
         if velocity.norm() > 0.0 {
