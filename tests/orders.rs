@@ -156,9 +156,9 @@ fn test_try_play_far_jump() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 30.0));
-    assert_eq!(result.action().jump_speed, 15.0);
     assert_eq!(result.score(), 1248);
+    assert_eq!(result.action().jump_speed, 15.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 30.0));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -218,9 +218,9 @@ fn test_try_play_continue_jump() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 0.0));
-    assert_eq!(result.action().jump_speed, 15.0);
     assert_eq!(result.score(), 2621);
+    assert_eq!(result.action().jump_speed, 15.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 0.0));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
