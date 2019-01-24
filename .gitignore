@@ -1,0 +1,7 @@
+target/
+.cache
+*.log
+*.json
+*.txt
+*.data
+TODO
