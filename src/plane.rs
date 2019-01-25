@@ -6,8 +6,8 @@ pub struct Plane {
 }
 
 impl Plane {
-    pub fn new(position: Vec3, normal: Vec3) -> Self {
-        Plane {position, normal}
+    pub const fn new(position: Vec3, normal: Vec3) -> Self {
+        Plane { position, normal }
     }
 
     pub fn distance(&self, position: Vec3) -> f64 {
@@ -24,6 +24,10 @@ impl Plane {
             *distance = distance_to;
             *normal = self.normal;
         }
+    }
+
+    pub fn distance_and_normal(&self, position: Vec3) -> (f64, Vec3) {
+        (self.distance(position), self.normal)
     }
 
     pub fn projected(value: Vec3, normal: Vec3) -> Vec3 {

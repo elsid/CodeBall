@@ -6,7 +6,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f64) -> Self {
+    pub const fn new(center: Vec3, radius: f64) -> Self {
         Sphere {center, radius}
     }
 
@@ -34,11 +34,19 @@ impl Sphere {
         }
     }
 
+    pub fn inner_distance_and_normal(&self, position: Vec3) -> (f64, Vec3) {
+        (self.distance_inner(position), self.inner_normal_to(position))
+    }
+
     pub fn outer_collide(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
         let distance_to = self.distance_outer(position);
         if *distance > distance_to {
             *distance = distance_to;
             *normal = self.outer_normal_to(position);
         }
+    }
+
+    pub fn outer_distance_and_normal(&self, position: Vec3) -> (f64, Vec3) {
+        (self.distance_outer(position), self.outer_normal_to(position))
     }
 }
