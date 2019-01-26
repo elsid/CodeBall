@@ -289,11 +289,11 @@ impl Play {
     }
 
     fn try_jump_at_position(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut InnerOrderContext) -> Option<Self> {
-        use crate::my_strategy::scenarios::MAX_TIME;
+        use crate::my_strategy::scenarios::MAX_TICKS;
 
         let time_to_play = get_min_time_to_play_ball(other, world);
 
-        if time_to_play > MAX_TIME {
+        if time_to_play > MAX_TICKS as f64 * world.rules.tick_time_interval() {
             return None;
         }
 
@@ -307,7 +307,7 @@ impl Play {
         let get_robot_action_at = make_get_robot_action_at(other);
 
         while (iterations < MAX_ITERATIONS || order.is_none())
-            && global_simulator.current_time() + time_interval < MAX_TIME
+            && global_simulator.current_tick() < MAX_TICKS
             && ctx.total_micro_ticks < MAX_TOTAL_MICRO_TICKS
             && !world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
 
@@ -377,7 +377,7 @@ impl Play {
 
     fn try_jump_near_ball(initial_simulator: &Simulator, global_simulator: &Simulator,
                           robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
-        use crate::my_strategy::scenarios::{MAX_TIME, Context, JumpAtPosition};
+        use crate::my_strategy::scenarios::{Context, JumpAtPosition};
 
         let time_interval = world.rules.tick_time_interval();
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
@@ -469,7 +469,6 @@ impl Play {
                     &local_simulator,
                     time_to_ball,
                     time_to_goal,
-                    MAX_TIME + time_interval,
                     world.game.current_tick,
                     robot.id,
                     action_id,
@@ -506,7 +505,7 @@ impl Play {
     }
 
     fn try_jump_to_ball(robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
-        use crate::my_strategy::scenarios::{MAX_TIME, Context, JumpToBall};
+        use crate::my_strategy::scenarios::{Context, JumpToBall};
 
         if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
             return None;
@@ -520,7 +519,6 @@ impl Play {
 
         let action_id = ctx.order_id_generator.next();
         let mut local_simulator = make_initial_simulator(robot, world);
-        let time_interval = world.rules.tick_time_interval();
         let mut time_to_ball = None;
         let mut time_to_goal = None;
         let mut actions = Vec::new();
@@ -559,7 +557,6 @@ impl Play {
                 &local_simulator,
                 time_to_ball,
                 time_to_goal,
-                MAX_TIME + time_interval,
                 world.game.current_tick,
                 robot.id,
                 action_id,
@@ -599,7 +596,7 @@ impl Play {
 
     fn try_continue_jump(jump_speed: f64, use_nitro: bool, robot: &Robot, world: &World, other: &[Order],
                          ctx: &mut InnerOrderContext) -> Option<Play> {
-        use crate::my_strategy::scenarios::{MAX_TIME, Context, ContinueJump};
+        use crate::my_strategy::scenarios::{Context, ContinueJump};
 
         if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
             return None;
@@ -609,7 +606,6 @@ impl Play {
         let mut simulator = make_initial_simulator(robot, world);
         let mut time_to_ball = None;
         let mut time_to_goal = None;
-        let time_interval = world.rules.tick_time_interval();
         let get_robot_action_at = make_get_robot_action_at(other);
         let mut actions = Vec::new();
         #[cfg(feature = "enable_render")]
@@ -649,7 +645,6 @@ impl Play {
                 &simulator,
                 time_to_ball,
                 time_to_goal,
-                MAX_TIME + time_interval,
                 world.game.current_tick,
                 robot.id,
                 action_id,
@@ -746,9 +741,11 @@ pub fn render_history(history: &Vec<Simulator>, render: &mut Render) {
 }
 
 fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>,
-                    time_to_goal: Option<f64>, max_time: f64, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
+                    time_to_goal: Option<f64>, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
     use crate::my_strategy::common::as_score;
+    use crate::my_strategy::scenarios::MAX_TICKS;
 
+    let max_time = (MAX_TICKS + 1) as f64 * rules.tick_time_interval();
     let ball = simulator.ball();
     let to_goal = rules.get_goal_target() - ball.position();
     let ball_goal_distance_score = if simulator.score() == 0 {

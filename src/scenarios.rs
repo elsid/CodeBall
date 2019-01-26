@@ -6,7 +6,7 @@ use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::stats::Stats;
 
 const MAX_MICRO_TICKS: i32 = 1000;
-pub const MAX_TIME: f64 = 1.6666666666666667;
+pub const MAX_TICKS: i32 = 100;
 
 pub struct Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
@@ -166,7 +166,7 @@ impl WalkToPosition {
             max_distance_to_ball
         );
 
-        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
+        while ctx.simulator.current_tick() < MAX_TICKS
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().position().distance(self.target)
@@ -242,7 +242,7 @@ impl Jump {
             ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
         );
 
-        if ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
+        if ctx.simulator.current_tick() < MAX_TICKS
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0 {
 
@@ -306,7 +306,7 @@ impl WatchBallMove {
             ctx.simulator.ball().position()
         );
 
-        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
+        while ctx.simulator.current_tick() < MAX_TICKS
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0 {
 
@@ -406,12 +406,17 @@ impl JumpToBall {
             get_my_position(time).distance(get_ball_position(time))
         };
 
-        let time = minimize1d(0.0, MAX_TIME, 10, get_distance);
+        let time = minimize1d(
+            0.0,
+            MAX_TICKS as f64 * simulator.rules().tick_time_interval(),
+            10,
+            get_distance
+        );
 
         get_distance(time) < simulator.rules().ROBOT_MAX_RADIUS + simulator.rules().BALL_RADIUS
-            && my_move_equation.get_velocity(time).y() > -ctx.simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
+            && my_move_equation.get_velocity(time).y() > -simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
             && my_move_equation.get_position(time).y() < ball_move_equation.get_position(time).y()
-            && ball_move_equation.get_position(time).y() > ball_min_y - ctx.simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
+            && ball_move_equation.get_position(time).y() > ball_min_y - simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
     }
 }
 
@@ -464,7 +469,7 @@ impl FarJump {
                 + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
         );
 
-        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
+        while ctx.simulator.current_tick() < MAX_TICKS
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
@@ -514,7 +519,7 @@ impl WatchMeJump {
             ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
         );
 
-        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
+        while ctx.simulator.current_tick() < MAX_TICKS
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().distance_to_arena() - ctx.simulator.me().radius() > 1e-3
