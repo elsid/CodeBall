@@ -6,6 +6,7 @@ use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::entity::Entity;
 use crate::my_strategy::common::IdGenerator;
+use crate::my_strategy::scenarios::Scenario;
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
@@ -208,6 +209,7 @@ pub struct Play {
     pub score: i32,
     pub time_to_ball: Option<f64>,
     pub actions: Vec<Action>,
+    pub scenario: Scenario,
     #[cfg(feature = "enable_render")]
     pub position_to_jump: Option<Vec3>,
     #[cfg(feature = "enable_render")]
@@ -277,6 +279,7 @@ impl Play {
             score: self.score,
             time_to_ball: self.time_to_ball,
             actions: self.actions.into_iter().map(|v| v.opposite()).collect(),
+            scenario: self.scenario.opposite(),
             #[cfg(feature = "enable_render")]
             position_to_jump: self.position_to_jump.map(|v| v.opposite()),
             #[cfg(feature = "enable_render")]
@@ -451,10 +454,12 @@ impl Play {
                 stats: &mut stats,
             };
 
-            let action = JumpAtPosition {
+            let scenario = JumpAtPosition {
                 position: target,
                 my_max_speed: required_speed,
-            }.perform(&mut scenario_ctx);
+            };
+
+            let action = scenario.perform(&mut scenario_ctx);
 
             *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
             ctx.total_micro_ticks += local_simulator.current_micro_tick();
@@ -488,6 +493,7 @@ impl Play {
                         score: action_score,
                         time_to_ball,
                         actions,
+                        scenario: Scenario::JumpAtPosition(scenario),
                         #[cfg(feature = "enable_render")]
                         position_to_jump: Some(target),
                         #[cfg(feature = "enable_render")]
@@ -580,6 +586,7 @@ impl Play {
                 score: action_score,
                 time_to_ball,
                 actions,
+                scenario: Scenario::None,
                 #[cfg(feature = "enable_render")]
                 position_to_jump: None,
                 #[cfg(feature = "enable_render")]
@@ -669,6 +676,7 @@ impl Play {
                 score: action_score,
                 time_to_ball,
                 actions,
+                scenario: Scenario::None,
                 #[cfg(feature = "enable_render")]
                 position_to_jump: None,
                 #[cfg(feature = "enable_render")]

@@ -8,6 +8,20 @@ use crate::my_strategy::stats::Stats;
 const MAX_MICRO_TICKS: i32 = 1000;
 pub const MAX_TICKS: i32 = 100;
 
+pub enum Scenario {
+    None,
+    JumpAtPosition(JumpAtPosition),
+}
+
+impl Scenario {
+    pub fn opposite(&self) -> Self {
+        match self {
+            Scenario::None => Scenario::None,
+            Scenario::JumpAtPosition(v) => Scenario::JumpAtPosition(v.opposite()),
+        }
+    }
+}
+
 pub struct Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
@@ -132,6 +146,13 @@ impl JumpAtPosition {
         }.perform(ctx));
 
         action
+    }
+
+    pub fn opposite(&self) -> Self {
+        JumpAtPosition {
+            position: self.position.opposite(),
+            my_max_speed: self.my_max_speed,
+        }
     }
 }
 
