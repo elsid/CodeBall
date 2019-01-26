@@ -16,7 +16,6 @@ use crate::my_strategy::stats::Stats;
 const MAX_TIME: f64 = 1.6666666666666667;
 const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 const FAR_MICRO_TICKS_PER_TICK: usize = 3;
-const MAX_MICRO_TICK: i32 = 1000;
 const MAX_TOTAL_MICRO_TICKS: i32 = 15000;
 const MAX_ITERATIONS: usize = 5;
 
@@ -456,7 +455,6 @@ impl Play {
                 tick_time_interval: time_interval,
                 micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
                 micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
-                max_micro_tick: MAX_MICRO_TICK,
             }.perform(&mut scenario_ctx);
 
             *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
@@ -489,7 +487,6 @@ impl Play {
                     };
                     stats.score = local_simulator.score();
                     stats.action_score = action_score;
-                    stats.reached_scenario_limit = local_simulator.current_micro_tick() >= MAX_MICRO_TICK;
                 }
 
                 log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
@@ -562,7 +559,6 @@ impl Play {
             tick_time_interval: time_interval,
             micro_ticks_per_tick_before_jump: NEAR_MICRO_TICKS_PER_TICK,
             micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
-            max_micro_ticks: MAX_MICRO_TICK,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
@@ -591,7 +587,6 @@ impl Play {
                 };
                 stats.score = local_simulator.score();
                 stats.action_score = action_score;
-                stats.reached_scenario_limit = local_simulator.current_micro_tick() >= MAX_MICRO_TICK;
             }
 
             log!(
@@ -664,7 +659,6 @@ impl Play {
             tick_time_interval: time_interval,
             micro_ticks_per_tick_before_land: NEAR_MICRO_TICKS_PER_TICK,
             micro_ticks_per_tick_after_land: FAR_MICRO_TICKS_PER_TICK,
-            max_micro_ticks: MAX_MICRO_TICK,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += simulator.current_micro_tick() as usize;
