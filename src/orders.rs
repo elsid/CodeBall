@@ -450,7 +450,7 @@ impl Play {
             };
 
             let action = JumpAtPosition {
-                kick_ball_position: target,
+                position: target,
                 my_max_speed: required_speed,
                 max_time: MAX_TIME,
                 tick_time_interval: time_interval,

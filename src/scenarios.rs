@@ -55,7 +55,7 @@ impl<'r, 'a, G> Context<'r, 'a, G>
 }
 
 pub struct JumpAtPosition {
-    pub kick_ball_position: Vec3,
+    pub position: Vec3,
     pub my_max_speed: f64,
     pub max_time: f64,
     pub tick_time_interval: f64,
@@ -79,7 +79,7 @@ impl JumpAtPosition {
         let before_move = ctx.simulator.current_time();
 
         let mut action = WalkToPosition {
-            target: self.kick_ball_position,
+            target: self.position,
             max_speed: self.my_max_speed,
             max_time: self.max_time,
             tick_time_interval: self.tick_time_interval,
@@ -92,7 +92,7 @@ impl JumpAtPosition {
                 ctx.current_tick, "[{}] <{}> jump now {}:{} kick_ball_position={} ball={}",
                 ctx.robot_id, ctx.action_id,
                 ctx.simulator.current_time(), ctx.simulator.current_micro_tick(),
-                ctx.simulator.me().position().distance(self.kick_ball_position),
+                ctx.simulator.me().position().distance(self.position),
                 ctx.simulator.me().position().distance(ctx.simulator.ball().position())
             );
         }
