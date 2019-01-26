@@ -66,7 +66,7 @@ impl Arena {
         if negate_z {
             position = position.with_neg_z();
         }
-        let (distance, mut normal) = self.distance_and_normal_to_quarter(position);
+        let (distance, mut normal) = self.distance_and_normal_to_quarter(&position);
         if negate_x {
             normal = normal.with_neg_x();
         }
@@ -76,7 +76,7 @@ impl Arena {
         (distance, normal)
     }
 
-    pub fn distance_and_normal_to_quarter(&self, position: Vec3) -> (f64, Vec3) {
+    pub fn distance_and_normal_to_quarter(&self, position: &Vec3) -> (f64, Vec3) {
         let (mut distance, mut normal) = Self::distance_and_normal_to_ground(position);
         self.collide_ceiling(position, &mut distance, &mut normal);
         self.collide_side_x(position, &mut distance, &mut normal);
@@ -92,61 +92,61 @@ impl Arena {
         (distance, normal)
     }
 
-    pub fn distance_and_normal_to_ground(position: Vec3) -> (f64, Vec3) {
-        (Self::ground().distance(position), Self::ground().normal())
+    pub fn distance_and_normal_to_ground(position: &Vec3) -> (f64, Vec3) {
+        (Self::ground().distance(*position), Self::ground().normal())
     }
 
-    pub fn collide_ceiling(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
-        self.ceiling().collide(position, distance, normal);
+    pub fn collide_ceiling(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
+        self.ceiling().collide(*position, distance, normal);
     }
 
-    pub fn collide_side_x(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
-        self.side_x().collide(position, distance, normal);
+    pub fn collide_side_x(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
+        self.side_x().collide(*position, distance, normal);
     }
 
-    pub fn collide_goal_side_z(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
-        self.goal_side_z().collide(position, distance, normal);
+    pub fn collide_goal_side_z(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
+        self.goal_side_z().collide(*position, distance, normal);
     }
 
-    pub fn collide_side_z(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_side_z(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.side_z(position)
-            .map(|v| v.collide(position, distance, normal));
+            .map(|v| v.collide(*position, distance, normal));
     }
 
-    pub fn collide_goal_side_x_and_ceiling(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_goal_side_x_and_ceiling(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.goal_side_x(position)
-            .map(|v| v.collide(position, distance, normal));
+            .map(|v| v.collide(*position, distance, normal));
         self.goal_ceiling(position)
-            .map(|v| v.collide(position, distance, normal));
+            .map(|v| v.collide(*position, distance, normal));
     }
 
-    pub fn collide_goal_back_corners(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_goal_back_corners(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.goal_back_corners(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_corner(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_corner(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.corner(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_goal_outer_corner(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_goal_outer_corner(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.goal_outer_front_corner(position)
-            .map(|v| v.outer_collide(position, distance, normal));
+            .map(|v| v.outer_collide(*position, distance, normal));
         self.goal_outer_ceiling_corner(position)
-            .map(|v| v.outer_collide(position, distance, normal));
+            .map(|v| v.outer_collide(*position, distance, normal));
         self.goal_outer_top_corner(position)
-            .map(|v| v.outer_collide(position, distance, normal));
+            .map(|v| v.outer_collide(*position, distance, normal));
     }
 
-    pub fn collide_goal_inside_top_corners(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_goal_inside_top_corners(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.goal_inside_top_corner_side_x(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
         self.goal_inside_top_corner_side_z(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_bottom_corners(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_bottom_corners(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.collide_bottom_corner_side_x(position, distance, normal);
         self.collide_bottom_corner_side_z(position, distance, normal);
         self.collide_bottom_corner_side_z_goal(position, distance, normal);
@@ -155,43 +155,43 @@ impl Arena {
         self.collide_bottom_corner(position, distance, normal);
     }
 
-    pub fn collide_bottom_corner_side_x(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_bottom_corner_side_x(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.bottom_corner_side_x(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_bottom_corner_side_z(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_bottom_corner_side_z(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.bottom_corner_side_z(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_bottom_corner_side_z_goal(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_bottom_corner_side_z_goal(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.bottom_goal_corner_side_z(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_bottom_corner_outer_goal(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_bottom_corner_outer_goal(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.bottom_goal_outer_corner(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_bottom_corner_side_x_goal(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_bottom_corner_side_x_goal(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.bottom_goal_corner_side_x(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_bottom_corner(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_bottom_corner(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.bottom_corner(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
-    pub fn collide_ceiling_corners(&self, position: Vec3, distance: &mut f64, normal: &mut Vec3) {
+    pub fn collide_ceiling_corners(&self, position: &Vec3, distance: &mut f64, normal: &mut Vec3) {
         self.ceiling_corner_side_x(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
         self.ceiling_corner_side_z(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
         self.ceiling_corner(position)
-            .map(|v| v.inner_collide(position, distance, normal));
+            .map(|v| v.inner_collide(*position, distance, normal));
     }
 
     pub const fn ground() -> Plane {
@@ -222,7 +222,7 @@ impl Arena {
         )
     }
 
-    pub fn side_z(&self, position: Vec3) -> Option<Plane> {
+    pub fn side_z(&self, position: &Vec3) -> Option<Plane> {
         let v = position.xy() - Vec2::new(
             (self.goal_width / 2.0) - self.goal_top_radius,
             self.goal_height - self.goal_top_radius
@@ -239,7 +239,7 @@ impl Arena {
         }
     }
 
-    pub fn goal_side_x(&self, position: Vec3) -> Option<Plane> {
+    pub fn goal_side_x(&self, position: &Vec3) -> Option<Plane> {
         if position.z() >= (self.depth / 2.0) + self.goal_side_radius {
             Some(Plane::new(
                 Vec3::new(self.goal_width / 2.0, 0.0, 0.0),
@@ -250,7 +250,7 @@ impl Arena {
         }
     }
 
-    pub fn goal_ceiling(&self, position: Vec3) -> Option<Plane> {
+    pub fn goal_ceiling(&self, position: &Vec3) -> Option<Plane> {
         if position.z() >= (self.depth / 2.0) + self.goal_side_radius {
             Some(Plane::new(
                 Vec3::new(0.0, self.goal_height, 0.0),
@@ -261,7 +261,7 @@ impl Arena {
         }
     }
 
-    pub fn goal_back_corners(&self, position: Vec3) -> Option<Sphere> {
+    pub fn goal_back_corners(&self, position: &Vec3) -> Option<Sphere> {
         if position.z() > (self.depth / 2.0) + self.goal_depth - self.bottom_radius {
             Some(Sphere::new(
                 Vec3::new(
@@ -282,7 +282,7 @@ impl Arena {
         }
     }
 
-    pub fn corner(&self, position: Vec3) -> Option<Sphere> {
+    pub fn corner(&self, position: &Vec3) -> Option<Sphere> {
         if position.x() > (self.width / 2.0) - self.corner_radius
             && position.z() > (self.depth / 2.0) - self.corner_radius {
             Some(Sphere::new(
@@ -298,7 +298,7 @@ impl Arena {
         }
     }
 
-    pub fn goal_outer_front_corner(&self, position: Vec3) -> Option<Sphere> {
+    pub fn goal_outer_front_corner(&self, position: &Vec3) -> Option<Sphere> {
         if position.z() < (self.depth / 2.0) + self.goal_side_radius
             && position.x() < (self.goal_width / 2.0) + self.goal_side_radius {
             Some(Sphere::new(
@@ -314,7 +314,7 @@ impl Arena {
         }
     }
 
-    pub fn goal_outer_ceiling_corner(&self, position: Vec3) -> Option<Sphere> {
+    pub fn goal_outer_ceiling_corner(&self, position: &Vec3) -> Option<Sphere> {
         if position.z() < (self.depth / 2.0) + self.goal_side_radius
             && position.y() < self.goal_height + self.goal_side_radius {
             Some(Sphere::new(
@@ -330,7 +330,7 @@ impl Arena {
         }
     }
 
-    pub fn goal_outer_top_corner(&self, position: Vec3) -> Option<Sphere> {
+    pub fn goal_outer_top_corner(&self, position: &Vec3) -> Option<Sphere> {
         if position.z() < (self.depth / 2.0) + self.goal_side_radius {
             let o = Vec2::new(
                 (self.goal_width / 2.0) - self.goal_top_radius,
@@ -351,7 +351,7 @@ impl Arena {
         }
     }
 
-    pub fn goal_inside_top_corner_side_x(&self, position: Vec3) -> Option<Sphere> {
+    pub fn goal_inside_top_corner_side_x(&self, position: &Vec3) -> Option<Sphere> {
         if position.z() > (self.depth / 2.0) + self.goal_side_radius
             && position.y() > self.goal_height - self.goal_top_radius
             && position.x() > (self.goal_width / 2.0) - self.goal_top_radius {
@@ -368,7 +368,7 @@ impl Arena {
         }
     }
 
-    pub fn goal_inside_top_corner_side_z(&self, position: Vec3) -> Option<Sphere> {
+    pub fn goal_inside_top_corner_side_z(&self, position: &Vec3) -> Option<Sphere> {
         if position.z() > (self.depth / 2.0) + self.goal_side_radius
             && position.y() > self.goal_height - self.goal_top_radius
             && position.z() > (self.depth / 2.0) + self.goal_depth - self.goal_top_radius {
@@ -385,7 +385,7 @@ impl Arena {
         }
     }
 
-    pub fn bottom_corner_side_x(&self, position: Vec3) -> Option<Sphere> {
+    pub fn bottom_corner_side_x(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() < self.bottom_radius
             && position.x() > (self.width / 2.0) - self.bottom_radius {
             Some(Sphere::new(
@@ -401,7 +401,7 @@ impl Arena {
         }
     }
 
-    pub fn bottom_corner_side_z(&self, position: Vec3) -> Option<Sphere> {
+    pub fn bottom_corner_side_z(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() < self.bottom_radius
             && position.z() > (self.depth / 2.0) - self.bottom_radius
             && position.x() >= (self.goal_width / 2.0) + self.goal_side_radius {
@@ -418,7 +418,7 @@ impl Arena {
         }
     }
 
-    pub fn bottom_goal_corner_side_z(&self, position: Vec3) -> Option<Sphere> {
+    pub fn bottom_goal_corner_side_z(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() < self.bottom_radius
             && position.z() > (self.depth / 2.0) + self.goal_depth - self.bottom_radius {
             Some(Sphere::new(
@@ -434,7 +434,7 @@ impl Arena {
         }
     }
 
-    pub fn bottom_goal_outer_corner(&self, position: Vec3) -> Option<Sphere> {
+    pub fn bottom_goal_outer_corner(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() < self.bottom_radius {
             let o = Vec2::new(
                 (self.goal_width / 2.0) + self.goal_side_radius,
@@ -455,7 +455,7 @@ impl Arena {
         }
     }
 
-    pub fn bottom_goal_corner_side_x(&self, position: Vec3) -> Option<Sphere> {
+    pub fn bottom_goal_corner_side_x(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() < self.bottom_radius
             && position.z() >= (self.depth / 2.0) + self.goal_side_radius
             && position.x() > (self.goal_width / 2.0) - self.bottom_radius {
@@ -472,7 +472,7 @@ impl Arena {
         }
     }
 
-    pub fn bottom_corner(&self, position: Vec3) -> Option<Sphere> {
+    pub fn bottom_corner(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() < self.bottom_radius
             && position.x() > (self.width / 2.0) - self.corner_radius
             && position.z() > (self.depth / 2.0) - self.corner_radius {
@@ -497,7 +497,7 @@ impl Arena {
         }
     }
 
-    pub fn ceiling_corner_side_x(&self, position: Vec3) -> Option<Sphere> {
+    pub fn ceiling_corner_side_x(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() > self.height - self.top_radius
             && position.x() > (self.width / 2.0) - self.top_radius {
             Some(Sphere::new(
@@ -513,7 +513,7 @@ impl Arena {
         }
     }
 
-    pub fn ceiling_corner_side_z(&self, position: Vec3) -> Option<Sphere> {
+    pub fn ceiling_corner_side_z(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() > self.height - self.top_radius
             && position.z() > (self.depth / 2.0) - self.top_radius {
             Some(Sphere::new(
@@ -529,7 +529,7 @@ impl Arena {
         }
     }
 
-    pub fn ceiling_corner(&self, position: Vec3) -> Option<Sphere> {
+    pub fn ceiling_corner(&self, position: &Vec3) -> Option<Sphere> {
         if position.y() > self.height - self.top_radius
             && position.x() > (self.width / 2.0) - self.corner_radius
             && position.z() > (self.depth / 2.0) - self.corner_radius {
