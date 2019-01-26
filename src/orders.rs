@@ -450,7 +450,6 @@ impl Play {
             };
 
             let action = JumpAtPosition {
-                ball: global_simulator.ball().base(),
                 kick_ball_position: target,
                 my_max_speed: required_speed,
                 max_time: MAX_TIME,

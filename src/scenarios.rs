@@ -1,4 +1,4 @@
-use crate::model::{Action, Ball};
+use crate::model::Action;
 use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec3::Vec3;
@@ -54,8 +54,7 @@ impl<'r, 'a, G> Context<'r, 'a, G>
     }
 }
 
-pub struct JumpAtPosition<'r> {
-    pub ball: &'r Ball,
+pub struct JumpAtPosition {
     pub kick_ball_position: Vec3,
     pub my_max_speed: f64,
     pub max_time: f64,
@@ -65,7 +64,7 @@ pub struct JumpAtPosition<'r> {
     pub max_micro_tick: i32,
 }
 
-impl JumpAtPosition<'_> {
+impl JumpAtPosition {
     pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
