@@ -454,7 +454,6 @@ impl Play {
                 position: target,
                 my_max_speed: required_speed,
                 max_time: MAX_TIME,
-                tick_time_interval: time_interval,
             }.perform(&mut scenario_ctx);
 
             *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
@@ -550,7 +549,6 @@ impl Play {
 
         let action = JumpToBall {
             max_time: MAX_TIME,
-            tick_time_interval: time_interval,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
@@ -642,7 +640,6 @@ impl Play {
             jump_speed,
             use_nitro,
             max_time: MAX_TIME,
-            tick_time_interval: time_interval,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += simulator.current_micro_tick() as usize;
