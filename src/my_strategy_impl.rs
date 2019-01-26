@@ -294,7 +294,13 @@ impl MyStrategyImpl {
                     let order = Order::try_play(robot, world, &all_orders[0..i], max_z, &mut ctx);
                     if order.is_idle() {
                         match role {
-                            Role::Forward(_) => Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator),
+                            Role::Forward(_) => {
+                                if robot.nitro_amount < world.rules.START_NITRO_AMOUNT {
+                                    Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator)
+                                } else {
+                                    order
+                                }
+                            },
                             Role::Goalkeeper(_) => {
                                 if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
                                     && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
