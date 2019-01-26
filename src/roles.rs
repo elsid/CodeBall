@@ -141,8 +141,12 @@ impl Goalkeeper {
     }
 
     pub fn max_z(world: &World) -> f64 {
-        (-world.rules.arena.depth / 2.0 + world.rules.arena.corner_radius + world.rules.BALL_RADIUS + 10.0)
-            .max(-world.rules.NITRO_PACK_Z)
+        if world.game.robots.len() > 4 {
+            -world.rules.NITRO_PACK_Z
+        } else {
+            (-world.rules.arena.depth / 2.0 + world.rules.arena.corner_radius + world.rules.BALL_RADIUS + 10.0)
+                .max(-world.rules.NITRO_PACK_Z)
+        }
     }
 
     pub fn can_quit(&self, world: &World) -> bool {
