@@ -339,17 +339,17 @@ impl Play {
 
                 iterations += 1;
 
-                let candidate = Self::try_jump_near_ball(&initial_simulator, &global_simulator, robot, world, other, ctx);
+                let mut candidate = Self::try_jump_near_ball(&initial_simulator, &global_simulator, robot, world, other, ctx);
 
-                if candidate.is_some() && (order.is_none() || order.as_ref().unwrap().score < candidate.as_ref().unwrap().score) {
-                    order = candidate;
-
-                    #[cfg(feature = "enable_stats")]
-                    {
-                        order.as_mut().unwrap().stats.iteration = iterations;
-                        order.as_mut().unwrap().stats.current_step = steps[iterations.min(steps.len() - 1)];
+                #[cfg(feature = "enable_stats")]
+                {
+                    if let Some(candidate) = candidate.as_mut() {
+                        candidate.stats.iteration = iterations;
+                        candidate.stats.current_step = steps[iterations.min(steps.len() - 1)];
                     }
                 }
+
+                order = Self::get_with_max_score(order, candidate);
             }
 
             for _ in 0..steps[iterations.min(steps.len() - 1)] {
