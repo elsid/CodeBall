@@ -6,7 +6,7 @@ use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::entity::Entity;
 use crate::my_strategy::common::IdGenerator;
-use crate::my_strategy::scenarios::Scenario;
+use crate::my_strategy::scenarios::{Scenario, NEAR_MICRO_TICKS_PER_TICK, FAR_MICRO_TICKS_PER_TICK};
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
@@ -14,8 +14,6 @@ use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
-const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 const MAX_TOTAL_MICRO_TICKS: i32 = 15000;
 const MAX_ITERATIONS: usize = 5;
 

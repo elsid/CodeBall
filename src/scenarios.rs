@@ -7,6 +7,8 @@ use crate::my_strategy::stats::Stats;
 
 const MAX_MICRO_TICKS: i32 = 1000;
 pub const MAX_TICKS: i32 = 100;
+pub const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
+pub const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 
 pub enum Scenario {
     None,
@@ -95,6 +97,12 @@ impl<'r, 'a, G> Context<'r, 'a, G>
                 None
             };
             self.stats.score = self.simulator.score();
+
+            if micro_ticks_per_tick == NEAR_MICRO_TICKS_PER_TICK {
+                self.stats.ticks_with_near_micro_ticks += 1;
+            } else {
+                self.stats.ticks_with_far_micro_ticks += 1;
+            }
         }
     }
 }

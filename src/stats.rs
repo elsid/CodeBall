@@ -21,6 +21,8 @@ pub struct Stats {
     pub reached_play_limit: bool,
     pub reached_scenario_limit: bool,
     pub other_number: usize,
+    pub ticks_with_near_micro_ticks: usize,
+    pub ticks_with_far_micro_ticks: usize,
 }
 
 impl Stats {
