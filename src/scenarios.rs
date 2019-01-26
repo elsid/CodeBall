@@ -215,7 +215,7 @@ impl WalkToPosition {
                 action = Some(ctx.simulator.me().action().clone());
             }
 
-            ctx.tick(TickType::Near);
+            ctx.tick(TickType::Far);
 
             log!(
                 ctx.current_tick, "[{}] <{}> move {}:{} target={}/{} ball={}/{}",
