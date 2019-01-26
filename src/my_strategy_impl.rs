@@ -244,7 +244,7 @@ impl MyStrategyImpl {
 
         let opponents_orders = world.game.robots.iter()
             .filter(|v| {
-                !v.is_teammate && v.position().distance(world.game.ball.position()) < 10.0
+                !v.is_teammate && v.position().distance(world.game.ball.position()) < 15.0
             })
             .min_by_key(|v| {
                 as_score(v.position().distance(world.game.ball.position()))
