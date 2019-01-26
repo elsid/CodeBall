@@ -576,6 +576,9 @@ impl Simulator {
 
         rng.shuffle(&mut self.robots[..]);
 
+        let min_e = self.rules.MIN_HIT_E;
+        let max_e = self.rules.MAX_HIT_E;
+
         for robot in self.robots.iter_mut() {
             if robot.is_me && self.ignore_me {
                 continue;
@@ -620,42 +623,34 @@ impl Simulator {
             if self.robots[i].is_me && self.ignore_me {
                 continue;
             }
-            for j in i + 1 .. self.robots.len() {
-                if self.robots[j].is_me && self.ignore_me {
+            let (left, right) = self.robots.split_at_mut(i + 1);
+            for j in 0 .. right.len() {
+                if right[j].is_me && self.ignore_me {
                     continue;
                 }
-                let mut robot_i = self.robots[i].clone();
-                let mut robot_j = self.robots[j].clone();
-                let e = || { rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E) };
-                Simulator::collide(e, &mut robot_i, &mut robot_j);
-                self.robots[i] = robot_i;
-                self.robots[j] = robot_j;
+                let e = || { rng.gen_range(min_e, max_e) };
+                Simulator::collide(e, &mut left[i], &mut right[j]);
             }
         }
-
-        let mut ball = self.ball.clone();
 
         for i in 0 .. self.robots.len() {
             if self.robots[i].is_me && self.ignore_me {
                 continue;
             }
-            let mut robot = self.robots[i].clone();
-            let e = || { rng.gen_range(self.rules.MIN_HIT_E, self.rules.MAX_HIT_E) };
-            let collision_type = Simulator::collide(e, &mut robot, &mut ball);
-            let touch_normal = self.rules.arena.collide(&mut robot);
+            let robot = &mut self.robots[i];
+            let e = || { rng.gen_range(min_e, max_e) };
+            let collision_type = Simulator::collide(e, robot, &mut self.ball);
+            let touch_normal = self.rules.arena.collide(robot);
             robot.set_touch_normal(touch_normal);
             if collision_type != RobotCollisionType::None {
                 robot.collision_type = robot.collision_type.with(collision_type);
-                ball.collision_type = ball.collision_type.with(BallCollisionType::Robot);
+                self.ball.collision_type = self.ball.collision_type.with(BallCollisionType::Robot);
             }
-            self.robots[i] = robot;
         }
 
-        if self.rules.arena.collide(&mut ball).is_some() {
-            ball.collision_type = ball.collision_type.with(BallCollisionType::Arena);
+        if self.rules.arena.collide(&mut self.ball).is_some() {
+            self.ball.collision_type = self.ball.collision_type.with(BallCollisionType::Arena);
         }
-
-        self.ball = ball;
 
         if self.score == 0 {
             if self.ball.position().z() > self.rules.arena.depth / 2.0 + self.ball.radius() {
