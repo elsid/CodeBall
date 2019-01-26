@@ -255,7 +255,7 @@ impl MyStrategyImpl {
             .into_iter()
             .collect::<Vec<_>>();
 
-        let mut orders = self.robots_priority.iter()
+        let mut teammates_orders = self.robots_priority.iter()
             .enumerate()
             .map(|(n, robot_id)| {
                 let robot = world.get_robot(*robot_id);
@@ -267,7 +267,7 @@ impl MyStrategyImpl {
             })
             .collect::<Vec<_>>();
 
-        orders.sort_by_key(|(n, order)| {
+        teammates_orders.sort_by_key(|(n, order)| {
             if has_orders {
                 -(order.score() - *n as i32 * ROBOT_PRIORITY_CHANGE_GAP)
             } else {
@@ -278,7 +278,7 @@ impl MyStrategyImpl {
         let opponents_orders_num = opponents_orders.len();
         let mut all_orders = opponents_orders;
 
-        for (_, order) in orders.into_iter() {
+        for (_, order) in teammates_orders.into_iter() {
             all_orders.push(order);
         }
 
