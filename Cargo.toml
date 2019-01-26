@@ -36,3 +36,7 @@ harness = false
 [[bench]]
 name = "arena"
 harness = false
+
+[[bench]]
+name = "my_strategy_impl"
+harness = false
