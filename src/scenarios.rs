@@ -57,6 +57,14 @@ impl<'r, 'a, G> Context<'r, 'a, G>
         #[cfg(feature = "enable_stats")]
         {
             self.stats.reached_scenario_limit = self.simulator.current_micro_tick() >= MAX_MICRO_TICKS;
+            self.stats.micro_ticks_to_end = self.simulator.current_micro_tick();
+            self.stats.time_to_end = self.simulator.current_time();
+            self.stats.time_to_score = if self.simulator.score() != self.stats.score {
+                Some(self.simulator.current_time())
+            } else {
+                None
+            };
+            self.stats.score = self.simulator.score();
         }
     }
 }

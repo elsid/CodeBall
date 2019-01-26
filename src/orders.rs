@@ -478,14 +478,6 @@ impl Play {
 
                 #[cfg(feature = "enable_stats")]
                 {
-                    stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-                    stats.time_to_end = local_simulator.current_time();
-                    stats.time_to_score = if local_simulator.score() != 0 {
-                        Some(stats.time_to_end)
-                    } else {
-                        None
-                    };
-                    stats.score = local_simulator.score();
                     stats.action_score = action_score;
                 }
 
@@ -578,14 +570,6 @@ impl Play {
 
             #[cfg(feature = "enable_stats")]
             {
-                stats.micro_ticks_to_end = local_simulator.current_micro_tick();
-                stats.time_to_end = local_simulator.current_time();
-                stats.time_to_score = if local_simulator.score() != 0 {
-                    Some(stats.time_to_end)
-                } else {
-                    None
-                };
-                stats.score = local_simulator.score();
                 stats.action_score = action_score;
             }
 
@@ -678,14 +662,6 @@ impl Play {
 
             #[cfg(feature = "enable_stats")]
             {
-                stats.micro_ticks_to_end = simulator.current_micro_tick();
-                stats.time_to_end = simulator.current_time();
-                stats.time_to_score = if simulator.score() != 0 {
-                    Some(stats.time_to_end)
-                } else {
-                    None
-                };
-                stats.score = simulator.score();
                 stats.action_score = action_score;
             }
 
