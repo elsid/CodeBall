@@ -426,21 +426,10 @@ impl Play {
             );
 
             let mut local_simulator = initial_simulator.clone();
-            let velocity = if distance_to_target > 1e-3 {
-                to_target.normalized() * required_speed
-            } else {
-                Vec3::default()
-            };
-
-            log!(
-                world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}",
-                robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
-                velocity.norm(), velocity
-            );
 
             let distance_to_ball = local_simulator.me().position()
                 .distance(local_simulator.ball().position());
-            let ball_distance_limit  = ball_distance_limit + velocity.norm() * time_interval;
+            let ball_distance_limit  = ball_distance_limit + required_speed * time_interval;
             let near_micro_ticks_per_tick = if distance_to_ball > ball_distance_limit {
                 log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
                 FAR_MICRO_TICKS_PER_TICK
