@@ -59,6 +59,7 @@ pub struct RobotExt {
     collision_type: RobotCollisionType,
     distance_to_arena: f64,
     normal_to_arena: Vec3,
+    ignore: bool,
 }
 
 impl RobotExt {
@@ -73,6 +74,7 @@ impl RobotExt {
             collision_type: RobotCollisionType::None,
             distance_to_arena: 0.0,
             normal_to_arena: Vec3::default(),
+            ignore: false,
         }
     }
 
@@ -87,6 +89,7 @@ impl RobotExt {
             collision_type: self.collision_type,
             distance_to_arena: self.distance_to_arena,
             normal_to_arena: self.normal_to_arena.opposite(),
+            ignore: self.ignore,
         }
     }
 
@@ -397,7 +400,6 @@ pub struct Simulator {
     current_time: f64,
     score: i32,
     me_index: usize,
-    ignore_me: bool,
 }
 
 impl Simulator {
@@ -437,6 +439,7 @@ impl Simulator {
                     collision_type: RobotCollisionType::None,
                     distance_to_arena: distance,
                     normal_to_arena: normal,
+                    ignore: false,
                 }
             })
             .collect();
@@ -464,7 +467,6 @@ impl Simulator {
             current_time: 0.0,
             score: 0,
             me_index,
-            ignore_me: false,
         }
     }
 
@@ -480,7 +482,6 @@ impl Simulator {
             current_time: self.current_time,
             score: self.score,
             me_index: self.me_index,
-            ignore_me: self.ignore_me,
         }
     }
 
@@ -543,7 +544,7 @@ impl Simulator {
     }
 
     pub fn set_ignore_me(&mut self, value: bool) {
-        self.ignore_me = value;
+        self.me_mut().ignore = value;
     }
 
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize, rng: &mut XorShiftRng) {
@@ -580,7 +581,7 @@ impl Simulator {
         let max_e = self.rules.MAX_HIT_E;
 
         for robot in self.robots.iter_mut() {
-            if robot.is_me && self.ignore_me {
+            if robot.ignore {
                 continue;
             }
             if let Some(touch_normal) = robot.touch_normal() {
@@ -620,12 +621,12 @@ impl Simulator {
         self.ball.shift(time_interval, self.rules.GRAVITY, self.rules.MAX_ENTITY_SPEED);
 
         for i in 0 .. self.robots.len() - 1 {
-            if self.robots[i].is_me && self.ignore_me {
+            if self.robots[i].ignore {
                 continue;
             }
             let (left, right) = self.robots.split_at_mut(i + 1);
             for j in 0 .. right.len() {
-                if right[j].is_me && self.ignore_me {
+                if right[j].ignore {
                     continue;
                 }
                 let e = || { rng.gen_range(min_e, max_e) };
@@ -634,7 +635,7 @@ impl Simulator {
         }
 
         for i in 0 .. self.robots.len() {
-            if self.robots[i].is_me && self.ignore_me {
+            if self.robots[i].ignore {
                 continue;
             }
             let robot = &mut self.robots[i];
