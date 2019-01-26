@@ -594,7 +594,7 @@ impl Play {
         }
     }
 
-    fn try_continue_jump(jump_speed: f64, use_nitro: bool, robot: &Robot, world: &World, other: &[Order],
+    fn try_continue_jump(jump_speed: f64, allow_nitro: bool, robot: &Robot, world: &World, other: &[Order],
                          ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, ContinueJump};
 
@@ -633,7 +633,7 @@ impl Play {
 
         let action = ContinueJump {
             jump_speed,
-            use_nitro,
+            allow_nitro: allow_nitro,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += simulator.current_micro_tick() as usize;
@@ -659,7 +659,7 @@ impl Play {
                 world.game.current_tick,
                 "[{}] <{}> suggest action continue jump {}:{} score={} jump_speed={} nitro={}",
                 robot.id, action_id, simulator.current_time(), simulator.current_micro_tick(),
-                action_score, jump_speed, use_nitro
+                action_score, jump_speed, allow_nitro
             );
 
             Some(Play {
