@@ -6,6 +6,7 @@ use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::stats::Stats;
 
 const MAX_MICRO_TICKS: i32 = 1000;
+pub const MAX_TIME: f64 = 1.6666666666666667;
 
 pub struct Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
@@ -87,7 +88,6 @@ impl<'r, 'a, G> Context<'r, 'a, G>
 pub struct JumpAtPosition {
     pub position: Vec3,
     pub my_max_speed: f64,
-    pub max_time: f64,
 }
 
 impl JumpAtPosition {
@@ -107,7 +107,6 @@ impl JumpAtPosition {
         let mut action = WalkToPosition {
             target: self.position,
             max_speed: self.my_max_speed,
-            max_time: self.max_time,
         }.perform(ctx);
 
         if before_move == ctx.simulator.current_time() {
@@ -121,17 +120,14 @@ impl JumpAtPosition {
         }
 
         action = action.or(Jump {
-            max_time: self.max_time,
         }.perform(ctx));
 
         action = action.or(WatchMeJump {
             jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
             use_nitro: false,
-            max_time: self.max_time,
         }.perform(ctx));
 
         action = action.or(WatchBallMove {
-            max_time: self.max_time,
             stop: true,
         }.perform(ctx));
 
@@ -142,7 +138,6 @@ impl JumpAtPosition {
 pub struct WalkToPosition {
     pub target: Vec3,
     pub max_speed: f64,
-    pub max_time: f64,
 }
 
 impl WalkToPosition {
@@ -171,7 +166,7 @@ impl WalkToPosition {
             max_distance_to_ball
         );
 
-        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < self.max_time
+        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().position().distance(self.target)
@@ -221,7 +216,6 @@ impl WalkToPosition {
 }
 
 pub struct Jump {
-    pub max_time: f64,
 }
 
 impl Jump {
@@ -248,7 +242,7 @@ impl Jump {
             ctx.simulator.current_time(), ctx.simulator.current_micro_tick()
         );
 
-        if ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < self.max_time
+        if ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0 {
 
@@ -279,7 +273,6 @@ impl Jump {
 }
 
 pub struct WatchBallMove {
-    pub max_time: f64,
     pub stop: bool,
 }
 
@@ -313,7 +306,7 @@ impl WatchBallMove {
             ctx.simulator.ball().position()
         );
 
-        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < self.max_time
+        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0 {
 
@@ -338,7 +331,6 @@ impl WatchBallMove {
 }
 
 pub struct JumpToBall {
-    pub max_time: f64,
 }
 
 impl JumpToBall {
@@ -365,17 +357,14 @@ impl JumpToBall {
         );
 
         let action = FarJump {
-            max_time: self.max_time,
         }.perform(ctx);
 
         WatchMeJump {
             jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
             use_nitro: false,
-            max_time: self.max_time,
         }.perform(ctx);
 
         WatchBallMove {
-            max_time: self.max_time,
             stop: false,
         }.perform(ctx);
 
@@ -417,7 +406,7 @@ impl JumpToBall {
             get_my_position(time).distance(get_ball_position(time))
         };
 
-        let time = minimize1d(0.0, self.max_time, 10, get_distance);
+        let time = minimize1d(0.0, MAX_TIME, 10, get_distance);
 
         get_distance(time) < simulator.rules().ROBOT_MAX_RADIUS + simulator.rules().BALL_RADIUS
             && my_move_equation.get_velocity(time).y() > -ctx.simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
@@ -427,7 +416,6 @@ impl JumpToBall {
 }
 
 pub struct FarJump {
-    pub max_time: f64,
 }
 
 impl FarJump {
@@ -476,7 +464,7 @@ impl FarJump {
                 + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
         );
 
-        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < self.max_time
+        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
@@ -504,7 +492,6 @@ impl FarJump {
 pub struct WatchMeJump {
     pub jump_speed: f64,
     pub use_nitro: bool,
-    pub max_time: f64,
 }
 
 impl WatchMeJump {
@@ -527,7 +514,7 @@ impl WatchMeJump {
             ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
         );
 
-        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < self.max_time
+        while ctx.simulator.current_time() + ctx.simulator.rules().tick_time_interval() < MAX_TIME
             && ctx.simulator.current_micro_tick() < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().distance_to_arena() - ctx.simulator.me().radius() > 1e-3
@@ -572,7 +559,6 @@ impl WatchMeJump {
 pub struct ContinueJump {
     pub jump_speed: f64,
     pub use_nitro: bool,
-    pub max_time: f64,
 }
 
 impl ContinueJump {
@@ -582,11 +568,9 @@ impl ContinueJump {
         let mut action = WatchMeJump {
             jump_speed: self.jump_speed,
             use_nitro: self.use_nitro,
-            max_time: self.max_time,
         }.perform(ctx);
 
         action = action.or(WatchBallMove {
-            max_time: self.max_time,
             stop: true,
         }.perform(ctx));
 

@@ -13,7 +13,6 @@ use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-const MAX_TIME: f64 = 1.6666666666666667;
 const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 const MAX_TOTAL_MICRO_TICKS: i32 = 15000;
@@ -290,6 +289,8 @@ impl Play {
     }
 
     fn try_jump_at_position(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut InnerOrderContext) -> Option<Self> {
+        use crate::my_strategy::scenarios::MAX_TIME;
+
         let time_to_play = get_min_time_to_play_ball(other, world);
 
         if time_to_play > MAX_TIME {
@@ -376,7 +377,7 @@ impl Play {
 
     fn try_jump_near_ball(initial_simulator: &Simulator, global_simulator: &Simulator,
                           robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
-        use crate::my_strategy::scenarios::{Context, JumpAtPosition};
+        use crate::my_strategy::scenarios::{MAX_TIME, Context, JumpAtPosition};
 
         let time_interval = world.rules.tick_time_interval();
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
@@ -453,7 +454,6 @@ impl Play {
             let action = JumpAtPosition {
                 position: target,
                 my_max_speed: required_speed,
-                max_time: MAX_TIME,
             }.perform(&mut scenario_ctx);
 
             *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
@@ -506,7 +506,7 @@ impl Play {
     }
 
     fn try_jump_to_ball(robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
-        use crate::my_strategy::scenarios::{Context, JumpToBall};
+        use crate::my_strategy::scenarios::{MAX_TIME, Context, JumpToBall};
 
         if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
             return None;
@@ -548,7 +548,6 @@ impl Play {
         };
 
         let action = JumpToBall {
-            max_time: MAX_TIME,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
@@ -600,7 +599,7 @@ impl Play {
 
     fn try_continue_jump(jump_speed: f64, use_nitro: bool, robot: &Robot, world: &World, other: &[Order],
                          ctx: &mut InnerOrderContext) -> Option<Play> {
-        use crate::my_strategy::scenarios::{Context, ContinueJump};
+        use crate::my_strategy::scenarios::{MAX_TIME, Context, ContinueJump};
 
         if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
             return None;
@@ -639,7 +638,6 @@ impl Play {
         let action = ContinueJump {
             jump_speed,
             use_nitro,
-            max_time: MAX_TIME,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += simulator.current_micro_tick() as usize;
