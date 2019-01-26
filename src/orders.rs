@@ -417,7 +417,7 @@ impl Play {
                 Vec3::default()
             };
             log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
-            let before_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
+            let near_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
                 log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
                 FAR_MICRO_TICKS_PER_TICK
             } else {
@@ -442,6 +442,8 @@ impl Play {
                 time_to_goal: &mut time_to_goal,
                 get_robot_action_at: make_get_robot_action_at(other),
                 actions: &mut actions,
+                near_micro_ticks_per_tick,
+                far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
                 #[cfg(feature = "enable_render")]
                 history: &mut history,
                 #[cfg(feature = "enable_stats")]
@@ -453,8 +455,6 @@ impl Play {
                 my_max_speed: required_speed,
                 max_time: MAX_TIME,
                 tick_time_interval: time_interval,
-                micro_ticks_per_tick_before_jump: before_micro_ticks_per_tick,
-                micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
             }.perform(&mut scenario_ctx);
 
             *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
@@ -540,6 +540,8 @@ impl Play {
             time_to_goal: &mut time_to_goal,
             get_robot_action_at: make_get_robot_action_at(other),
             actions: &mut actions,
+            near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
+            far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -549,8 +551,6 @@ impl Play {
         let action = JumpToBall {
             max_time: MAX_TIME,
             tick_time_interval: time_interval,
-            micro_ticks_per_tick_before_jump: NEAR_MICRO_TICKS_PER_TICK,
-            micro_ticks_per_tick_after_jump: FAR_MICRO_TICKS_PER_TICK,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
@@ -630,6 +630,8 @@ impl Play {
             time_to_goal: &mut time_to_goal,
             get_robot_action_at,
             actions: &mut actions,
+            near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
+            far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -641,8 +643,6 @@ impl Play {
             use_nitro,
             max_time: MAX_TIME,
             tick_time_interval: time_interval,
-            micro_ticks_per_tick_before_land: NEAR_MICRO_TICKS_PER_TICK,
-            micro_ticks_per_tick_after_land: FAR_MICRO_TICKS_PER_TICK,
         }.perform(&mut scenario_ctx);
 
         *ctx.micro_ticks += simulator.current_micro_tick() as usize;
