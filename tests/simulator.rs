@@ -14,7 +14,7 @@ fn test_simulator_tick_robot_walk() {
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
-        &mut rng
+        &mut rng,
     );
     assert_eq!(
         simulator.me().position(),
@@ -32,7 +32,7 @@ fn test_simulator_tick_robot_jump() {
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
-        &mut rng
+        &mut rng,
     );
     assert_eq!(
         simulator.me().position(),
@@ -54,7 +54,7 @@ fn test_simulator_tick_robot_jump_with_half_micro_ticks() {
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
-        &mut rng
+        &mut rng,
     );
     assert_eq!(
         simulator.me().position(),
@@ -75,14 +75,14 @@ fn test_simulator_robot_jump() {
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK / 2,
-        &mut rng
+        &mut rng,
     );
     simulator.me_mut().action_mut().jump_speed = 0.0;
     while simulator.me().position().y() > 1.0 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(
@@ -104,14 +104,14 @@ fn test_simulator_robot_jump_with_half_micro_ticks() {
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK / 2,
-        &mut rng
+        &mut rng,
     );
     simulator.me_mut().action_mut().jump_speed = 0.0;
     while simulator.me().position().y() > 1.0 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK / 2,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(
@@ -131,7 +131,7 @@ fn test_simulator_robot_kick_ball() {
         let distance = get_min_distance_between_spheres(
             world.game.ball.y,
             world.rules.BALL_RADIUS,
-            world.rules.ROBOT_MIN_RADIUS
+            world.rules.ROBOT_MIN_RADIUS,
         );
         assert!(distance.is_some());
         let robot_position = world.game.ball.position().with_y(1.0)
@@ -146,22 +146,22 @@ fn test_simulator_robot_kick_ball() {
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
-        &mut rng
+        &mut rng,
     );
     assert_eq!(simulator.ball().position(), Vec3::new(0.0, 2.694228217927261, 0.6398122069549653));
     assert_eq!(simulator.ball().velocity(), Vec3::new(0.0, 16.18748483167559, 36.05203378168932));
     assert_eq!(simulator.me().collision_type(), RobotCollisionType::KickBall);
     while simulator.ball().position().y().is_between(
-            world.rules.BALL_RADIUS + 0.1,
-            world.rules.arena.goal_height - world.rules.BALL_RADIUS - 1e-2
-        ) && simulator.ball().position().z() < world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS
-    {
-        simulator.tick(
-            simulator.rules().tick_time_interval(),
-            simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
-        );
-    }
+        world.rules.BALL_RADIUS + 0.1,
+        world.rules.arena.goal_height - world.rules.BALL_RADIUS - 1e-2,
+    ) && simulator.ball().position().z() < world.rules.arena.depth / 2.0 + world.rules.BALL_RADIUS
+        {
+            simulator.tick(
+                simulator.rules().tick_time_interval(),
+                simulator.rules().MICROTICKS_PER_TICK,
+                &mut rng,
+            );
+        }
     assert_eq!(simulator.current_time(), 1.1333333333333342);
     assert_eq!(simulator.ball().position(), Vec3::new(0.0, 2.066086279964874, 40.89791659650675));
     assert_eq!(simulator.ball().velocity(), Vec3::new(0.0, -17.312515168326318, 36.05203378168932));
@@ -186,7 +186,7 @@ fn test_simulator_wait_for_goal() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(3.617314710299518, 6.5360488907168355, 42.16899575426824));
@@ -203,12 +203,13 @@ fn test_simulator_throw_ball_by_plus_x_and_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = example_rng();;
+    let mut rng = example_rng();
+    ;
     for _ in 0..10 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(8.333333333333501, 7.420661866399502, 8.333333333333501));
@@ -216,7 +217,7 @@ fn test_simulator_throw_ball_by_plus_x_and_z() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(-23.451917024130786, 3.123213400000252, 18.627066409350064));
@@ -232,12 +233,13 @@ fn test_simulator_throw_ball_by_plus_x_and_neg_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = example_rng();;
+    let mut rng = example_rng();
+    ;
     for _ in 0..10 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(8.333333333333501, 7.420661866399502, -8.333333333333501));
@@ -245,7 +247,7 @@ fn test_simulator_throw_ball_by_plus_x_and_neg_z() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(-23.451917024130786, 3.123213400000252, -18.627066409350064));
@@ -266,7 +268,7 @@ fn test_simulator_throw_ball_by_neg_x_and_plus_z() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(-8.333333333333501, 7.420661866399502, 8.333333333333501));
@@ -274,7 +276,7 @@ fn test_simulator_throw_ball_by_neg_x_and_plus_z() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(23.451917024130786, 3.123213400000252, 18.627066409350064));
@@ -290,12 +292,13 @@ fn test_simulator_throw_ball_by_neg_x_and_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = example_rng();;
+    let mut rng = example_rng();
+    ;
     for _ in 0..10 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(-8.333333333333501, 7.420661866399502, -8.333333333333501));
@@ -303,7 +306,7 @@ fn test_simulator_throw_ball_by_neg_x_and_z() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.ball().position(), Vec3::new(23.451917024130786, 3.123213400000252, -18.627066409350064));
@@ -320,7 +323,7 @@ fn test_simulator_collide_jumping_robot_and_ball() {
     let distance = get_min_distance_between_spheres(
         ball.position().y(),
         rules.BALL_RADIUS,
-        rules.ROBOT_MIN_RADIUS
+        rules.ROBOT_MIN_RADIUS,
     ).unwrap();
     me.set_position(ball.position().with_y(rules.ROBOT_MIN_RADIUS) - Vec3::only_z(distance));
     me.jump(rules.ROBOT_MAX_JUMP_SPEED, &rules);
@@ -339,7 +342,7 @@ fn test_simulator_collide_jumping_and_moving_robot_and_ball() {
     let distance = get_min_distance_between_spheres(
         ball.position().y(),
         rules.BALL_RADIUS,
-        rules.ROBOT_MIN_RADIUS
+        rules.ROBOT_MIN_RADIUS,
     ).unwrap();
     me.set_position(ball.position().with_y(rules.ROBOT_MIN_RADIUS) - Vec3::only_z(distance));
     me.set_velocity(Vec3::new(0.0, 0.0, rules.ROBOT_MAX_GROUND_SPEED));
@@ -358,7 +361,7 @@ fn test_simulator_tick_ball_to_goal() {
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
-        &mut rng
+        &mut rng,
     );
     assert_eq!(
         simulator.ball().position(),
@@ -382,7 +385,7 @@ fn test_simulator_robot_turn_left() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.current_tick(), 40);
@@ -404,7 +407,7 @@ fn test_simulator_robot_turn_back() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.current_tick(), 49);
@@ -431,7 +434,7 @@ fn test_simulator_robot_walk_on_wall() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
         max_y = max_y.max(simulator.me().position().y());
     }
@@ -459,7 +462,7 @@ fn test_simulator_tick_robot_jump_using_nitro_with_nitro() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(
@@ -481,7 +484,7 @@ fn test_simulator_tick_robot_jump_using_nitro_without_nitro() {
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(
@@ -496,7 +499,7 @@ fn test_simulator_tick_robot_walk_to_nitro_pack() {
     let world = example_world(GameType::TwoRobotsWithNitro);
     let mut simulator = Simulator::new(&world, world.me.id);
     let mut rng = example_rng();
-    let nearest_nitro_pack  = simulator.nitro_packs().iter()
+    let nearest_nitro_pack = simulator.nitro_packs().iter()
         .map(|v| (v.position().distance(simulator.me().position()).round() as i32, v))
         .min_by_key(|(distance, _)| *distance)
         .map(|(_, v)| v.clone())
@@ -506,11 +509,10 @@ fn test_simulator_tick_robot_walk_to_nitro_pack() {
     simulator.me_mut().action_mut().set_target_velocity(target_velocity);
     while nearest_nitro_pack.position().distance(simulator.me().position())
         > simulator.me().velocity().norm() * simulator.rules().tick_time_interval() {
-
         simulator.tick(
             simulator.rules().tick_time_interval(),
             simulator.rules().MICROTICKS_PER_TICK,
-            &mut rng
+            &mut rng,
         );
     }
     assert_eq!(simulator.me().nitro_amount(), world.rules.MAX_NITRO_AMOUNT);
@@ -529,7 +531,7 @@ fn test_simulator_ball_hit_bottom_corner() {
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
-        &mut rng
+        &mut rng,
     );
     assert_eq!(
         simulator.ball().position(),

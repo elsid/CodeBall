@@ -222,7 +222,11 @@ pub struct Play {
 
 impl Play {
     pub fn try_new(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut OrderContext) -> Option<Self> {
-        log!(world.game.current_tick, "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}", robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity());
+        log!(
+            world.game.current_tick,
+            "[{}] get optimal action robot_position={:?} robot_velocity={:?} ball_position={:?} ball_velocity={:?}",
+            robot.id, robot.position(), robot.velocity(), world.game.ball.position(), world.game.ball.velocity()
+        );
 
         let mut ctx = InnerOrderContext {
             rng: ctx.rng,
@@ -413,15 +417,31 @@ impl Play {
             } else {
                 world.rules.ROBOT_MAX_GROUND_SPEED
             };
-            log!(world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}", robot.id, action_id, global_simulator.current_time(), global_simulator.current_micro_tick(), distance_to_target, required_speed, target);
+
+            log!(
+                world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}",
+                robot.id, action_id, global_simulator.current_time(),
+                global_simulator.current_micro_tick(), distance_to_target,
+                required_speed, target
+            );
+
             let mut local_simulator = initial_simulator.clone();
             let velocity = if distance_to_target > 1e-3 {
                 to_target.normalized() * required_speed
             } else {
                 Vec3::default()
             };
-            log!(world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), velocity.norm(), velocity);
-            let near_micro_ticks_per_tick = if local_simulator.me().position().distance(local_simulator.ball().position()) > ball_distance_limit + velocity.norm() * time_interval {
+
+            log!(
+                world.game.current_tick, "[{}] <{}> use velocity {}:{} {} {:?}",
+                robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
+                velocity.norm(), velocity
+            );
+
+            let distance_to_ball = local_simulator.me().position()
+                .distance(local_simulator.ball().position());
+            let ball_distance_limit  = ball_distance_limit + velocity.norm() * time_interval;
+            let near_micro_ticks_per_tick = if distance_to_ball > ball_distance_limit {
                 log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
                 FAR_MICRO_TICKS_PER_TICK
             } else {
@@ -465,7 +485,11 @@ impl Play {
             ctx.total_micro_ticks += local_simulator.current_micro_tick();
 
             if local_simulator.score() != 0 {
-                log!(world.game.current_tick, "[{}] <{}> goal {}:{} score={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), local_simulator.score());
+                log!(
+                    world.game.current_tick, "[{}] <{}> goal {}:{} score={}",
+                    robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
+                    local_simulator.score()
+                );
             }
 
             if let Some(action) = action {
@@ -484,7 +508,12 @@ impl Play {
                     stats.action_score = action_score;
                 }
 
-                log!(world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}", robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(), action_score, action.target_velocity().norm());
+                log!(
+                    world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}",
+                    robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
+                    action_score, action.target_velocity().norm()
+                );
+
                 if order.is_none() || order.as_ref().unwrap().score < action_score {
                     order = Some(Play {
                         id: action_id,
