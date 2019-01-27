@@ -42,11 +42,15 @@ fn test_new() {
         score: 0,
         action_score: 1145,
         play_micro_ticks: 5350,
+        game_micro_ticks: 5350,
+        game_micro_ticks_limit: 30000,
         current_step: 8,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
+        ticks_with_near_micro_ticks: 0,
+        ticks_with_far_micro_ticks: 100,
     });
 }
 
@@ -110,11 +114,15 @@ fn test_try_play_should_not_jump_on_ball_top() {
         score: 0,
         action_score: 1278,
         play_micro_ticks: 3525,
+        game_micro_ticks: 3525,
+        game_micro_ticks_limit: 30000,
         current_step: 8,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
+        ticks_with_near_micro_ticks: 0,
+        ticks_with_far_micro_ticks: 100,
     });
 }
 
@@ -178,11 +186,15 @@ fn test_try_play_far_jump() {
         score: 0,
         action_score: 1248,
         play_micro_ticks: 6113,
+        game_micro_ticks: 6088,
+        game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
+        ticks_with_near_micro_ticks: 4,
+        ticks_with_far_micro_ticks: 96,
     });
 }
 
@@ -240,11 +252,15 @@ fn test_try_play_continue_jump() {
         score: 1,
         action_score: 2621,
         play_micro_ticks: 821,
+        game_micro_ticks: 821,
+        game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
+        ticks_with_near_micro_ticks: 7,
+        ticks_with_far_micro_ticks: 64,
     });
 }
 
@@ -303,10 +319,14 @@ fn test_try_play_continue_jump_with_nitro() {
         score: 1,
         action_score: 2610,
         play_micro_ticks: 1621,
+        game_micro_ticks: 1621,
+        game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
+        ticks_with_near_micro_ticks: 7,
+        ticks_with_far_micro_ticks: 62,
     });
 }
