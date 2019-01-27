@@ -375,6 +375,7 @@ impl MyStrategyImpl {
         render.add(Object::text(format!("current_tick: {}", self.world.game.current_tick)));
 
         self.world.game.ball.render(render);
+        self.world.rules.arena.render_normal(self.world.game.ball.position(), render);
 
         for robot in robots {
             robot.render(render);
@@ -394,6 +395,8 @@ impl MyStrategyImpl {
             if let Some(order) = order {
                 order.render(robot, render);
             }
+
+            self.world.rules.arena.render_normal(robot.position(), render);
         }
 
         render.add(Object::line(

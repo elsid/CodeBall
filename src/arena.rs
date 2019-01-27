@@ -6,6 +6,9 @@ use crate::my_strategy::sphere::Sphere;
 use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 
+#[cfg(feature = "enable_render")]
+use crate::my_strategy::render::Render;
+
 impl Arena {
     pub fn max_distance(&self) -> f64 {
         Vec3::new(self.width, self.depth + 2.0 * self.goal_depth, self.height).norm()
@@ -511,6 +514,18 @@ impl Arena {
         } else {
             None
         }
+    }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render_normal(&self, position: Vec3, render: &mut Render) {
+        use crate::my_strategy::render::{Color, Object};
+
+        render.add(Object::line(
+            position,
+            self.projected_with_shift(position, 0.0),
+            3.0,
+            Color::new(0.2, 0.8, 0.6, 1.0)
+        ));
     }
 }
 
