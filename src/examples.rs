@@ -6,6 +6,7 @@ use crate::my_strategy::random::{XorShiftRng, SeedableRng};
 pub enum GameType {
     TwoRobots,
     TwoRobotsWithNitro,
+    ThreeRobotsWithNitro,
 }
 
 impl GameType {
@@ -13,6 +14,15 @@ impl GameType {
         match self {
             GameType::TwoRobots => false,
             GameType::TwoRobotsWithNitro => true,
+            GameType::ThreeRobotsWithNitro => true,
+        }
+    }
+
+    pub fn team_size(self) -> usize {
+        match self {
+            GameType::TwoRobots => 2,
+            GameType::TwoRobotsWithNitro => 2,
+            GameType::ThreeRobotsWithNitro => 3,
         }
     }
 }
@@ -32,7 +42,7 @@ pub fn example_world(game_type: GameType) -> World {
     World::new(
         example_me(game_type, &rules),
         rules.clone(),
-        example_game(game_type, &rules)
+        example_game(game_type, &rules),
     )
 }
 
@@ -43,12 +53,23 @@ pub fn example_game(game_type: GameType, rules: &Rules) -> Game {
             Player { id: 1, me: true, strategy_crashed: false, score: 0 },
             Player { id: 2, me: false, strategy_crashed: false, score: 0 },
         ],
-        robots: vec![
-            example_me(game_type, rules),
-            example_teammate(game_type, rules),
-            example_opponent_1(game_type, rules),
-            example_opponent_2(game_type, rules),
-        ],
+        robots: if game_type.team_size() == 2 {
+            vec![
+                example_me(game_type, rules),
+                example_teammate_1(game_type, rules),
+                example_opponent_1(game_type, rules),
+                example_opponent_2(game_type, rules),
+            ]
+        } else {
+            vec![
+                example_me(game_type, rules),
+                example_teammate_2(game_type, rules),
+                example_teammate_1(game_type, rules),
+                example_opponent_1(game_type, rules),
+                example_opponent_3(game_type, rules),
+                example_opponent_2(game_type, rules),
+            ]
+        },
         nitro_packs: if game_type.nitro() {
             vec![
                 NitroPack {
@@ -119,9 +140,13 @@ pub fn example_me(game_type: GameType, rules: &Rules) -> Robot {
     }
 }
 
-pub fn example_teammate(game_type: GameType, rules: &Rules) -> Robot {
+pub fn example_teammate_1(game_type: GameType, rules: &Rules) -> Robot {
     Robot {
-        id: 2,
+        id: if game_type.team_size() == 2 {
+            2
+        } else {
+            3
+        },
         player_id: 1,
         is_teammate: true,
         x: -10.24931922557014,
@@ -143,13 +168,41 @@ pub fn example_teammate(game_type: GameType, rules: &Rules) -> Robot {
     }
 }
 
+pub fn example_teammate_2(game_type: GameType, rules: &Rules) -> Robot {
+    Robot {
+        id: 2,
+        player_id: 1,
+        is_teammate: true,
+        x: -0.289095425043726,
+        y: rules.ROBOT_RADIUS,
+        z: -19.997910486728827,
+        velocity_x: 0.0,
+        velocity_y: 0.0,
+        velocity_z: 0.0,
+        radius: rules.ROBOT_RADIUS,
+        nitro_amount: if game_type.nitro() {
+            rules.START_NITRO_AMOUNT
+        } else {
+            0.0
+        },
+        touch: true,
+        touch_normal_x: Some(0.0),
+        touch_normal_y: Some(1.0),
+        touch_normal_z: Some(0.0),
+    }
+}
+
 pub fn example_opponent_1(game_type: GameType, rules: &Rules) -> Robot {
     Robot {
-        id: 3,
+        id: if game_type.team_size() == 2 {
+            3
+        } else {
+            4
+        },
         player_id: 2,
         is_teammate: false,
         x: -9.748591261158683,
-        y: 1.0,
+        y: rules.ROBOT_RADIUS,
         z: 17.463246216636257,
         velocity_x: 0.0,
         velocity_y: 0.0,
@@ -169,12 +222,44 @@ pub fn example_opponent_1(game_type: GameType, rules: &Rules) -> Robot {
 
 pub fn example_opponent_2(game_type: GameType, rules: &Rules) -> Robot {
     Robot {
-        id: 4,
+        id: if game_type.team_size() == 2 {
+            4
+        } else {
+            6
+        },
         player_id: 2,
         is_teammate: false,
         x: 10.24931922557014,
-        y: 1.0,
+        y: rules.ROBOT_RADIUS,
         z: 17.17415079159253,
+        velocity_x: 0.0,
+        velocity_y: 0.0,
+        velocity_z: 0.0,
+        radius: rules.ROBOT_RADIUS,
+        nitro_amount: if game_type.nitro() {
+            rules.START_NITRO_AMOUNT
+        } else {
+            0.0
+        },
+        touch: true,
+        touch_normal_x: Some(0.0),
+        touch_normal_y: Some(1.0),
+        touch_normal_z: Some(0.0),
+    }
+}
+
+pub fn example_opponent_3(game_type: GameType, rules: &Rules) -> Robot {
+    Robot {
+        id: if game_type.team_size() == 2 {
+            4
+        } else {
+            5
+        },
+        player_id: 2,
+        is_teammate: false,
+        x: 0.289095425043726,
+        y: rules.ROBOT_RADIUS,
+        z: 19.997910486728827,
         velocity_x: 0.0,
         velocity_y: 0.0,
         velocity_z: 0.0,
