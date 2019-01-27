@@ -45,7 +45,7 @@ def main():
             )
     print()
     for k, v in values.items():
-        if not v:
+        if not v or k in ('game_micro_ticks_limit', 'game_micro_ticks', 'play_micro_ticks'):
             continue
         elif isinstance(v[0], (int, float)):
             fig, ax = matplotlib.pyplot.subplots()
@@ -53,7 +53,7 @@ def main():
             if v and k in ('iteration', 'step', 'total_iterations'):
                 ax.hist(v, bins=numpy.arange(min(v), max(v) + 1, 1))
                 ax.set_xticks(numpy.arange(min(v), max(v) + 1, 1))
-            elif v and k not in ('game_micro_ticks_limit', 'game_micro_ticks', 'play_micro_ticks'):
+            else:
                 ax.hist(v, bins='auto')
             ax.grid(True)
         elif isinstance(v[0], str):
