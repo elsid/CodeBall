@@ -2,7 +2,7 @@ use std::ops::{Add, Sub, Mul, Div, Neg};
 use crate::my_strategy::common::{Square};
 use crate::my_strategy::vec2::Vec2;
 
-#[derive(Default, Clone, Copy, Debug, PartialOrd)]
+#[derive(Default, Clone, Copy, PartialOrd)]
 pub struct Vec3 {
     x: f64,
     y: f64,
@@ -163,3 +163,9 @@ impl PartialEq for Vec3 {
 }
 
 impl Eq for Vec3 {}
+
+impl std::fmt::Debug for Vec3 {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Vec3::new({:?}, {:?}, {:?})", self.x, self.y, self.z)
+    }
+}
