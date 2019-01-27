@@ -6,13 +6,15 @@ import statistics
 import numpy
 import matplotlib.pyplot
 
-from collections import Counter
+from collections import Counter, defaultdict
 
 
 def main():
     raw = [json.loads(v) for v in sys.stdin]
     records = [v for v in raw if isinstance(v, dict)]
-    result = [v for v in raw if isinstance(v, list)]
+    by_ticks = defaultdict(dict)
+    for record in records:
+        by_ticks[record['current_tick']][record['robot_id']] = record
     values = {k: [v.get(k) for v in records if v.get(k) is not None] for k in records[0]}
     values['time_to_score'] = [v for v in values['time_to_score']]
     row('', 'n', 'sum', 'q95', 'min', 'max', 'mean', 'median', 'stdev')
@@ -42,11 +44,6 @@ def main():
                 '%s (%s)' % max(count.items(), key=lambda v: v[1]),
             )
     print()
-    if result:
-        row(*sorted(result[0][0].keys()))
-        for player in result[0]:
-            row(*[player[k] for k in sorted(result[0][0].keys())])
-    print()
     for k, v in values.items():
         if not v:
             continue
@@ -56,7 +53,7 @@ def main():
             if v and k in ('iteration', 'step', 'total_iterations'):
                 ax.hist(v, bins=numpy.arange(min(v), max(v) + 1, 1))
                 ax.set_xticks(numpy.arange(min(v), max(v) + 1, 1))
-            else:
+            elif v and k not in ('game_micro_ticks_limit', 'game_micro_ticks', 'play_micro_ticks'):
                 ax.hist(v, bins='auto')
             ax.grid(True)
         elif isinstance(v[0], str):
@@ -68,6 +65,19 @@ def main():
             ax.xaxis.set_major_locator(matplotlib.pyplot.FixedLocator(x_coordinates))
             ax.xaxis.set_major_formatter(matplotlib.pyplot.FixedFormatter(['%s (%s)' % (v[0], v[1]) for v in count]))
             ax.grid(True)
+    fig, ax = matplotlib.pyplot.subplots()
+    fig.canvas.set_window_title('game_micro_ticks')
+    ticks = numpy.arange(max(values['current_tick']))
+    for k in ('game_micro_ticks', 'game_micro_ticks_limit'):
+        y = list()
+        for tick in ticks:
+            current = [v[k] for v in by_ticks[tick].values()]
+            if current and (not y or max(current) > y[-1]):
+                y.append(max(current))
+            else:
+                y.append(y[-1])
+        ax.plot(ticks, y)
+    ax.grid(True)
     matplotlib.pyplot.show()
 
 
