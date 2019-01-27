@@ -15,7 +15,7 @@ pub struct Stats {
     pub total_iterations: usize,
     pub score: i32,
     pub action_score: i32,
-    pub total_micro_ticks: i32,
+    pub play_micro_ticks: i32,
     pub current_step: usize,
     pub reached_game_limit: bool,
     pub reached_play_limit: bool,

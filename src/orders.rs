@@ -229,8 +229,8 @@ impl Play {
         let mut ctx = InnerOrderContext {
             rng: ctx.rng,
             order_id_generator: ctx.order_id_generator,
-            micro_ticks: ctx.micro_ticks,
-            total_micro_ticks: 0,
+            game_micro_ticks: ctx.micro_ticks,
+            play_micro_ticks: 0,
             total_iterations: 0,
         };
 
@@ -263,9 +263,9 @@ impl Play {
         {
             if let Some(v) = &mut order {
                 v.stats.total_iterations = ctx.total_iterations;
-                v.stats.total_micro_ticks += ctx.total_micro_ticks;
-                v.stats.reached_play_limit = ctx.total_micro_ticks >= MAX_TOTAL_MICRO_TICKS;
-                v.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.micro_ticks);
+                v.stats.play_micro_ticks += ctx.play_micro_ticks;
+                v.stats.reached_play_limit = ctx.play_micro_ticks >= MAX_TOTAL_MICRO_TICKS;
+                v.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks);
                 v.stats.other_number = other.len();
             }
         }
@@ -313,8 +313,8 @@ impl Play {
 
         while (iterations < MAX_ITERATIONS || order.is_none())
             && global_simulator.current_tick() < MAX_TICKS
-            && ctx.total_micro_ticks < MAX_TOTAL_MICRO_TICKS
-            && !world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
+            && ctx.play_micro_ticks < MAX_TOTAL_MICRO_TICKS
+            && !world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks) {
 
             log!(
                 world.game.current_tick, "[{}] try time point {} {}",
@@ -367,8 +367,8 @@ impl Play {
                 }
 
                 global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, ctx.rng);
-                ctx.total_micro_ticks += NEAR_MICRO_TICKS_PER_TICK as i32;
-                *ctx.micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
+                ctx.play_micro_ticks += NEAR_MICRO_TICKS_PER_TICK as i32;
+                *ctx.game_micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
             }
         }
 
@@ -468,8 +468,8 @@ impl Play {
 
             let action = scenario.perform(&mut scenario_ctx);
 
-            *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
-            ctx.total_micro_ticks += local_simulator.current_micro_tick();
+            *ctx.game_micro_ticks += local_simulator.current_micro_tick() as usize;
+            ctx.play_micro_ticks += local_simulator.current_micro_tick();
 
             if local_simulator.score() != 0 {
                 log!(
@@ -529,7 +529,7 @@ impl Play {
     fn try_jump_to_ball(robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, JumpToBall};
 
-        if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
+        if world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks) {
             return None;
         }
 
@@ -570,8 +570,8 @@ impl Play {
         let action = JumpToBall {
         }.perform(&mut scenario_ctx);
 
-        *ctx.micro_ticks += local_simulator.current_micro_tick() as usize;
-        ctx.total_micro_ticks += local_simulator.current_micro_tick();
+        *ctx.game_micro_ticks += local_simulator.current_micro_tick() as usize;
+        ctx.play_micro_ticks += local_simulator.current_micro_tick();
 
         if let Some(action) = action {
             let action_score = get_action_score(
@@ -621,7 +621,7 @@ impl Play {
                          ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, ContinueJump};
 
-        if world.is_micro_ticks_limit_reached(*ctx.micro_ticks) {
+        if world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks) {
             return None;
         }
 
@@ -659,8 +659,8 @@ impl Play {
             allow_nitro: allow_nitro,
         }.perform(&mut scenario_ctx);
 
-        *ctx.micro_ticks += simulator.current_micro_tick() as usize;
-        ctx.total_micro_ticks += simulator.current_micro_tick();
+        *ctx.game_micro_ticks += simulator.current_micro_tick() as usize;
+        ctx.play_micro_ticks += simulator.current_micro_tick();
 
         if let Some(action) = action {
             let action_score = get_action_score(
@@ -918,8 +918,8 @@ pub struct OrderContext<'r> {
 struct InnerOrderContext<'r> {
     pub rng: &'r mut XorShiftRng,
     pub order_id_generator: &'r mut IdGenerator,
-    pub micro_ticks: &'r mut usize,
-    pub total_micro_ticks: i32,
+    pub game_micro_ticks: &'r mut usize,
+    pub play_micro_ticks: i32,
     pub total_iterations: usize,
 }
 
