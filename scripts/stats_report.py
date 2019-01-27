@@ -45,7 +45,7 @@ def main():
             )
     print()
     for k, v in values.items():
-        if not v or k in ('game_micro_ticks_limit', 'game_micro_ticks', 'play_micro_ticks'):
+        if not v or k in ('game_micro_ticks_limit', 'game_micro_ticks'):
             continue
         elif isinstance(v[0], (int, float)):
             fig, ax = matplotlib.pyplot.subplots()
