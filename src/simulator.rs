@@ -4,6 +4,7 @@ use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::random::{Rng, XorShiftRng};
 use crate::my_strategy::world::World;
 use crate::my_strategy::entity::Entity;
+use crate::my_strategy::arena::ArenaCollisionMask;
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::{Render, Color};
@@ -27,6 +28,7 @@ pub trait Solid : Entity {
     fn arena_e(&self) -> f64;
     fn set_distance_to_arena(&mut self, value: f64);
     fn set_normal_to_arena(&mut self, value: Vec3);
+    fn arena_collision_mask(&self) -> ArenaCollisionMask;
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -60,6 +62,7 @@ pub struct RobotExt {
     distance_to_arena: f64,
     normal_to_arena: Vec3,
     ignore: bool,
+    arena_collision_mask: ArenaCollisionMask,
 }
 
 impl RobotExt {
@@ -75,6 +78,7 @@ impl RobotExt {
             distance_to_arena: 0.0,
             normal_to_arena: Vec3::default(),
             ignore: false,
+            arena_collision_mask: ArenaCollisionMask::All,
         }
     }
 
@@ -90,6 +94,7 @@ impl RobotExt {
             distance_to_arena: self.distance_to_arena,
             normal_to_arena: self.normal_to_arena.opposite(),
             ignore: self.ignore,
+            arena_collision_mask: self.arena_collision_mask,
         }
     }
 
@@ -148,6 +153,14 @@ impl RobotExt {
 
     pub fn set_nitro_amount(&mut self, value: f64) {
         self.base.nitro_amount = value;
+    }
+
+    pub fn arena_collision_mask(&self) -> ArenaCollisionMask {
+        self.arena_collision_mask
+    }
+
+    pub fn set_arena_collision_mask(&mut self, value: ArenaCollisionMask) {
+        self.arena_collision_mask = value;
     }
 
     #[cfg(feature = "enable_render")]
@@ -230,6 +243,7 @@ pub struct BallExt {
     distance_to_arena: f64,
     normal_to_arena: Vec3,
     collision_type: BallCollisionType,
+    arena_collision_mask: ArenaCollisionMask,
 }
 
 impl BallExt {
@@ -241,6 +255,7 @@ impl BallExt {
             distance_to_arena: 0.0,
             normal_to_arena: Vec3::default(),
             collision_type: BallCollisionType::None,
+            arena_collision_mask: ArenaCollisionMask::All,
         }
     }
 
@@ -252,6 +267,7 @@ impl BallExt {
             distance_to_arena: 0.0,
             normal_to_arena: Vec3::default(),
             collision_type: BallCollisionType::None,
+            arena_collision_mask: ArenaCollisionMask::All,
         }
     }
 
@@ -263,6 +279,7 @@ impl BallExt {
             distance_to_arena: self.distance_to_arena,
             normal_to_arena: self.normal_to_arena.opposite(),
             collision_type: self.collision_type,
+            arena_collision_mask: self.arena_collision_mask,
         }
     }
 
@@ -284,6 +301,14 @@ impl BallExt {
 
     pub fn projected_to_arena_position_with_shift(&self, shift: f64) -> Vec3 {
         self.base().position() - self.normal_to_arena * (self.distance_to_arena - shift)
+    }
+
+    pub fn arena_collision_mask(&self) -> ArenaCollisionMask {
+        self.arena_collision_mask
+    }
+
+    pub fn set_arena_collision_mask(&mut self, value: ArenaCollisionMask) {
+        self.arena_collision_mask = value;
     }
 
     #[cfg(feature = "enable_render")]
@@ -360,6 +385,10 @@ impl Solid for BallExt {
     fn set_normal_to_arena(&mut self, value: Vec3) {
         self.normal_to_arena = value;
     }
+
+    fn arena_collision_mask(&self) -> ArenaCollisionMask {
+        self.arena_collision_mask
+    }
 }
 
 impl Solid for RobotExt {
@@ -385,6 +414,10 @@ impl Solid for RobotExt {
 
     fn set_normal_to_arena(&mut self, value: Vec3) {
         self.normal_to_arena = value;
+    }
+
+    fn arena_collision_mask(&self) -> ArenaCollisionMask {
+        self.arena_collision_mask
     }
 }
 
@@ -440,6 +473,7 @@ impl Simulator {
                     distance_to_arena: distance,
                     normal_to_arena: normal,
                     ignore: false,
+                    arena_collision_mask: ArenaCollisionMask::All,
                 }
             })
             .collect();
@@ -459,6 +493,7 @@ impl Simulator {
                 distance_to_arena: distance,
                 normal_to_arena: normal,
                 collision_type: BallCollisionType::None,
+                arena_collision_mask: ArenaCollisionMask::All,
             },
             nitro_packs: world.game.nitro_packs.clone(),
             rules: world.rules.clone(),
@@ -549,10 +584,17 @@ impl Simulator {
 
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize, rng: &mut XorShiftRng) {
         let micro_tick_time_interval = time_interval / micro_ticks_per_tick as f64;
+        let max_path = time_interval * self.rules.MAX_ENTITY_SPEED;
         for robot in self.robots.iter_mut() {
             robot.collision_type = RobotCollisionType::None;
+            robot.set_arena_collision_mask(self.rules.get_arena_collision_mask(
+                &robot.position(), max_path + robot.radius()
+            ));
         }
         self.ball.collision_type = BallCollisionType::None;
+        self.ball.set_arena_collision_mask(self.rules.get_arena_collision_mask(
+            &self.ball.position(), max_path + self.ball.radius()
+        ));
         for _ in 0..micro_ticks_per_tick {
             self.micro_tick(micro_tick_time_interval, rng);
         }

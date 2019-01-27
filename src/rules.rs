@@ -1,5 +1,6 @@
 use crate::model::{Rules, Robot};
 use crate::my_strategy::vec3::Vec3;
+use crate::my_strategy::arena::ArenaCollisionMask;
 
 impl Rules {
     pub fn tick_time_interval(&self) -> f64 {
@@ -112,5 +113,39 @@ impl Rules {
             MoveEquation::from_robot(robot, self)
                 .get_position(self.tick_time_interval())
         ) - robot.radius > 1e-3
+    }
+
+    pub fn get_arena_collision_mask(&self, position: &Vec3, max_path: f64) -> ArenaCollisionMask {
+        if self.is_far_from_goal(position, max_path) {
+            if self.is_far_from_ceiling(position, max_path) && self.is_far_from_walls(position, max_path) {
+                ArenaCollisionMask::OnlyGround
+            } else {
+                ArenaCollisionMask::ExceptGoal
+            }
+        } else {
+            ArenaCollisionMask::All
+        }
+    }
+
+    pub fn is_far_from_goal(&self, position: &Vec3, max_path: f64) -> bool {
+        use crate::my_strategy::common::IsBetween;
+
+        position.z().is_between(
+            -self.arena.depth / 2.0 + self.arena.corner_radius + max_path,
+            self.arena.depth / 2.0 - self.arena.corner_radius - max_path,
+        )
+    }
+
+    pub fn is_far_from_ceiling(&self, position: &Vec3, max_path: f64) -> bool {
+        position.y() < self.arena.height - self.arena.top_radius - max_path
+    }
+
+    pub fn is_far_from_walls(&self, position: &Vec3, max_path: f64) -> bool {
+        use crate::my_strategy::common::IsBetween;
+
+        position.x().is_between(
+            -self.arena.width / 2.0 + self.arena.bottom_radius + max_path,
+            self.arena.width / 2.0 - self.arena.bottom_radius - max_path,
+        )
     }
 }
