@@ -14,7 +14,7 @@ use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-const MAX_PLAY_MICRO_TICKS: usize = 15000;
+const MAX_PLAY_MICRO_TICKS: usize = 30000;
 const MAX_ITERATIONS: usize = 5;
 
 pub enum Order {
@@ -248,6 +248,7 @@ impl Play {
             rng: ctx.rng,
             order_id_generator: ctx.order_id_generator,
             game_micro_ticks: ctx.micro_ticks,
+            max_play_micro_ticks: MAX_PLAY_MICRO_TICKS * 2 / world.game.robots.len(),
             play_micro_ticks: 0,
             total_iterations: 0,
         };
@@ -284,7 +285,7 @@ impl Play {
                 v.stats.play_micro_ticks = ctx.play_micro_ticks;
                 v.stats.game_micro_ticks = *ctx.game_micro_ticks;
                 v.stats.game_micro_ticks_limit = world.get_micro_ticks_limit();
-                v.stats.reached_play_limit = ctx.play_micro_ticks >= MAX_PLAY_MICRO_TICKS;
+                v.stats.reached_play_limit = ctx.play_micro_ticks >= ctx.max_play_micro_ticks;
                 v.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks);
                 v.stats.other_number = other.len();
             }
@@ -333,7 +334,7 @@ impl Play {
 
         while (iterations < MAX_ITERATIONS || order.is_none())
             && global_simulator.current_tick() < MAX_TICKS
-            && ctx.play_micro_ticks < MAX_PLAY_MICRO_TICKS
+            && ctx.play_micro_ticks < ctx.max_play_micro_ticks
             && !world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks) {
 
             log!(
@@ -946,6 +947,7 @@ struct InnerOrderContext<'r> {
     pub rng: &'r mut XorShiftRng,
     pub order_id_generator: &'r mut IdGenerator,
     pub game_micro_ticks: &'r mut usize,
+    pub max_play_micro_ticks: usize,
     pub play_micro_ticks: usize,
     pub total_iterations: usize,
 }
