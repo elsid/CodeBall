@@ -14,7 +14,7 @@ use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-const MAX_TOTAL_MICRO_TICKS: i32 = 15000;
+const MAX_PLAY_MICRO_TICKS: i32 = 15000;
 const MAX_ITERATIONS: usize = 5;
 
 pub enum Order {
@@ -266,7 +266,7 @@ impl Play {
                 v.stats.play_micro_ticks += ctx.play_micro_ticks;
                 v.stats.game_micro_ticks += *ctx.game_micro_ticks;
                 v.stats.game_micro_ticks_limit = world.get_micro_ticks_limit();
-                v.stats.reached_play_limit = ctx.play_micro_ticks >= MAX_TOTAL_MICRO_TICKS;
+                v.stats.reached_play_limit = ctx.play_micro_ticks >= MAX_PLAY_MICRO_TICKS;
                 v.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks);
                 v.stats.other_number = other.len();
             }
@@ -315,7 +315,7 @@ impl Play {
 
         while (iterations < MAX_ITERATIONS || order.is_none())
             && global_simulator.current_tick() < MAX_TICKS
-            && ctx.play_micro_ticks < MAX_TOTAL_MICRO_TICKS
+            && ctx.play_micro_ticks < MAX_PLAY_MICRO_TICKS
             && !world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks) {
 
             log!(
