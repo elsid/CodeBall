@@ -963,7 +963,7 @@ impl TakeNitroPack {
                 let velocity = if to_target.norm() > world.rules.min_running_distance() {
                     to_target.normalized() * world.rules.ROBOT_MAX_GROUND_SPEED
                 } else {
-                    to_target
+                    to_target * world.rules.ROBOT_MAX_GROUND_SPEED / world.rules.min_running_distance()
                 };
                 let mut action = Action::default();
                 action.set_target_velocity(velocity);
