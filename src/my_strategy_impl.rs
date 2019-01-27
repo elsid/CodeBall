@@ -298,7 +298,7 @@ impl MyStrategyImpl {
                                 if robot.nitro_amount < world.rules.START_NITRO_AMOUNT {
                                     Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator)
                                 } else {
-                                    order
+                                    Order::try_push_opponent(robot, world, ctx.order_id_generator)
                                 }
                             },
                             Role::Goalkeeper(_) => {
