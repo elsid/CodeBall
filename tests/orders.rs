@@ -587,3 +587,58 @@ fn test_try_play_goalkeeper_should_catch() {
         path_type: Some("far_jump"),
     });
 }
+
+#[test]
+fn test_try_play_for_tree_robots_with_nitro() {
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::common::IdGenerator;
+
+    #[cfg(feature = "enable_stats")]
+    use my_strategy::my_strategy::stats::Stats;
+
+    let world = example_world(GameType::ThreeRobotsWithNitro);
+    let mut rng = example_rng();
+    let mut order_id_generator = IdGenerator::new();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks,
+    };
+
+    let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
+
+    assert_eq!(result.score(), 1123);
+    assert_eq!(result.action().jump_speed, 0.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(-16.3826505756388, 0.0, 25.131827631840103));
+
+    #[cfg(feature = "enable_stats")]
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 1,
+        current_tick: 0,
+        order: "play",
+        time_to_jump: 0.733333333333334,
+        time_to_watch: 0.7833333333333341,
+        time_to_end: 1.6666666666666656,
+        time_to_score: None,
+        iteration: 18,
+        total_iterations: 61,
+        game_score: 0,
+        order_score: 1123,
+        path_micro_ticks: 300,
+        plan_micro_ticks: 5175,
+        game_micro_ticks: 5175,
+        game_micro_ticks_limit: 30000,
+        current_step: 3,
+        reached_game_limit: false,
+        reached_plan_limit: false,
+        reached_path_limit: false,
+        other_number: 0,
+        ticks_with_near_micro_ticks: 30,
+        ticks_with_far_micro_ticks: 100,
+        path_type: Some("walk_to_position"),
+    });
+}

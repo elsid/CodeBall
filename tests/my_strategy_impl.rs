@@ -252,6 +252,56 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch() {
     assert_eq!(simulator.current_tick(), 100);
 }
 
+#[test]
+fn test_three_robots_with_nitro_first_ball_kick_until_goal() {
+    use my_strategy::model::Ball;
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, Solid};
+    use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::entity::Entity;
+
+    let world = example_world(GameType::ThreeRobotsWithNitro);
+    let mut rng = example_rng();
+    let mut simulator = Simulator::new(&world, 3);
+    let mut my_strategy = MyStrategyImpl::new(
+        &simulator.me().base(),
+        &simulator.rules(),
+        &simulator.game(),
+    );
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.me().position().y() - simulator.me().radius() < 1e-3
+            && simulator.current_tick() < 150
+    });
+
+    assert_eq!(simulator.me().position().y(), 1.2933846022005453);
+    assert_eq!(simulator.current_tick(), 38);
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.me().collision_type() == RobotCollisionType::None
+            && simulator.current_tick() < 150
+    });
+
+    assert_eq!(simulator.ball().base(), &Ball {
+        x: 0.008630768289976823,
+        y: 3.307333838427491,
+        z: 0.23468462876435003,
+        velocity_x: 1.3843278763265943,
+        velocity_y: 18.265538210817308,
+        velocity_z: 37.642126729452535,
+        radius: 2.0,
+    });
+    assert_eq!(simulator.me().action().jump_speed, 15.0);
+    assert_eq!(simulator.current_tick(), 44);
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.score() == 0 && simulator.current_tick() < 150
+    });
+
+    assert_eq!(simulator.score(), 1);
+    assert_eq!(simulator.current_tick(), 111);
+}
+
 fn simulate_while<P>(my_strategy: &mut MyStrategyImpl, simulator: &mut Simulator,
                      rng: &mut XorShiftRng, predicate: P)
     where P: Fn(&mut Simulator) -> bool {
