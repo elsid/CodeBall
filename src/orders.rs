@@ -658,7 +658,7 @@ impl Play {
 
         let action = ContinueJump {
             jump_speed,
-            allow_nitro: allow_nitro,
+            allow_nitro,
         }.perform(&mut scenario_ctx);
 
         *ctx.game_micro_ticks += simulator.current_micro_tick() as usize;
