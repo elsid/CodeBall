@@ -1,5 +1,5 @@
 #[test]
-fn test_new() {
+fn test_try_play() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::orders::{Order, OrderContext};
@@ -43,7 +43,7 @@ fn test_new() {
         action_score: 1145,
         play_micro_ticks: 5375,
         game_micro_ticks: 5375,
-        game_micro_ticks_limit: 30000,
+        game_micro_ticks_limit: 28000,
         current_step: 8,
         reached_game_limit: false,
         reached_play_limit: false,
@@ -115,7 +115,7 @@ fn test_try_play_should_not_jump_on_ball_top() {
         action_score: 1278,
         play_micro_ticks: 3550,
         game_micro_ticks: 3550,
-        game_micro_ticks_limit: 30000,
+        game_micro_ticks_limit: 28000,
         current_step: 8,
         reached_game_limit: false,
         reached_play_limit: false,
@@ -187,7 +187,7 @@ fn test_try_play_far_jump() {
         action_score: 1248,
         play_micro_ticks: 6113,
         game_micro_ticks: 6113,
-        game_micro_ticks_limit: 30000,
+        game_micro_ticks_limit: 28000,
         current_step: 0,
         reached_game_limit: false,
         reached_play_limit: false,
@@ -253,7 +253,7 @@ fn test_try_play_continue_jump() {
         action_score: 2621,
         play_micro_ticks: 821,
         game_micro_ticks: 821,
-        game_micro_ticks_limit: 30000,
+        game_micro_ticks_limit: 28000,
         current_step: 0,
         reached_game_limit: false,
         reached_play_limit: false,
@@ -320,7 +320,7 @@ fn test_try_play_continue_jump_with_nitro() {
         action_score: 2610,
         play_micro_ticks: 1621,
         game_micro_ticks: 1621,
-        game_micro_ticks_limit: 30000,
+        game_micro_ticks_limit: 28000,
         current_step: 0,
         reached_game_limit: false,
         reached_play_limit: false,
