@@ -3,18 +3,26 @@
 ID=${1}
 OTHER=${2}
 NITRO=${3}
-PORTS_SHIFT=${4}
+TEAM_SIZE=${4}
+PORTS_SHIFT=${5}
 SUFFIX=
 
 if ! [[ "${OTHER}" ]] || ! [[ "${ID}" ]]; then
-    echo "other is not set, usage: ${0} <id> <other> [nitro] [ports_shift]"
+    echo "other is not set, usage: ${0} <id> <other> [<nitro> [<team_size> [ports_shift]]]"
     exit 1
 fi
 
 if ! [[ "${NITRO}" ]]; then
     NITRO=false
+else
     SUFFIX=_nitro
 fi
+
+if ! [[ "${TEAM_SIZE}" ]]; then
+    TEAM_SIZE=2
+fi
+
+SUFFIX=${SUFFIX}_${TEAM_SIZE}
 
 if ! [[ "${PORTS_SHIFT}" ]]; then
     PORTS_SHIFT=0
@@ -32,7 +40,7 @@ PLAYER_2_PORT=$((31012 + ${PORTS_SHIFT}))
 cargo build --release
 
 local_runner/codeball2018 \
-    --team-size 2 \
+    --team-size ${TEAM_SIZE} \
     --start-paused \
     --no-countdown \
     --results-file ${RESULT} \
