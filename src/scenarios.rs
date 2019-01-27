@@ -38,6 +38,7 @@ pub struct Context<'r, 'a, G>
     pub actions: &'r mut Vec<Action>,
     pub near_micro_ticks_per_tick: usize,
     pub far_micro_ticks_per_tick: usize,
+    pub scenario_micro_ticks: usize,
     #[cfg(feature = "enable_render")]
     pub history: &'r mut Vec<Simulator>,
     #[cfg(feature = "enable_stats")]
@@ -72,6 +73,8 @@ impl<'r, 'a, G> Context<'r, 'a, G>
         let time_interval = self.simulator.rules().tick_time_interval();
 
         self.simulator.tick(time_interval, micro_ticks_per_tick, self.rng);
+
+        self.scenario_micro_ticks += micro_ticks_per_tick;
 
         if self.simulator.me().collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
             *self.time_to_ball = Some(self.simulator.current_time());
@@ -413,11 +416,7 @@ impl JumpToBall {
 
         simulator.tick(ctx.simulator.rules().tick_time_interval(), ctx.near_micro_ticks_per_tick, &mut rng);
 
-        #[cfg(feature = "enable_stats")]
-        {
-            ctx.stats.play_micro_ticks += ctx.near_micro_ticks_per_tick;
-            ctx.stats.game_micro_ticks += ctx.near_micro_ticks_per_tick;
-        }
+        ctx.scenario_micro_ticks += ctx.near_micro_ticks_per_tick;
 
         let my_move_equation = MoveEquation::from_robot(simulator.me().base(), simulator.rules());
         let ball_move_equation = MoveEquation::from_ball(simulator.ball().base(), simulator.rules());

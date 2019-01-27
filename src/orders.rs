@@ -263,8 +263,8 @@ impl Play {
         {
             if let Some(v) = &mut order {
                 v.stats.total_iterations = ctx.total_iterations;
-                v.stats.play_micro_ticks += ctx.play_micro_ticks;
-                v.stats.game_micro_ticks += *ctx.game_micro_ticks;
+                v.stats.play_micro_ticks = ctx.play_micro_ticks;
+                v.stats.game_micro_ticks = *ctx.game_micro_ticks;
                 v.stats.game_micro_ticks_limit = world.get_micro_ticks_limit();
                 v.stats.reached_play_limit = ctx.play_micro_ticks >= MAX_PLAY_MICRO_TICKS;
                 v.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks);
@@ -457,6 +457,7 @@ impl Play {
                 actions: &mut actions,
                 near_micro_ticks_per_tick,
                 far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
+                scenario_micro_ticks: 0,
                 #[cfg(feature = "enable_render")]
                 history: &mut history,
                 #[cfg(feature = "enable_stats")]
@@ -470,8 +471,8 @@ impl Play {
 
             let action = scenario.perform(&mut scenario_ctx);
 
-            *ctx.game_micro_ticks += local_simulator.current_micro_tick() as usize;
-            ctx.play_micro_ticks += local_simulator.current_micro_tick() as usize;
+            ctx.play_micro_ticks += scenario_ctx.scenario_micro_ticks;
+            *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
             if local_simulator.score() != 0 {
                 log!(
@@ -563,6 +564,7 @@ impl Play {
             actions: &mut actions,
             near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
             far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
+            scenario_micro_ticks: 0,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -572,8 +574,8 @@ impl Play {
         let action = JumpToBall {
         }.perform(&mut scenario_ctx);
 
-        *ctx.game_micro_ticks += local_simulator.current_micro_tick() as usize;
-        ctx.play_micro_ticks += local_simulator.current_micro_tick() as usize;
+        ctx.play_micro_ticks += scenario_ctx.scenario_micro_ticks;
+        *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
         if let Some(action) = action {
             let action_score = get_action_score(
@@ -650,6 +652,7 @@ impl Play {
             actions: &mut actions,
             near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
             far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
+            scenario_micro_ticks: 0,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -661,8 +664,8 @@ impl Play {
             allow_nitro,
         }.perform(&mut scenario_ctx);
 
-        *ctx.game_micro_ticks += simulator.current_micro_tick() as usize;
-        ctx.play_micro_ticks += simulator.current_micro_tick() as usize;
+        ctx.play_micro_ticks += scenario_ctx.scenario_micro_ticks;
+        *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
         if let Some(action) = action {
             let action_score = get_action_score(
