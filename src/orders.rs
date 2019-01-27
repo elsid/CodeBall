@@ -14,7 +14,7 @@ use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-const MAX_PLAY_MICRO_TICKS: i32 = 15000;
+const MAX_PLAY_MICRO_TICKS: usize = 15000;
 const MAX_ITERATIONS: usize = 5;
 
 pub enum Order {
@@ -369,7 +369,7 @@ impl Play {
                 }
 
                 global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, ctx.rng);
-                ctx.play_micro_ticks += NEAR_MICRO_TICKS_PER_TICK as i32;
+                ctx.play_micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
                 *ctx.game_micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
             }
         }
@@ -471,7 +471,7 @@ impl Play {
             let action = scenario.perform(&mut scenario_ctx);
 
             *ctx.game_micro_ticks += local_simulator.current_micro_tick() as usize;
-            ctx.play_micro_ticks += local_simulator.current_micro_tick();
+            ctx.play_micro_ticks += local_simulator.current_micro_tick() as usize;
 
             if local_simulator.score() != 0 {
                 log!(
@@ -573,7 +573,7 @@ impl Play {
         }.perform(&mut scenario_ctx);
 
         *ctx.game_micro_ticks += local_simulator.current_micro_tick() as usize;
-        ctx.play_micro_ticks += local_simulator.current_micro_tick();
+        ctx.play_micro_ticks += local_simulator.current_micro_tick() as usize;
 
         if let Some(action) = action {
             let action_score = get_action_score(
@@ -662,7 +662,7 @@ impl Play {
         }.perform(&mut scenario_ctx);
 
         *ctx.game_micro_ticks += simulator.current_micro_tick() as usize;
-        ctx.play_micro_ticks += simulator.current_micro_tick();
+        ctx.play_micro_ticks += simulator.current_micro_tick() as usize;
 
         if let Some(action) = action {
             let action_score = get_action_score(
@@ -921,7 +921,7 @@ struct InnerOrderContext<'r> {
     pub rng: &'r mut XorShiftRng,
     pub order_id_generator: &'r mut IdGenerator,
     pub game_micro_ticks: &'r mut usize,
-    pub play_micro_ticks: i32,
+    pub play_micro_ticks: usize,
     pub total_iterations: usize,
 }
 
