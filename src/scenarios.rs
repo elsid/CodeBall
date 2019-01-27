@@ -416,6 +416,7 @@ impl JumpToBall {
         #[cfg(feature = "enable_stats")]
         {
             ctx.stats.play_micro_ticks += ctx.near_micro_ticks_per_tick as i32;
+            ctx.stats.game_micro_ticks += ctx.near_micro_ticks_per_tick;
         }
 
         let my_move_equation = MoveEquation::from_robot(simulator.me().base(), simulator.rules());

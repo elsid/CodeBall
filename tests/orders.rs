@@ -186,7 +186,7 @@ fn test_try_play_far_jump() {
         score: 0,
         action_score: 1248,
         play_micro_ticks: 6113,
-        game_micro_ticks: 6088,
+        game_micro_ticks: 6113,
         game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
