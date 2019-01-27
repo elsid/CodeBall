@@ -850,7 +850,11 @@ pub fn get_points(simulator: &Simulator, world: &World, rng: &mut XorShiftRng) -
     let max_time_diff = 2.0 * (rules.ROBOT_RADIUS + rules.BALL_RADIUS) / rules.ROBOT_MAX_GROUND_SPEED;
     let number = if time_to_ball < simulator.current_time() + max_time_diff {
         if time_to_ball < rules.tick_time_interval() * 10.0 {
-            7
+            if world.game.robots.len() <= 4 {
+                7
+            } else {
+                5
+            }
         } else {
             3
         }
