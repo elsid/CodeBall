@@ -502,7 +502,7 @@ impl Play {
             }
 
             if let Some(action) = action {
-                let action_score = get_action_score(
+                let action_score = get_order_score(
                     &world.rules,
                     &local_simulator,
                     time_to_ball,
@@ -597,7 +597,7 @@ impl Play {
         *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
         if let Some(action) = action {
-            let action_score = get_action_score(
+            let action_score = get_order_score(
                 &world.rules,
                 &local_simulator,
                 time_to_ball,
@@ -687,7 +687,7 @@ impl Play {
         *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
         if let Some(action) = action {
-            let action_score = get_action_score(
+            let action_score = get_order_score(
                 &world.rules,
                 &simulator,
                 time_to_ball,
@@ -788,8 +788,8 @@ pub fn render_history(history: &Vec<Simulator>, render: &mut Render) {
     }
 }
 
-fn get_action_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>,
-                    time_to_goal: Option<f64>, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
+fn get_order_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>,
+                   time_to_goal: Option<f64>, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
     use crate::my_strategy::common::as_score;
     use crate::my_strategy::scenarios::MAX_TICKS;
 
