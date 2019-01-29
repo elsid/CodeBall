@@ -93,7 +93,7 @@ impl Order {
     pub fn action(&self) -> &Action {
         match self {
             Order::Idle(v) => &v.action,
-            Order::Play(v) => &v.action,
+            Order::Play(v) => v.actions.first().unwrap(),
             Order::WalkToGoalkeeperPosition(v) => &v.action,
             Order::TakeNitroPack(v) => &v.action,
             Order::PushOpponent(v) => &v.action,
@@ -221,7 +221,6 @@ impl Idle {
 pub struct Play {
     pub id: i32,
     pub robot_id: i32,
-    pub action: Action,
     pub score: i32,
     pub time_to_ball: Option<f64>,
     pub actions: Vec<Action>,
@@ -298,7 +297,6 @@ impl Play {
         Play {
             id: self.id,
             robot_id: self.robot_id,
-            action: self.action.opposite(),
             score: self.score,
             time_to_ball: self.time_to_ball,
             actions: self.actions.into_iter().map(|v| v.opposite()).collect(),
@@ -488,7 +486,7 @@ impl Play {
                 my_max_speed: required_speed,
             };
 
-            let action = scenario.perform(&mut scenario_ctx);
+            scenario.perform(&mut scenario_ctx);
 
             ctx.play_micro_ticks += scenario_ctx.scenario_micro_ticks;
             *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
@@ -501,7 +499,7 @@ impl Play {
                 );
             }
 
-            if let Some(action) = action {
+            if !actions.is_empty() {
                 let action_score = get_order_score(
                     &world.rules,
                     &local_simulator,
@@ -520,14 +518,13 @@ impl Play {
                 log!(
                     world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}",
                     robot.id, order_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
-                    action_score, action.target_velocity().norm()
+                    action_score, actions.first().unwrap().target_velocity().norm()
                 );
 
                 if order.is_none() || order.as_ref().unwrap().score < action_score {
                     order = Some(Play {
                         id: order_id,
                         robot_id: robot.id,
-                        action,
                         score: action_score,
                         time_to_ball,
                         actions,
@@ -590,13 +587,13 @@ impl Play {
             stats: &mut stats,
         };
 
-        let action = JumpToBall {
+        JumpToBall {
         }.perform(&mut scenario_ctx);
 
         ctx.play_micro_ticks += scenario_ctx.scenario_micro_ticks;
         *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
-        if let Some(action) = action {
+        if !actions.is_empty() {
             let action_score = get_order_score(
                 &world.rules,
                 &local_simulator,
@@ -621,7 +618,6 @@ impl Play {
             Some(Play {
                 id: order_id,
                 robot_id: robot.id,
-                action,
                 score: action_score,
                 time_to_ball,
                 actions,
@@ -678,7 +674,7 @@ impl Play {
             stats: &mut stats,
         };
 
-        let action = ContinueJump {
+        ContinueJump {
             jump_speed,
             allow_nitro,
         }.perform(&mut scenario_ctx);
@@ -686,7 +682,7 @@ impl Play {
         ctx.play_micro_ticks += scenario_ctx.scenario_micro_ticks;
         *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
-        if let Some(action) = action {
+        if !actions.is_empty() {
             let action_score = get_order_score(
                 &world.rules,
                 &simulator,
@@ -712,7 +708,6 @@ impl Play {
             Some(Play {
                 id: order_id,
                 robot_id: robot.id,
-                action,
                 score: action_score,
                 time_to_ball,
                 actions,

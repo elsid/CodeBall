@@ -116,7 +116,7 @@ pub struct JumpAtPosition {
 }
 
 impl JumpAtPosition {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -129,7 +129,7 @@ impl JumpAtPosition {
 
         let before_move = ctx.simulator.current_time();
 
-        let mut action = WalkToPosition {
+        WalkToPosition {
             target: self.position,
             max_speed: self.my_max_speed,
         }.perform(ctx);
@@ -144,19 +144,17 @@ impl JumpAtPosition {
             );
         }
 
-        action = action.or(Jump {
-        }.perform(ctx));
+        Jump {
+        }.perform(ctx);
 
-        action = action.or(WatchMeJump {
+        WatchMeJump {
             jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
             allow_nitro: false,
-        }.perform(ctx));
+        }.perform(ctx);
 
-        action = action.or(WatchBallMove {
+        WatchBallMove {
             stop: true,
-        }.perform(ctx));
-
-        action
+        }.perform(ctx);
     }
 
     pub fn opposite(&self) -> Self {
@@ -173,15 +171,13 @@ pub struct WalkToPosition {
 }
 
 impl WalkToPosition {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::RobotCollisionType;
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
-
-        let mut action = None;
 
         let max_distance_to_target = self.max_speed * ctx.simulator.rules().tick_time_interval();
         let max_distance_to_ball = ctx.simulator.rules().ball_distance_limit()
@@ -212,10 +208,6 @@ impl WalkToPosition {
             );
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
-            if action.is_none() {
-                action = Some(ctx.simulator.me().action().clone());
-            }
-
             ctx.tick(TickType::Far);
 
             log!(
@@ -227,8 +219,6 @@ impl WalkToPosition {
                 max_distance_to_ball
             );
         }
-
-        action
     }
 
     fn get_target_velocity(&self, position: Vec3, normal: Vec3, max_speed: f64) -> Vec3 {
@@ -247,7 +237,7 @@ pub struct Jump {
 }
 
 impl Jump {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -258,8 +248,6 @@ impl Jump {
         }
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
-
-        let mut action = None;
 
         log!(
             ctx.current_tick, "[{}] <{}> jump {}:{}",
@@ -278,10 +266,6 @@ impl Jump {
             ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
-            if action.is_none() {
-                action = Some(ctx.simulator.me().action().clone());
-            }
-
             ctx.tick(TickType::Near);
 
             log!(
@@ -290,8 +274,6 @@ impl Jump {
                 ctx.simulator.current_time(), ctx.scenario_micro_ticks
             );
         }
-
-        action
     }
 }
 
@@ -300,7 +282,7 @@ pub struct WatchBallMove {
 }
 
 impl WatchBallMove {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -317,8 +299,6 @@ impl WatchBallMove {
             ctx.simulator.me_mut().action_mut().set_target_velocity(Vec3::default());
         }
 
-        let mut action = None;
-
         log!(
             ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
             ctx.robot_id, ctx.order_id,
@@ -330,10 +310,6 @@ impl WatchBallMove {
             && ctx.scenario_micro_ticks < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0 {
 
-            if action.is_none() {
-                action = Some(ctx.simulator.me().action().clone());
-            }
-
             log!(
                 ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
                 ctx.robot_id, ctx.order_id,
@@ -343,8 +319,6 @@ impl WatchBallMove {
 
             ctx.tick(TickType::Far);
         }
-
-        action
     }
 }
 
@@ -352,7 +326,7 @@ pub struct JumpToBall {
 }
 
 impl JumpToBall {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -364,7 +338,7 @@ impl JumpToBall {
         );
 
         if !self.does_jump_hit_ball(ctx) {
-            return None;
+            return;
         }
 
         log!(
@@ -374,7 +348,7 @@ impl JumpToBall {
             ctx.simulator.me().position().distance(ctx.simulator.ball().position())
         );
 
-        let action = FarJump {
+        FarJump {
         }.perform(ctx);
 
         WatchMeJump {
@@ -385,8 +359,6 @@ impl JumpToBall {
         WatchBallMove {
             stop: false,
         }.perform(ctx);
-
-        Some(action)
     }
 
     pub fn does_jump_hit_ball<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> bool
@@ -439,7 +411,7 @@ pub struct FarJump {
 }
 
 impl FarJump {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Action
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -458,8 +430,6 @@ impl FarJump {
             let target_velocity = velocity.normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
         }
-
-        let action = ctx.simulator.me().action().clone();
 
         log!(
             ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
@@ -499,8 +469,6 @@ impl FarJump {
                     + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
             );
         }
-
-        action
     }
 }
 
@@ -510,14 +478,13 @@ pub struct WatchMeJump {
 }
 
 impl WatchMeJump {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
         where G: Fn(i32, i32) -> Option<&'a Action> {
         use crate::my_strategy::simulator::{Solid, RobotCollisionType};
         use crate::my_strategy::entity::Entity;
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
-        let mut action = None;
         let mut collided_with_ball = false;
 
         log!(
@@ -549,10 +516,6 @@ impl WatchMeJump {
                 ctx.simulator.me_mut().action_mut().use_nitro = false;
             }
 
-            if action.is_none() {
-                action = Some(ctx.simulator.me().action().clone());
-            }
-
             log!(
                 ctx.current_tick, "[{}] <{}> watch me jump {}:{} distance_to_arena={}/{}",
                 ctx.robot_id, ctx.order_id,
@@ -562,8 +525,6 @@ impl WatchMeJump {
 
             ctx.tick(TickType::Near);
         }
-
-        action
     }
 }
 
@@ -573,18 +534,17 @@ pub struct ContinueJump {
 }
 
 impl ContinueJump {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Option<Action>
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
-        let mut action = WatchMeJump {
+        WatchMeJump {
             jump_speed: self.jump_speed,
             allow_nitro: self.allow_nitro,
         }.perform(ctx);
 
-        action = action.or(WatchBallMove {
+        WatchBallMove {
             stop: true,
-        }.perform(ctx));
+        }.perform(ctx);
 
-        action
     }
 }
