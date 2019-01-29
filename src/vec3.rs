@@ -112,7 +112,7 @@ impl Vec3 {
     }
 
     pub fn opposite(&self) -> Vec3 {
-        Vec3::new(-self.x, self.y, -self.z)
+        Vec3::new(self.x, self.y, -self.z)
     }
 }
 

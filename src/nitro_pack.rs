@@ -15,7 +15,7 @@ impl NitroPack {
     pub fn opposite(&self) -> Self {
         NitroPack {
             id: self.id,
-            x: -self.x,
+            x: self.x,
             y: self.y,
             z: -self.z,
             radius: self.radius,

@@ -20,7 +20,7 @@ impl Action {
 
     pub fn opposite(&self) -> Action {
         Action {
-            target_velocity_x: -self.target_velocity_x,
+            target_velocity_x: self.target_velocity_x,
             target_velocity_y: self.target_velocity_y,
             target_velocity_z: -self.target_velocity_z,
             jump_speed: self.jump_speed,
