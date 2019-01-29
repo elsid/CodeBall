@@ -223,6 +223,7 @@ impl MyStrategyImpl {
                 .collect();
         } else {
             self.robots_priority = self.orders.iter()
+                .filter(|v| self.world.is_teammate(v.robot_id()))
                 .map(|v| v.robot_id())
                 .collect();
         }
@@ -322,7 +323,7 @@ impl MyStrategyImpl {
             }
         }
 
-        self.orders = all_orders.into_iter().skip(opponents_orders_num).collect();
+        self.orders = all_orders;
     }
 
     fn apply_action(&mut self, action: &mut Action) {
