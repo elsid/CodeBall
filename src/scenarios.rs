@@ -179,8 +179,6 @@ impl WalkToPosition {
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::simulator::RobotCollisionType;
 
-        let stored_action = ctx.simulator.me().action().clone();
-
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
         let mut action = None;
@@ -230,8 +228,6 @@ impl WalkToPosition {
             );
         }
 
-        *ctx.simulator.me_mut().action_mut() = stored_action;
-
         action
     }
 
@@ -260,8 +256,6 @@ impl Jump {
         {
             ctx.stats.time_to_jump = ctx.simulator.current_time();
         }
-
-        let stored_action = ctx.simulator.me().action().clone();
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
@@ -297,8 +291,6 @@ impl Jump {
             );
         }
 
-        *ctx.simulator.me_mut().action_mut() = stored_action;
-
         action
     }
 }
@@ -317,8 +309,6 @@ impl WatchBallMove {
         {
             ctx.stats.time_to_watch = ctx.simulator.current_time();
         }
-
-        let stored_action = ctx.simulator.me().action().clone();
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
@@ -353,8 +343,6 @@ impl WatchBallMove {
 
             ctx.tick(TickType::Far);
         }
-
-        *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
     }
@@ -461,8 +449,6 @@ impl FarJump {
             ctx.stats.time_to_jump = ctx.simulator.current_time();
         }
 
-        let stored_action = ctx.simulator.me().action().clone();
-
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
         ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
@@ -514,8 +500,6 @@ impl FarJump {
             );
         }
 
-        *ctx.simulator.me_mut().action_mut() = stored_action;
-
         action
     }
 }
@@ -530,8 +514,6 @@ impl WatchMeJump {
         where G: Fn(i32, i32) -> Option<&'a Action> {
         use crate::my_strategy::simulator::{Solid, RobotCollisionType};
         use crate::my_strategy::entity::Entity;
-
-        let stored_action = ctx.simulator.me().action().clone();
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
@@ -580,8 +562,6 @@ impl WatchMeJump {
 
             ctx.tick(TickType::Near);
         }
-
-        *ctx.simulator.me_mut().action_mut() = stored_action;
 
         action
     }
