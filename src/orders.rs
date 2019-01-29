@@ -413,14 +413,14 @@ impl Play {
         let mut order: Option<Play> = None;
 
         for point in points {
-            let action_id = ctx.order_id_generator.next();
+            let order_id = ctx.order_id_generator.next();
             let target = {
                 let mut robot = global_simulator.me().clone();
                 robot.set_position(point);
                 world.rules.arena.collide(&mut robot);
                 log!(
                     world.game.current_tick, "[{}] <{}> adjust target {}:{} target={:?} new={:?}",
-                    robot.id(), action_id, global_simulator.current_time(), global_simulator.current_micro_tick(),
+                    robot.id(), order_id, global_simulator.current_time(), global_simulator.current_micro_tick(),
                     point, robot.position()
                 );
                 robot.position()
@@ -439,7 +439,7 @@ impl Play {
 
             log!(
                 world.game.current_tick, "[{}] <{}> suggest target {}:{} distance={} speed={} target={:?}",
-                robot.id, action_id, global_simulator.current_time(),
+                robot.id, order_id, global_simulator.current_time(),
                 global_simulator.current_micro_tick(), distance_to_target,
                 required_speed, target
             );
@@ -450,10 +450,10 @@ impl Play {
                 .distance(local_simulator.ball().position());
             let ball_distance_limit  = ball_distance_limit + required_speed * time_interval;
             let near_micro_ticks_per_tick = if distance_to_ball > ball_distance_limit {
-                log!(world.game.current_tick, "[{}] <{}> far", robot.id, action_id);
+                log!(world.game.current_tick, "[{}] <{}> far", robot.id, order_id);
                 FAR_MICRO_TICKS_PER_TICK
             } else {
-                log!(world.game.current_tick, "[{}] <{}> near", robot.id, action_id);
+                log!(world.game.current_tick, "[{}] <{}> near", robot.id, order_id);
                 NEAR_MICRO_TICKS_PER_TICK
             };
             let mut time_to_ball = None;
@@ -467,7 +467,7 @@ impl Play {
             let mut scenario_ctx = Context {
                 current_tick: world.game.current_tick,
                 robot_id: robot.id,
-                action_id,
+                order_id,
                 simulator: &mut local_simulator,
                 rng: ctx.rng,
                 time_to_ball: &mut time_to_ball,
@@ -496,7 +496,7 @@ impl Play {
             if local_simulator.score() != 0 {
                 log!(
                     world.game.current_tick, "[{}] <{}> goal {}:{} score={}",
-                    robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
+                    robot.id, order_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
                     local_simulator.score()
                 );
             }
@@ -509,7 +509,7 @@ impl Play {
                     time_to_goal,
                     world.game.current_tick,
                     robot.id,
-                    action_id,
+                    order_id,
                 );
 
                 #[cfg(feature = "enable_stats")]
@@ -519,13 +519,13 @@ impl Play {
 
                 log!(
                     world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}",
-                    robot.id, action_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
+                    robot.id, order_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
                     action_score, action.target_velocity().norm()
                 );
 
                 if order.is_none() || order.as_ref().unwrap().score < action_score {
                     order = Some(Play {
-                        id: action_id,
+                        id: order_id,
                         robot_id: robot.id,
                         action,
                         score: action_score,
@@ -561,7 +561,7 @@ impl Play {
             return None;
         }
 
-        let action_id = ctx.order_id_generator.next();
+        let order_id = ctx.order_id_generator.next();
         let mut local_simulator = make_initial_simulator(robot, world);
         let mut time_to_ball = None;
         let mut time_to_goal = None;
@@ -574,7 +574,7 @@ impl Play {
         let mut scenario_ctx = Context {
             current_tick: world.game.current_tick,
             robot_id: robot.id,
-            action_id,
+            order_id,
             simulator: &mut local_simulator,
             rng: ctx.rng,
             time_to_ball: &mut time_to_ball,
@@ -604,7 +604,7 @@ impl Play {
                 time_to_goal,
                 world.game.current_tick,
                 robot.id,
-                action_id,
+                order_id,
             );
 
             #[cfg(feature = "enable_stats")]
@@ -614,12 +614,12 @@ impl Play {
 
             log!(
                 world.game.current_tick, "[{}] <{}> suggest action far jump {}:{} score={}",
-                robot.id, action_id,
+                robot.id, order_id,
                 local_simulator.current_time(), local_simulator.current_micro_tick(), action_score
             );
 
             Some(Play {
-                id: action_id,
+                id: order_id,
                 robot_id: robot.id,
                 action,
                 score: action_score,
@@ -648,7 +648,7 @@ impl Play {
             return None;
         }
 
-        let action_id = ctx.order_id_generator.next();
+        let order_id = ctx.order_id_generator.next();
         let mut simulator = make_initial_simulator(robot, world);
         let mut time_to_ball = None;
         let mut time_to_goal = None;
@@ -662,7 +662,7 @@ impl Play {
         let mut scenario_ctx = Context {
             current_tick: world.game.current_tick,
             robot_id: robot.id,
-            action_id,
+            order_id,
             simulator: &mut simulator,
             rng: ctx.rng,
             time_to_ball: &mut time_to_ball,
@@ -694,7 +694,7 @@ impl Play {
                 time_to_goal,
                 world.game.current_tick,
                 robot.id,
-                action_id,
+                order_id,
             );
 
             #[cfg(feature = "enable_stats")]
@@ -705,12 +705,12 @@ impl Play {
             log!(
                 world.game.current_tick,
                 "[{}] <{}> suggest action continue jump {}:{} score={} jump_speed={} nitro={}",
-                robot.id, action_id, simulator.current_time(), simulator.current_micro_tick(),
+                robot.id, order_id, simulator.current_time(), simulator.current_micro_tick(),
                 action_score, jump_speed, allow_nitro
             );
 
             Some(Play {
-                id: action_id,
+                id: order_id,
                 robot_id: robot.id,
                 action,
                 score: action_score,
@@ -789,7 +789,7 @@ pub fn render_history(history: &Vec<Simulator>, render: &mut Render) {
 }
 
 fn get_order_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f64>,
-                   time_to_goal: Option<f64>, current_tick: i32, robot_id: i32, action_id: i32) -> i32 {
+                   time_to_goal: Option<f64>, current_tick: i32, robot_id: i32, order_id: i32) -> i32 {
     use crate::my_strategy::common::as_score;
     use crate::my_strategy::scenarios::MAX_TICKS;
 
@@ -830,7 +830,7 @@ fn get_order_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f6
         + 0.25 * time_to_goal_score;
     log!(
         current_tick, "[{}] <{}> action ball_goal_distance_score={} ball_goal_direction_score={} time_to_ball_score={} total={}",
-        robot_id, action_id, ball_goal_distance_score, ball_goal_direction_score, time_to_ball_score, score
+        robot_id, order_id, ball_goal_distance_score, ball_goal_direction_score, time_to_ball_score, score
     );
     as_score(score)
 }
