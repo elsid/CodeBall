@@ -94,12 +94,12 @@ impl<'r, 'a, G> Context<'r, 'a, G>
             self.stats.reached_scenario_limit = self.scenario_micro_ticks >= MAX_MICRO_TICKS;
             self.stats.scenario_micro_ticks = self.scenario_micro_ticks;
             self.stats.time_to_end = self.simulator.current_time();
-            self.stats.time_to_score = if self.simulator.score() != self.stats.score {
+            self.stats.time_to_score = if self.simulator.score() != self.stats.game_score {
                 Some(self.simulator.current_time())
             } else {
                 None
             };
-            self.stats.score = self.simulator.score();
+            self.stats.game_score = self.simulator.score();
 
             if micro_ticks_per_tick == NEAR_MICRO_TICKS_PER_TICK {
                 self.stats.ticks_with_near_micro_ticks += 1;

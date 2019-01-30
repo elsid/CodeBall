@@ -500,7 +500,7 @@ impl Play {
             }
 
             if !actions.is_empty() {
-                let action_score = get_order_score(
+                let order_score = get_order_score(
                     &world.rules,
                     &local_simulator,
                     time_to_ball,
@@ -512,20 +512,20 @@ impl Play {
 
                 #[cfg(feature = "enable_stats")]
                 {
-                    stats.action_score = action_score;
+                    stats.order_score = order_score;
                 }
 
                 log!(
                     world.game.current_tick, "[{}] <{}> suggest action {}:{} score={} speed={}",
                     robot.id, order_id, local_simulator.current_time(), local_simulator.current_micro_tick(),
-                    action_score, actions.first().unwrap().target_velocity().norm()
+                    order_score, actions.first().unwrap().target_velocity().norm()
                 );
 
-                if order.is_none() || order.as_ref().unwrap().score < action_score {
+                if order.is_none() || order.as_ref().unwrap().score < order_score {
                     order = Some(Play {
                         id: order_id,
                         robot_id: robot.id,
-                        score: action_score,
+                        score: order_score,
                         time_to_ball,
                         actions,
                         scenario: Scenario::JumpAtPosition(scenario),
@@ -594,7 +594,7 @@ impl Play {
         *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
         if !actions.is_empty() {
-            let action_score = get_order_score(
+            let order_score = get_order_score(
                 &world.rules,
                 &local_simulator,
                 time_to_ball,
@@ -606,19 +606,19 @@ impl Play {
 
             #[cfg(feature = "enable_stats")]
             {
-                stats.action_score = action_score;
+                stats.order_score = order_score;
             }
 
             log!(
                 world.game.current_tick, "[{}] <{}> suggest action far jump {}:{} score={}",
                 robot.id, order_id,
-                local_simulator.current_time(), local_simulator.current_micro_tick(), action_score
+                local_simulator.current_time(), local_simulator.current_micro_tick(), order_score
             );
 
             Some(Play {
                 id: order_id,
                 robot_id: robot.id,
-                score: action_score,
+                score: order_score,
                 time_to_ball,
                 actions,
                 scenario: Scenario::None,
@@ -683,7 +683,7 @@ impl Play {
         *ctx.game_micro_ticks += scenario_ctx.scenario_micro_ticks;
 
         if !actions.is_empty() {
-            let action_score = get_order_score(
+            let order_score = get_order_score(
                 &world.rules,
                 &simulator,
                 time_to_ball,
@@ -695,20 +695,20 @@ impl Play {
 
             #[cfg(feature = "enable_stats")]
             {
-                stats.action_score = action_score;
+                stats.order_score = order_score;
             }
 
             log!(
                 world.game.current_tick,
                 "[{}] <{}> suggest action continue jump {}:{} score={} jump_speed={} nitro={}",
                 robot.id, order_id, simulator.current_time(), simulator.current_micro_tick(),
-                action_score, jump_speed, allow_nitro
+                order_score, jump_speed, allow_nitro
             );
 
             Some(Play {
                 id: order_id,
                 robot_id: robot.id,
-                score: action_score,
+                score: order_score,
                 time_to_ball,
                 actions,
                 scenario: Scenario::None,
