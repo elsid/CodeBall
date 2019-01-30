@@ -135,12 +135,12 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.008554082373327217,
-        y: 3.307117848029193,
-        z: 0.23373750302531543,
-        velocity_x: 1.3726393982194756,
-        velocity_y: 18.234645334589796,
-        velocity_z: 37.506922600418974,
+        x: 0.010140994996958893,
+        y: 3.313079288501532,
+        z: 0.26032655549236033,
+        velocity_x: 1.5435199991666337,
+        velocity_y: 18.708634435629627,
+        velocity_z: 39.623256380376844,
         radius: 2.0,
     });
     assert_eq!(simulator.me().action().jump_speed, 15.0);
@@ -151,7 +151,7 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 111);
+    assert_eq!(simulator.current_tick(), 108);
 }
 
 #[test]
@@ -193,14 +193,14 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 64);
+    assert_eq!(simulator.current_tick(), 63);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.score() == 0 && simulator.current_tick() < 100
     });
 
     assert_eq!(simulator.score(), -1);
-    assert_eq!(simulator.current_tick(), 64);
+    assert_eq!(simulator.current_tick(), 63);
 }
 
 #[test]

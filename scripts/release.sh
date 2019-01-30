@@ -33,6 +33,8 @@ cp src/nitro_pack.rs ${DIR}/src
 cp src/game.rs ${DIR}/src
 cp src/player.rs ${DIR}/src
 cp src/roles.rs ${DIR}/src
+cp src/search.rs ${DIR}/src
+cp src/plan.rs ${DIR}/src
 
 cd ${DIR}/src
 

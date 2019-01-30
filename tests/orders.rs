@@ -20,7 +20,7 @@ fn test_try_play() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1117);
+    assert_eq!(result.score(), 1121);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-16.3826505756388, 0.0, 25.131827631840103));
 
@@ -29,25 +29,25 @@ fn test_try_play() {
         player_id: 1,
         robot_id: 1,
         current_tick: 0,
-        order: "jump_at_position",
+        order: "play",
         time_to_jump: 0.733333333333334,
         time_to_watch: 0.7833333333333341,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 2,
-        total_iterations: 5,
+        iteration: 56,
+        total_iterations: 61,
         game_score: 0,
-        order_score: 1117,
+        order_score: 1121,
         path_micro_ticks: 300,
-        plan_micro_ticks: 5375,
-        game_micro_ticks: 5375,
+        plan_micro_ticks: 5175,
+        game_micro_ticks: 5175,
         game_micro_ticks_limit: 30000,
-        current_step: 4,
+        current_step: 8,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 0,
+        ticks_with_near_micro_ticks: 50,
         ticks_with_far_micro_ticks: 100,
     });
 }
@@ -99,25 +99,25 @@ fn test_try_play_should_not_jump_on_ball_top() {
         player_id: 1,
         robot_id: 2,
         current_tick: 0,
-        order: "jump_at_position",
+        order: "play",
         time_to_jump: 0.31666666666666665,
         time_to_watch: 0.36666666666666664,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 5,
-        total_iterations: 5,
+        iteration: 45,
+        total_iterations: 48,
         game_score: 0,
         order_score: 1334,
         path_micro_ticks: 300,
-        plan_micro_ticks: 3550,
-        game_micro_ticks: 3550,
+        plan_micro_ticks: 3350,
+        game_micro_ticks: 3350,
         game_micro_ticks_limit: 30000,
         current_step: 8,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 0,
+        ticks_with_near_micro_ticks: 25,
         ticks_with_far_micro_ticks: 100,
     });
 }
@@ -160,7 +160,7 @@ fn test_try_play_far_jump() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1248);
+    assert_eq!(result.score(), 1256);
     assert_eq!(result.action().jump_speed, 15.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(0.0, 0.0, 30.0));
 
@@ -169,18 +169,18 @@ fn test_try_play_far_jump() {
         player_id: 1,
         robot_id: 2,
         current_tick: 0,
-        order: "jump_to_ball",
+        order: "play",
         time_to_jump: 0.0,
         time_to_watch: 0.16666666666666666,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 0,
-        total_iterations: 5,
+        iteration: 3,
+        total_iterations: 71,
         game_score: 0,
-        order_score: 1248,
+        order_score: 1256,
         path_micro_ticks: 413,
-        plan_micro_ticks: 6113,
-        game_micro_ticks: 6113,
+        plan_micro_ticks: 5913,
+        game_micro_ticks: 5913,
         game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
@@ -233,13 +233,13 @@ fn test_try_play_continue_jump() {
         player_id: 1,
         robot_id: 1,
         current_tick: 0,
-        order: "continue_jump",
+        order: "play",
         time_to_jump: 0.0,
         time_to_watch: 0.11666666666666665,
         time_to_end: 1.183333333333334,
         time_to_score: Some(1.183333333333334),
-        iteration: 0,
-        total_iterations: 0,
+        iteration: 2,
+        total_iterations: 5,
         game_score: 1,
         order_score: 2621,
         path_micro_ticks: 367,
@@ -288,7 +288,7 @@ fn test_try_play_continue_jump_with_nitro() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 2610);
+    assert_eq!(result.score(), 2604);
     assert_eq!(result.action().use_nitro, true);
     assert_eq!(result.action().jump_speed, 15.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-37.54676686691887, 14.6683757644347, 91.51545798538402));
@@ -298,18 +298,18 @@ fn test_try_play_continue_jump_with_nitro() {
         player_id: 1,
         robot_id: 1,
         current_tick: 0,
-        order: "continue_jump",
+        order: "play",
         time_to_jump: 0.0,
         time_to_watch: 0.11666666666666665,
-        time_to_end: 1.1500000000000008,
-        time_to_score: Some(1.1500000000000008),
-        iteration: 0,
-        total_iterations: 0,
+        time_to_end: 1.2166666666666672,
+        time_to_score: Some(1.2166666666666672),
+        iteration: 2,
+        total_iterations: 9,
         game_score: 1,
-        order_score: 2610,
-        path_micro_ticks: 361,
-        plan_micro_ticks: 1621,
-        game_micro_ticks: 1621,
+        order_score: 2604,
+        path_micro_ticks: 373,
+        plan_micro_ticks: 1651,
+        game_micro_ticks: 1651,
         game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
@@ -317,7 +317,7 @@ fn test_try_play_continue_jump_with_nitro() {
         reached_scenario_limit: false,
         other_number: 0,
         ticks_with_near_micro_ticks: 7,
-        ticks_with_far_micro_ticks: 62,
+        ticks_with_far_micro_ticks: 66,
     });
 }
 
@@ -362,25 +362,25 @@ fn test_try_play_when_far_from_ball_at_my_side() {
         player_id: 1,
         robot_id: 1,
         current_tick: 0,
-        order: "jump_at_position",
+        order: "play",
         time_to_jump: 0.0,
         time_to_watch: 0.0,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 1,
-        total_iterations: 5,
+        iteration: 4,
+        total_iterations: 18,
         game_score: 0,
         order_score: 800,
         path_micro_ticks: 300,
-        plan_micro_ticks: 4000,
-        game_micro_ticks: 4000,
+        plan_micro_ticks: 3800,
+        game_micro_ticks: 3800,
         game_micro_ticks_limit: 30000,
-        current_step: 3,
+        current_step: 1,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 0,
+        ticks_with_near_micro_ticks: 36,
         ticks_with_far_micro_ticks: 100,
     });
 }
@@ -425,25 +425,25 @@ fn test_try_play_when_far_from_ball_at_opponent_side() {
         player_id: 1,
         robot_id: 1,
         current_tick: 0,
-        order: "jump_at_position",
+        order: "play",
         time_to_jump: 0.0,
         time_to_watch: 0.0,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 1,
-        total_iterations: 5,
+        iteration: 4,
+        total_iterations: 18,
         game_score: 0,
         order_score: 334,
         path_micro_ticks: 300,
-        plan_micro_ticks: 4000,
-        game_micro_ticks: 4000,
+        plan_micro_ticks: 3800,
+        game_micro_ticks: 3800,
         game_micro_ticks_limit: 30000,
-        current_step: 3,
+        current_step: 1,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 0,
+        ticks_with_near_micro_ticks: 36,
         ticks_with_far_micro_ticks: 100,
     });
 }
@@ -480,7 +480,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 530);
+    assert_eq!(result.score(), 534);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(11.693888968138127, 0.0, -27.62703315234659));
@@ -490,25 +490,25 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         player_id: 1,
         robot_id: 1,
         current_tick: 0,
-        order: "jump_at_position",
+        order: "play",
         time_to_jump: 0.5666666666666668,
         time_to_watch: 0.9500000000000013,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 1,
-        total_iterations: 5,
+        iteration: 19,
+        total_iterations: 36,
         game_score: 0,
-        order_score: 530,
+        order_score: 534,
         path_micro_ticks: 300,
-        plan_micro_ticks: 5069,
-        game_micro_ticks: 5069,
+        plan_micro_ticks: 4869,
+        game_micro_ticks: 4869,
         game_micro_ticks_limit: 30000,
-        current_step: 3,
+        current_step: 1,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 0,
+        ticks_with_near_micro_ticks: 63,
         ticks_with_far_micro_ticks: 100,
     });
 }
@@ -546,7 +546,7 @@ fn test_try_play_goalkeeper_should_catch() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 768);
+    assert_eq!(result.score(), 741);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 15.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(28.561044526277186, 0.0, -9.179691474554682));
@@ -556,18 +556,18 @@ fn test_try_play_goalkeeper_should_catch() {
         player_id: 1,
         robot_id: 1,
         current_tick: 0,
-        order: "jump_to_ball",
+        order: "play",
         time_to_jump: 0.0,
         time_to_watch: 0.44999999999999996,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 0,
-        total_iterations: 5,
+        iteration: 3,
+        total_iterations: 36,
         game_score: 0,
-        order_score: 768,
+        order_score: 741,
         path_micro_ticks: 391,
-        plan_micro_ticks: 3705,
-        game_micro_ticks: 3705,
+        plan_micro_ticks: 3505,
+        game_micro_ticks: 3505,
         game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,

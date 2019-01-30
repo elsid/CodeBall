@@ -8,6 +8,8 @@ use crate::my_strategy::stats::Stats;
 pub const MAX_TICKS: i32 = 100;
 pub const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 pub const FAR_MICRO_TICKS_PER_TICK: usize = 3;
+const MAX_OBSERVATIONS: usize = 5;
+const TICKS_PER_STEPS: &'static [usize] = &[1, 3, 4, 8];
 
 pub struct Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
@@ -15,6 +17,7 @@ pub struct Context<'r, 'a, G>
     pub current_tick: i32,
     pub robot_id: i32,
     pub order_id: i32,
+    pub state_id: i32,
     pub simulator: &'r mut Simulator,
     pub rng: &'r mut XorShiftRng,
     pub time_to_ball: &'r mut Option<f64>,
@@ -37,6 +40,7 @@ pub enum TickType {
     Far,
 }
 
+#[derive(Copy, Clone, Debug)]
 pub enum Error {
     Goal,
     TicksLimit,
@@ -44,23 +48,29 @@ pub enum Error {
     BadCondition,
 }
 
+const GOAL: usize = 1 << 0;
+const TICK_LIMIT: usize = 1 << 1;
+const MICRO_TICKS_LIMIT: usize = 1 << 2;
+const LIMITS: usize = TICK_LIMIT | MICRO_TICKS_LIMIT;
+const ALL: usize = GOAL | LIMITS;
+
 pub type Result = std::result::Result<(), Error>;
 
 impl<'r, 'a, G> Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
-    pub fn tick(&mut self, tick_type: TickType) -> Result {
+    pub fn tick(&mut self, tick_type: TickType, checks: usize) -> Result {
         use crate::my_strategy::simulator::RobotCollisionType;
 
-        if self.simulator.score() != 0 {
+        if checks & GOAL != 0 && self.simulator.score() != 0 {
             return Err(Error::Goal);
         }
 
-        if self.simulator.current_tick() >= MAX_TICKS {
+        if checks & TICK_LIMIT != 0 && self.simulator.current_tick() >= MAX_TICKS {
             return Err(Error::TicksLimit);
         }
 
-        if *self.used_path_micro_ticks >= self.max_path_micro_ticks {
+        if checks & MICRO_TICKS_LIMIT != 0 && *self.used_path_micro_ticks >= self.max_path_micro_ticks {
             return Err(Error::MicroTicksLimit);
         }
 
@@ -83,30 +93,36 @@ impl<'r, 'a, G> Context<'r, 'a, G>
 
         *self.used_path_micro_ticks += micro_ticks_per_tick;
 
-        if self.simulator.me().collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
-            *self.time_to_ball = Some(self.simulator.current_time());
+        if !self.simulator.ignore_me() {
+            if self.simulator.me().collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
+                *self.time_to_ball = Some(self.simulator.current_time());
+            }
+
+            if self.simulator.score() != 0 && self.time_to_goal.is_none() {
+                *self.time_to_goal = Some(self.simulator.current_time());
+            }
+
+            self.actions.push(self.simulator.me().action().clone());
+
+            #[cfg(feature = "enable_render")]
+            self.history.push(self.simulator.clone());
+
+            #[cfg(feature = "enable_stats")]
+            {
+                self.stats.time_to_end = self.simulator.current_time();
+                self.stats.time_to_score = if self.simulator.score() != self.stats.game_score {
+                    Some(self.simulator.current_time())
+                } else {
+                    None
+                };
+                self.stats.game_score = self.simulator.score();
+            }
         }
-
-        if self.simulator.score() != 0 && self.time_to_goal.is_none() {
-            *self.time_to_goal = Some(self.simulator.current_time());
-        }
-
-        self.actions.push(self.simulator.me().action().clone());
-
-        #[cfg(feature = "enable_render")]
-        self.history.push(self.simulator.clone());
 
         #[cfg(feature = "enable_stats")]
         {
             self.stats.reached_scenario_limit = *self.used_path_micro_ticks >= self.max_path_micro_ticks;
             self.stats.path_micro_ticks = *self.used_path_micro_ticks;
-            self.stats.time_to_end = self.simulator.current_time();
-            self.stats.time_to_score = if self.simulator.score() != self.stats.game_score {
-                Some(self.simulator.current_time())
-            } else {
-                None
-            };
-            self.stats.game_score = self.simulator.score();
 
             if micro_ticks_per_tick == NEAR_MICRO_TICKS_PER_TICK {
                 self.stats.ticks_with_near_micro_ticks += 1;
@@ -116,52 +132,6 @@ impl<'r, 'a, G> Context<'r, 'a, G>
         }
 
         Ok(())
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct JumpAtPosition {
-    pub position: Vec3,
-    pub my_max_speed: f64,
-    pub allow_nitro: bool,
-}
-
-impl JumpAtPosition {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
-        where G: Fn(i32, i32) -> Option<&'a Action> {
-
-        log!(
-            ctx.current_tick, "[{}] <{}> jump at position {}:{}",
-            ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.used_path_micro_ticks
-        );
-
-        WalkToPosition {
-            target: self.position,
-            max_speed: self.my_max_speed,
-        }.perform(ctx)?;
-
-        Jump {
-            allow_nitro: self.allow_nitro,
-        }.perform(ctx)?;
-
-        WatchMeJump {
-            jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
-            allow_nitro: self.allow_nitro,
-        }.perform(ctx)?;
-
-        WatchBallMove {
-        }.perform(ctx)?;
-
-        Ok(())
-    }
-
-    pub fn opposite(&self) -> Self {
-        JumpAtPosition {
-            position: self.position.opposite(),
-            my_max_speed: self.my_max_speed,
-            allow_nitro: self.allow_nitro,
-        }
     }
 }
 
@@ -185,8 +155,8 @@ impl WalkToPosition {
             + self.max_speed * ctx.simulator.rules().tick_time_interval();
 
         log!(
-            ctx.current_tick, "[{}] <{}> move to position {}:{} target={}/{} ball={}/{}",
-            ctx.robot_id, ctx.order_id,
+            ctx.current_tick, "[{}] <{}> <{}> move to position {}:{} target={}/{} ball={}/{}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
             ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().position().distance(self.target), max_distance_to_target,
             ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
@@ -206,11 +176,11 @@ impl WalkToPosition {
             );
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
-            ctx.tick(TickType::Far)?;
+            ctx.tick(TickType::Far, ALL)?;
 
             log!(
-                ctx.current_tick, "[{}] <{}> move {}:{} target={}/{} ball={}/{}",
-                ctx.robot_id, ctx.order_id,
+                ctx.current_tick, "[{}] <{}> <{}> move {}:{} target={}/{} ball={}/{}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
                 ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.me().position().distance(self.target), max_distance_to_target,
                 ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
@@ -252,8 +222,8 @@ impl Jump {
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
         log!(
-            ctx.current_tick, "[{}] <{}> jump {}:{}",
-            ctx.robot_id, ctx.order_id,
+            ctx.current_tick, "[{}] <{}> <{}> jump {}:{}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
             ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
@@ -265,11 +235,11 @@ impl Jump {
         ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
         ctx.simulator.me_mut().action_mut().use_nitro = self.allow_nitro;
 
-        ctx.tick(TickType::Near)?;
+        ctx.tick(TickType::Near, ALL)?;
 
         log!(
-            ctx.current_tick, "[{}] <{}> jump {}:{}",
-            ctx.robot_id, ctx.order_id,
+            ctx.current_tick, "[{}] <{}> <{}> jump {}:{}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
             ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
@@ -295,52 +265,22 @@ impl WatchBallMove {
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
         log!(
-            ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
-            ctx.robot_id, ctx.order_id,
+            ctx.current_tick, "[{}] <{}> <{}> watch ball move {}:{} ball_position={:?}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
             ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.ball().position()
         );
 
         loop {
             log!(
-                ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
-                ctx.robot_id, ctx.order_id,
+                ctx.current_tick, "[{}] <{}> <{}> watch ball move {}:{} ball_position={:?}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
                 ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.ball().position()
             );
 
-            ctx.tick(TickType::Far)?;
+            ctx.tick(TickType::Far, ALL)?;
         }
-    }
-}
-
-pub struct JumpToBall {
-    pub allow_nitro: bool,
-}
-
-impl JumpToBall {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
-        where G: Fn(i32, i32) -> Option<&'a Action> {
-
-        log!(
-            ctx.current_tick, "[{}] <{}> jump to ball {}:{}",
-            ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.used_path_micro_ticks
-        );
-
-        FarJump {
-            allow_nitro: self.allow_nitro,
-        }.perform(ctx)?;
-
-        WatchMeJump {
-            jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
-            allow_nitro: self.allow_nitro,
-        }.perform(ctx)?;
-
-        WatchBallMove {
-        }.perform(ctx)?;
-
-        Ok(())
     }
 }
 
@@ -383,19 +323,19 @@ impl FarJump {
         }
 
         log!(
-            ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
-            ctx.robot_id, ctx.order_id,
+            ctx.current_tick, "[{}] <{}> <{}> far jump {}:{} ball={}/{}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
             ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
             ctx.simulator.rules().ball_distance_limit()
                 + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
         );
 
-        ctx.tick(TickType::Near)?;
+        ctx.tick(TickType::Near, ALL)?;
 
         log!(
-            ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
-            ctx.robot_id, ctx.order_id,
+            ctx.current_tick, "[{}] <{}> <{}> far jump {}:{} ball={}/{}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
             ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
             ctx.simulator.rules().ball_distance_limit()
@@ -406,11 +346,11 @@ impl FarJump {
                 > ctx.simulator.rules().ball_distance_limit()
                     + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval() {
 
-            ctx.tick(TickType::Far)?;
+            ctx.tick(TickType::Far, ALL)?;
 
             log!(
-                ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
-                ctx.robot_id, ctx.order_id,
+                ctx.current_tick, "[{}] <{}> <{}> far jump {}:{} ball={}/{}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
                 ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
                 ctx.simulator.rules().ball_distance_limit()
@@ -439,8 +379,8 @@ impl WatchMeJump {
         let mut collided_with_ball = false;
 
         log!(
-            ctx.current_tick, "[{}] <{}> watch me jump {}:{} distance_to_arena={}/{}",
-            ctx.robot_id, ctx.order_id,
+            ctx.current_tick, "[{}] <{}> <{}> watch me jump {}:{} distance_to_arena={}/{}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
             ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
         );
@@ -465,13 +405,13 @@ impl WatchMeJump {
             }
 
             log!(
-                ctx.current_tick, "[{}] <{}> watch me jump {}:{} distance_to_arena={}/{}",
-                ctx.robot_id, ctx.order_id,
+                ctx.current_tick, "[{}] <{}> <{}> watch me jump {}:{} distance_to_arena={}/{}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
                 ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
             );
 
-            ctx.tick(TickType::Near)?;
+            ctx.tick(TickType::Near, ALL)?;
         }
 
         Ok(())
@@ -479,22 +419,72 @@ impl WatchMeJump {
 }
 
 #[derive(Debug, Clone)]
-pub struct ContinueJump {
-    pub jump_speed: f64,
-    pub allow_nitro: bool,
+pub struct Observe {
+    pub number: usize,
+    pub wait_until: f64,
+    pub max_ball_z: f64,
 }
 
-impl ContinueJump {
+impl Observe {
     pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
-        WatchMeJump {
-            jump_speed: self.jump_speed,
-            allow_nitro: self.allow_nitro,
-        }.perform(ctx)?;
+        use crate::my_strategy::entity::Entity;
 
-        WatchBallMove {
-        }.perform(ctx)?;
+        if self.number >= MAX_OBSERVATIONS {
+            return Err(Error::BadCondition);
+        }
+
+        *ctx.simulator.me_mut().action_mut() = Action::default();
+        ctx.simulator.set_ignore_me(true);
+
+        let step = TICKS_PER_STEPS[self.number.min(TICKS_PER_STEPS.len() - 1)];
+
+        #[cfg(feature = "enable_stats")]
+        {
+            ctx.stats.current_step = step;
+        }
+
+        log!(
+            ctx.current_tick, "[{}] <{}> <{}> observe {}:{} ball_position={:?}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+            ctx.simulator.ball().position()
+        );
+
+        let mut first = true;
+
+        loop {
+            let rules = ctx.simulator.rules();
+            let ball_position = ctx.simulator.ball().position();
+            let (distance, normal) = rules.arena.distance_and_normal(ball_position);
+
+            if (self.number == 0 || !first)
+                && ctx.simulator.current_time() >= self.wait_until
+                && ball_position.z() < self.max_ball_z
+                && (
+                    ball_position.y() < rules.max_robot_jump_height() || (
+                        distance < rules.max_robot_jump_height()
+                        && ball_position.y() < rules.max_robot_wall_walk_height()
+                        && Vec3::j().cos(normal) >= 0.0
+                    )
+            ) {
+                break;
+            }
+
+            first = false;
+
+            log!(
+                ctx.current_tick, "[{}] <{}> <{}> observe {}:{} ball_position={:?}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+                ctx.simulator.ball().position()
+            );
+
+            for _ in 0..step {
+                ctx.tick(TickType::Near, LIMITS)?;
+            }
+        }
 
         Ok(())
     }

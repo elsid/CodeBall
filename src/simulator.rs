@@ -102,6 +102,10 @@ impl RobotExt {
         self.base.id
     }
 
+    pub fn player_id(&self) -> i32 {
+        self.base.player_id
+    }
+
     pub fn base(&self) -> &Robot {
         &self.base
     }
@@ -576,6 +580,10 @@ impl Simulator {
 
     pub fn me_mut(&mut self) -> &mut RobotExt {
         &mut self.robots[self.me_index]
+    }
+
+    pub fn ignore_me(&mut self) -> bool {
+        self.me().ignore
     }
 
     pub fn set_ignore_me(&mut self, value: bool) {
