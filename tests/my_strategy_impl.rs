@@ -154,6 +154,106 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     assert_eq!(simulator.current_tick(), 113);
 }
 
+#[test]
+fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
+    use my_strategy::model::{Ball, Robot};
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, Solid};
+    use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::entity::Entity;
+    use my_strategy::my_strategy::vec3::Vec3;
+
+    let mut world = example_world(GameType::TwoRobotsWithNitro);
+
+    world.me.set_position(world.rules.get_goalkeeper_position());
+    world.me.nitro_amount = 50.0;
+    let me = world.me.clone();
+    world.game.robots.iter_mut()
+        .find(|v| v.id == me.id)
+        .map(|v| *v = me.clone());
+    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
+    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 16.6258312833173, -42.698087751137));
+
+    let mut rng = example_rng();
+    let mut simulator = Simulator::new(&world, 1);
+    let mut my_strategy = MyStrategyImpl::new(
+        &simulator.me().base(),
+        &simulator.rules(),
+        &simulator.game(),
+    );
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.me().position().y() - simulator.me().radius() < 1e-3
+            && simulator.current_tick() < 100
+    });
+
+    assert_eq!(simulator.current_tick(), 42);
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.me().collision_type() == RobotCollisionType::None
+            && simulator.current_tick() < 100
+    });
+
+    assert_eq!(simulator.current_tick(), 64);
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.score() == 0 && simulator.current_tick() < 100
+    });
+
+    assert_eq!(simulator.score(), -1);
+    assert_eq!(simulator.current_tick(), 64);
+}
+
+#[test]
+fn test_two_robots_with_nitro_goalkeeper_should_catch() {
+    use my_strategy::model::{Ball, Robot};
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, Solid};
+    use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::entity::Entity;
+    use my_strategy::my_strategy::vec3::Vec3;
+
+    let mut world = example_world(GameType::TwoRobotsWithNitro);
+
+    world.me.set_position(world.rules.get_goalkeeper_position());
+    world.me.nitro_amount = 50.0;
+    let me = world.me.clone();
+    world.game.robots.iter_mut()
+        .find(|v| v.id == me.id)
+        .map(|v| *v = me.clone());
+    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
+    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 14.6258312833173, -42.698087751137));
+
+    let mut rng = example_rng();
+    let mut simulator = Simulator::new(&world, 1);
+    let mut my_strategy = MyStrategyImpl::new(
+        &simulator.me().base(),
+        &simulator.rules(),
+        &simulator.game(),
+    );
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.me().position().y() - simulator.me().radius() < 1e-3
+            && simulator.current_tick() < 100
+    });
+
+    assert_eq!(simulator.current_tick(), 30);
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.me().collision_type() == RobotCollisionType::None
+            && simulator.current_tick() < 100
+    });
+
+    assert_eq!(simulator.current_tick(), 52);
+
+    simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
+        simulator.score() == 0 && simulator.current_tick() < 100
+    });
+
+    assert_eq!(simulator.score(), 0);
+    assert_eq!(simulator.current_tick(), 100);
+}
+
 fn simulate_while<P>(my_strategy: &mut MyStrategyImpl, simulator: &mut Simulator,
                      rng: &mut XorShiftRng, predicate: P)
     where P: Fn(&mut Simulator) -> bool {

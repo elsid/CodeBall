@@ -447,3 +447,134 @@ fn test_try_play_when_far_from_ball_at_opponent_side() {
         ticks_with_far_micro_ticks: 100,
     });
 }
+
+#[test]
+fn test_try_play_goalkeeper_should_catch_but_cant() {
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::roles::Goalkeeper;
+
+    #[cfg(feature = "enable_stats")]
+    use my_strategy::my_strategy::stats::Stats;
+
+    let mut world = example_world(GameType::TwoRobotsWithNitro);
+    let mut rng = example_rng();
+    let mut order_id_generator = IdGenerator::new();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks,
+    };
+
+    world.me.set_position(world.rules.get_goalkeeper_position());
+    world.me.nitro_amount = 50.0;
+    let me = world.me.clone();
+    world.game.robots.iter_mut()
+        .find(|v| v.id == me.id)
+        .map(|v| *v = me.clone());
+    world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
+    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 16.6258312833173, -42.698087751137));
+
+    let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
+
+    assert_eq!(result.score(), 500);
+    assert_eq!(result.action().use_nitro, false);
+    assert_eq!(result.action().jump_speed, 0.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(9.87305861387808, 0.0, -28.32883184331694));
+
+    #[cfg(feature = "enable_stats")]
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 1,
+        current_tick: 0,
+        order: "jump_at_position",
+        time_to_jump: 0.5833333333333335,
+        time_to_watch: 0.7666666666666674,
+        time_to_end: 1.566666666666666,
+        time_to_score: Some(1.566666666666666),
+        iteration: 2,
+        total_iterations: 5,
+        game_score: -1,
+        order_score: 500,
+        scenario_micro_ticks: 282,
+        play_micro_ticks: 5051,
+        game_micro_ticks: 5051,
+        game_micro_ticks_limit: 28000,
+        current_step: 4,
+        reached_game_limit: false,
+        reached_play_limit: false,
+        reached_scenario_limit: false,
+        other_number: 0,
+        ticks_with_near_micro_ticks: 0,
+        ticks_with_far_micro_ticks: 94,
+    });
+}
+
+#[test]
+fn test_try_play_goalkeeper_should_catch() {
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::roles::Goalkeeper;
+
+    #[cfg(feature = "enable_stats")]
+    use my_strategy::my_strategy::stats::Stats;
+
+    let mut world = example_world(GameType::TwoRobotsWithNitro);
+    let mut rng = example_rng();
+    let mut order_id_generator = IdGenerator::new();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks,
+    };
+
+    world.me.set_position(Vec3::new(2.6398424813638695, 1.0, -41.95171478620124));
+    world.me.set_velocity(Vec3::new(6.335451032857034, 0.0, -2.036252062849781));
+    world.me.nitro_amount = 50.0;
+    let me = world.me.clone();
+    world.game.robots.iter_mut()
+        .find(|v| v.id == me.id)
+        .map(|v| *v = me.clone());
+    world.game.ball.set_position(Vec3::new(2.6660784257613335, 8.492895589287127, -22.298092658424864));
+    world.game.ball.set_velocity(Vec3::new(5.10521022216499, 0.1258312833164129, -42.698087751137));
+
+    let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
+
+    assert_eq!(result.score(), 768);
+    assert_eq!(result.action().use_nitro, false);
+    assert_eq!(result.action().jump_speed, 15.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(28.561044526277186, 0.0, -9.179691474554682));
+
+    #[cfg(feature = "enable_stats")]
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 1,
+        current_tick: 0,
+        order: "jump_to_ball",
+        time_to_jump: 0.0,
+        time_to_watch: 0.44999999999999996,
+        time_to_end: 1.6666666666666656,
+        time_to_score: None,
+        iteration: 0,
+        total_iterations: 5,
+        game_score: 0,
+        order_score: 768,
+        scenario_micro_ticks: 391,
+        play_micro_ticks: 3537,
+        game_micro_ticks: 3537,
+        game_micro_ticks_limit: 28000,
+        current_step: 0,
+        reached_game_limit: false,
+        reached_play_limit: false,
+        reached_scenario_limit: false,
+        other_number: 0,
+        ticks_with_near_micro_ticks: 3,
+        ticks_with_far_micro_ticks: 97,
+    });
+}
