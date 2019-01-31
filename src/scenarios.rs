@@ -10,20 +10,6 @@ pub const MAX_TICKS: i32 = 100;
 pub const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 pub const FAR_MICRO_TICKS_PER_TICK: usize = 3;
 
-pub enum Scenario {
-    None,
-    JumpAtPosition(JumpAtPosition),
-}
-
-impl Scenario {
-    pub fn opposite(&self) -> Self {
-        match self {
-            Scenario::None => Scenario::None,
-            Scenario::JumpAtPosition(v) => Scenario::JumpAtPosition(v.opposite()),
-        }
-    }
-}
-
 pub struct Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
