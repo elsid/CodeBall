@@ -487,7 +487,7 @@ impl Play {
                 my_max_speed: required_speed,
             };
 
-            scenario.perform(&mut scenario_ctx);
+            let _ = scenario.perform(&mut scenario_ctx);
 
             ctx.play_micro_ticks += used_path_micro_ticks;
             *ctx.game_micro_ticks += used_path_micro_ticks;
@@ -589,7 +589,7 @@ impl Play {
             stats: &mut stats,
         };
 
-        JumpToBall {
+        let _ = JumpToBall {
         }.perform(&mut scenario_ctx);
 
         ctx.play_micro_ticks += used_path_micro_ticks;
@@ -677,7 +677,7 @@ impl Play {
             stats: &mut stats,
         };
 
-        ContinueJump {
+        let _ = ContinueJump {
             jump_speed,
             allow_nitro,
         }.perform(&mut scenario_ctx);

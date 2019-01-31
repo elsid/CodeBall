@@ -37,11 +37,32 @@ pub enum TickType {
     Far,
 }
 
+pub enum Error {
+    Goal,
+    TicksLimit,
+    MicroTicksLimit,
+    BadCondition,
+}
+
+pub type Result = std::result::Result<(), Error>;
+
 impl<'r, 'a, G> Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
-    pub fn tick(&mut self, tick_type: TickType) {
+    pub fn tick(&mut self, tick_type: TickType) -> Result {
         use crate::my_strategy::simulator::RobotCollisionType;
+
+        if self.simulator.score() != 0 {
+            return Err(Error::Goal);
+        }
+
+        if self.simulator.current_tick() >= MAX_TICKS {
+            return Err(Error::TicksLimit);
+        }
+
+        if *self.used_path_micro_ticks >= self.max_path_micro_ticks {
+            return Err(Error::MicroTicksLimit);
+        }
 
         let current_tick = self.simulator.current_tick();
 
@@ -93,19 +114,20 @@ impl<'r, 'a, G> Context<'r, 'a, G>
                 self.stats.ticks_with_far_micro_ticks += 1;
             }
         }
+
+        Ok(())
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct JumpAtPosition {
     pub position: Vec3,
     pub my_max_speed: f64,
 }
 
 impl JumpAtPosition {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
-
-        use crate::my_strategy::entity::Entity;
 
         log!(
             ctx.current_tick, "[{}] <{}> jump at position {}:{}",
@@ -116,18 +138,20 @@ impl JumpAtPosition {
         WalkToPosition {
             target: self.position,
             max_speed: self.my_max_speed,
-        }.perform(ctx);
+        }.perform(ctx)?;
 
         Jump {
-        }.perform(ctx);
+        }.perform(ctx)?;
 
         WatchMeJump {
             jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
             allow_nitro: false,
-        }.perform(ctx);
+        }.perform(ctx)?;
 
         WatchBallMove {
-        }.perform(ctx);
+        }.perform(ctx)?;
+
+        Ok(())
     }
 
     pub fn opposite(&self) -> Self {
@@ -138,13 +162,14 @@ impl JumpAtPosition {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct WalkToPosition {
     pub target: Vec3,
     pub max_speed: f64,
 }
 
 impl WalkToPosition {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -165,10 +190,7 @@ impl WalkToPosition {
             max_distance_to_ball
         );
 
-        while ctx.simulator.current_tick() < MAX_TICKS
-            && *ctx.used_path_micro_ticks < ctx.max_path_micro_ticks
-            && ctx.simulator.score() == 0
-            && ctx.simulator.me().position().distance(self.target)
+        while ctx.simulator.me().position().distance(self.target)
                 > max_distance_to_target
             && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
                 > max_distance_to_ball
@@ -181,7 +203,7 @@ impl WalkToPosition {
             );
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
-            ctx.tick(TickType::Far);
+            ctx.tick(TickType::Far)?;
 
             log!(
                 ctx.current_tick, "[{}] <{}> move {}:{} target={}/{} ball={}/{}",
@@ -192,6 +214,8 @@ impl WalkToPosition {
                 max_distance_to_ball
             );
         }
+
+        Ok(())
     }
 
     fn get_target_velocity(&self, position: Vec3, normal: Vec3, max_speed: f64) -> Vec3 {
@@ -206,11 +230,12 @@ impl WalkToPosition {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Jump {
 }
 
 impl Jump {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -228,33 +253,31 @@ impl Jump {
             ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
-        if ctx.simulator.current_tick() < MAX_TICKS
-            && *ctx.used_path_micro_ticks < ctx.max_path_micro_ticks
-            && ctx.simulator.score() == 0 {
+        ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
+        let target_velocity = ctx.simulator.rules().arena.projected_at(
+            ctx.simulator.ball().position(),
+            ctx.simulator.ball().position() - ctx.simulator.me().position()
+        ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+        ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
-            ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
-            let target_velocity = ctx.simulator.rules().arena.projected_at(
-                ctx.simulator.ball().position(),
-                ctx.simulator.ball().position() - ctx.simulator.me().position()
-            ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
-            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+        ctx.tick(TickType::Near)?;
 
-            ctx.tick(TickType::Near);
+        log!(
+            ctx.current_tick, "[{}] <{}> jump {}:{}",
+            ctx.robot_id, ctx.order_id,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks
+        );
 
-            log!(
-                ctx.current_tick, "[{}] <{}> jump {}:{}",
-                ctx.robot_id, ctx.order_id,
-                ctx.simulator.current_time(), ctx.used_path_micro_ticks
-            );
-        }
+        Ok(())
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct WatchBallMove {
 }
 
 impl WatchBallMove {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -273,10 +296,7 @@ impl WatchBallMove {
             ctx.simulator.ball().position()
         );
 
-        while ctx.simulator.current_tick() < MAX_TICKS
-            && *ctx.used_path_micro_ticks < ctx.max_path_micro_ticks
-            && ctx.simulator.score() == 0 {
-
+        loop {
             log!(
                 ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
                 ctx.robot_id, ctx.order_id,
@@ -284,7 +304,7 @@ impl WatchBallMove {
                 ctx.simulator.ball().position()
             );
 
-            ctx.tick(TickType::Far);
+            ctx.tick(TickType::Far)?;
         }
     }
 }
@@ -293,10 +313,8 @@ pub struct JumpToBall {
 }
 
 impl JumpToBall {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
-
-        use crate::my_strategy::entity::Entity;
 
         log!(
             ctx.current_tick, "[{}] <{}> jump to ball {}:{}",
@@ -305,26 +323,21 @@ impl JumpToBall {
         );
 
         if !self.does_jump_hit_ball(ctx) {
-            return;
+            return Err(Error::BadCondition);
         }
 
-        log!(
-            ctx.current_tick, "[{}] <{}> jump now {}:{} ball={}",
-            ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
-            ctx.simulator.me().position().distance(ctx.simulator.ball().position())
-        );
-
         FarJump {
-        }.perform(ctx);
+        }.perform(ctx)?;
 
         WatchMeJump {
             jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
             allow_nitro: false,
-        }.perform(ctx);
+        }.perform(ctx)?;
 
         WatchBallMove {
-        }.perform(ctx);
+        }.perform(ctx)?;
+
+        Ok(())
     }
 
     pub fn does_jump_hit_ball<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> bool
@@ -373,11 +386,12 @@ impl JumpToBall {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct FarJump {
 }
 
 impl FarJump {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -406,7 +420,7 @@ impl FarJump {
                 + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
         );
 
-        ctx.tick(TickType::Near);
+        ctx.tick(TickType::Near)?;
 
         log!(
             ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
@@ -417,14 +431,11 @@ impl FarJump {
                 + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
         );
 
-        while ctx.simulator.current_tick() < MAX_TICKS
-            && *ctx.used_path_micro_ticks < ctx.max_path_micro_ticks
-            && ctx.simulator.score() == 0
-            && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
+        while ctx.simulator.me().position().distance(ctx.simulator.ball().position())
                 > ctx.simulator.rules().ball_distance_limit()
                     + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval() {
 
-            ctx.tick(TickType::Far);
+            ctx.tick(TickType::Far)?;
 
             log!(
                 ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
@@ -435,16 +446,19 @@ impl FarJump {
                     + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
             );
         }
+
+        Ok(())
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct WatchMeJump {
     pub jump_speed: f64,
     pub allow_nitro: bool,
 }
 
 impl WatchMeJump {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
         use crate::my_strategy::simulator::{Solid, RobotCollisionType};
         use crate::my_strategy::entity::Entity;
@@ -460,10 +474,7 @@ impl WatchMeJump {
             ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
         );
 
-        while ctx.simulator.current_tick() < MAX_TICKS
-            && *ctx.used_path_micro_ticks < ctx.max_path_micro_ticks
-            && ctx.simulator.score() == 0
-            && ctx.simulator.me().distance_to_arena() - ctx.simulator.me().radius() > 1e-3
+        while ctx.simulator.me().distance_to_arena() - ctx.simulator.me().radius() > 1e-3
             && !(
                 collided_with_ball
                 && ctx.simulator.me().collision_type() == RobotCollisionType::None
@@ -489,26 +500,31 @@ impl WatchMeJump {
                 ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
             );
 
-            ctx.tick(TickType::Near);
+            ctx.tick(TickType::Near)?;
         }
+
+        Ok(())
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ContinueJump {
     pub jump_speed: f64,
     pub allow_nitro: bool,
 }
 
 impl ContinueJump {
-    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>)
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         WatchMeJump {
             jump_speed: self.jump_speed,
             allow_nitro: self.allow_nitro,
-        }.perform(ctx);
+        }.perform(ctx)?;
 
         WatchBallMove {
-        }.perform(ctx);
+        }.perform(ctx)?;
+
+        Ok(())
     }
 }
