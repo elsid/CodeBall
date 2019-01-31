@@ -139,7 +139,6 @@ impl JumpAtPosition {
         }.perform(ctx);
 
         WatchBallMove {
-            stop: true,
         }.perform(ctx);
     }
 
@@ -264,7 +263,6 @@ impl Jump {
 }
 
 pub struct WatchBallMove {
-    pub stop: bool,
 }
 
 impl WatchBallMove {
@@ -279,11 +277,6 @@ impl WatchBallMove {
         }
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
-
-        if self.stop {
-            ctx.simulator.me_mut().action_mut().jump_speed = 0.0;
-            ctx.simulator.me_mut().action_mut().set_target_velocity(Vec3::default());
-        }
 
         log!(
             ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
@@ -343,7 +336,6 @@ impl JumpToBall {
         }.perform(ctx);
 
         WatchBallMove {
-            stop: false,
         }.perform(ctx);
     }
 
@@ -529,8 +521,6 @@ impl ContinueJump {
         }.perform(ctx);
 
         WatchBallMove {
-            stop: true,
         }.perform(ctx);
-
     }
 }
