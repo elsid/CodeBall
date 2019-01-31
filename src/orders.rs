@@ -455,6 +455,7 @@ impl Play {
             let mut time_to_ball = None;
             let mut time_to_goal = None;
             let mut actions = Vec::new();
+            let mut used_path_micro_ticks = 0;
             #[cfg(feature = "enable_render")]
             let mut history = vec![local_simulator.clone()];
             #[cfg(feature = "enable_stats")]
@@ -472,7 +473,7 @@ impl Play {
                 actions: &mut actions,
                 near_micro_ticks_per_tick,
                 far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
-                used_path_micro_ticks: 0,
+                used_path_micro_ticks: &mut used_path_micro_ticks,
                 #[cfg(feature = "enable_render")]
                 history: &mut history,
                 #[cfg(feature = "enable_stats")]
@@ -486,8 +487,8 @@ impl Play {
 
             scenario.perform(&mut scenario_ctx);
 
-            ctx.play_micro_ticks += scenario_ctx.used_path_micro_ticks;
-            *ctx.game_micro_ticks += scenario_ctx.used_path_micro_ticks;
+            ctx.play_micro_ticks += used_path_micro_ticks;
+            *ctx.game_micro_ticks += used_path_micro_ticks;
 
             if local_simulator.score() != 0 {
                 log!(
@@ -560,6 +561,7 @@ impl Play {
         let mut time_to_ball = None;
         let mut time_to_goal = None;
         let mut actions = Vec::new();
+        let mut used_path_micro_ticks = 0;
         #[cfg(feature = "enable_render")]
         let mut history = vec![local_simulator.clone()];
         #[cfg(feature = "enable_stats")]
@@ -577,7 +579,7 @@ impl Play {
             actions: &mut actions,
             near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
             far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
-            used_path_micro_ticks: 0,
+            used_path_micro_ticks: &mut used_path_micro_ticks,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -587,8 +589,8 @@ impl Play {
         JumpToBall {
         }.perform(&mut scenario_ctx);
 
-        ctx.play_micro_ticks += scenario_ctx.used_path_micro_ticks;
-        *ctx.game_micro_ticks += scenario_ctx.used_path_micro_ticks;
+        ctx.play_micro_ticks += used_path_micro_ticks;
+        *ctx.game_micro_ticks += used_path_micro_ticks;
 
         if !actions.is_empty() {
             let order_score = get_order_score(
@@ -646,6 +648,7 @@ impl Play {
         let mut time_to_goal = None;
         let get_robot_action_at = make_get_robot_action_at(other);
         let mut actions = Vec::new();
+        let mut used_path_micro_ticks = 0;
         #[cfg(feature = "enable_render")]
         let mut history = vec![simulator.clone()];
         #[cfg(feature = "enable_stats")]
@@ -663,7 +666,7 @@ impl Play {
             actions: &mut actions,
             near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
             far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
-            used_path_micro_ticks: 0,
+            used_path_micro_ticks: &mut used_path_micro_ticks,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -675,8 +678,8 @@ impl Play {
             allow_nitro,
         }.perform(&mut scenario_ctx);
 
-        ctx.play_micro_ticks += scenario_ctx.used_path_micro_ticks;
-        *ctx.game_micro_ticks += scenario_ctx.used_path_micro_ticks;
+        ctx.play_micro_ticks += used_path_micro_ticks;
+        *ctx.game_micro_ticks += used_path_micro_ticks;
 
         if !actions.is_empty() {
             let order_score = get_order_score(
