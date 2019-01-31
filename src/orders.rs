@@ -15,6 +15,7 @@ use crate::my_strategy::render::Render;
 use crate::my_strategy::stats::Stats;
 
 const MAX_PLAY_MICRO_TICKS: usize = 30000;
+const MAX_PATH_MICRO_TICKS: usize = 1000;
 const MAX_ITERATIONS: usize = 5;
 
 pub enum Order {
@@ -474,6 +475,7 @@ impl Play {
                 near_micro_ticks_per_tick,
                 far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
                 used_path_micro_ticks: &mut used_path_micro_ticks,
+                max_path_micro_ticks: MAX_PATH_MICRO_TICKS,
                 #[cfg(feature = "enable_render")]
                 history: &mut history,
                 #[cfg(feature = "enable_stats")]
@@ -580,6 +582,7 @@ impl Play {
             near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
             far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
             used_path_micro_ticks: &mut used_path_micro_ticks,
+            max_path_micro_ticks: MAX_PATH_MICRO_TICKS,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
@@ -667,6 +670,7 @@ impl Play {
             near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
             far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
             used_path_micro_ticks: &mut used_path_micro_ticks,
+            max_path_micro_ticks: MAX_PATH_MICRO_TICKS,
             #[cfg(feature = "enable_render")]
             history: &mut history,
             #[cfg(feature = "enable_stats")]
