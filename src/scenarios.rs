@@ -322,10 +322,6 @@ impl JumpToBall {
             ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
-        if !self.does_jump_hit_ball(ctx) {
-            return Err(Error::BadCondition);
-        }
-
         FarJump {
         }.perform(ctx)?;
 
@@ -339,51 +335,6 @@ impl JumpToBall {
 
         Ok(())
     }
-
-    pub fn does_jump_hit_ball<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> bool
-        where G: Fn(i32, i32) -> Option<&'a Action> {
-
-        use crate::my_strategy::physics::MoveEquation;
-        use crate::my_strategy::optimization::minimize1d;
-
-        let mut simulator = ctx.simulator.clone();
-        let mut rng = ctx.rng.clone();
-
-        simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
-
-        simulator.tick(ctx.simulator.rules().tick_time_interval(), ctx.near_micro_ticks_per_tick, &mut rng);
-
-        *ctx.used_path_micro_ticks += ctx.near_micro_ticks_per_tick;
-
-        let my_move_equation = MoveEquation::from_robot(simulator.me().base(), simulator.rules());
-        let ball_move_equation = MoveEquation::from_ball(simulator.ball().base(), simulator.rules());
-        let my_min_y = simulator.rules().ROBOT_MIN_RADIUS;
-        let ball_min_y = simulator.rules().BALL_RADIUS;
-
-        let get_my_position = |time| {
-            my_move_equation.get_position(time).with_max_y(my_min_y)
-        };
-
-        let get_ball_position = |time| {
-            ball_move_equation.get_position(time).with_max_y(ball_min_y)
-        };
-
-        let get_distance = |time| {
-            get_my_position(time).distance(get_ball_position(time))
-        };
-
-        let time = minimize1d(
-            0.0,
-            MAX_TICKS as f64 * simulator.rules().tick_time_interval(),
-            10,
-            get_distance
-        );
-
-        get_distance(time) < simulator.rules().ROBOT_MAX_RADIUS + simulator.rules().BALL_RADIUS
-            && my_move_equation.get_velocity(time).y() > -simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
-            && my_move_equation.get_position(time).y() < ball_move_equation.get_position(time).y()
-            && ball_move_equation.get_position(time).y() > ball_min_y - simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -395,6 +346,10 @@ impl FarJump {
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
+
+        if !does_jump_hit_ball(ctx) {
+            return Err(Error::BadCondition);
+        }
 
         #[cfg(feature = "enable_stats")]
         {
@@ -527,4 +482,49 @@ impl ContinueJump {
 
         Ok(())
     }
+}
+
+pub fn does_jump_hit_ball<'r, 'a, G>(ctx: &mut Context<'r, 'a, G>) -> bool
+    where G: Fn(i32, i32) -> Option<&'a Action> {
+
+    use crate::my_strategy::physics::MoveEquation;
+    use crate::my_strategy::optimization::minimize1d;
+
+    let mut simulator = ctx.simulator.clone();
+    let mut rng = ctx.rng.clone();
+
+    simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
+
+    simulator.tick(ctx.simulator.rules().tick_time_interval(), ctx.near_micro_ticks_per_tick, &mut rng);
+
+    *ctx.used_path_micro_ticks += ctx.near_micro_ticks_per_tick;
+
+    let my_move_equation = MoveEquation::from_robot(simulator.me().base(), simulator.rules());
+    let ball_move_equation = MoveEquation::from_ball(simulator.ball().base(), simulator.rules());
+    let my_min_y = simulator.rules().ROBOT_MIN_RADIUS;
+    let ball_min_y = simulator.rules().BALL_RADIUS;
+
+    let get_my_position = |time| {
+        my_move_equation.get_position(time).with_max_y(my_min_y)
+    };
+
+    let get_ball_position = |time| {
+        ball_move_equation.get_position(time).with_max_y(ball_min_y)
+    };
+
+    let get_distance = |time| {
+        get_my_position(time).distance(get_ball_position(time))
+    };
+
+    let time = minimize1d(
+        0.0,
+        MAX_TICKS as f64 * simulator.rules().tick_time_interval(),
+        10,
+        get_distance
+    );
+
+    get_distance(time) < simulator.rules().ROBOT_MAX_RADIUS + simulator.rules().BALL_RADIUS
+        && my_move_equation.get_velocity(time).y() > -simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
+        && my_move_equation.get_position(time).y() < ball_move_equation.get_position(time).y()
+        && ball_move_equation.get_position(time).y() > ball_min_y - simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
 }
