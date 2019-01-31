@@ -24,7 +24,7 @@ pub struct Context<'r, 'a, G>
     pub actions: &'r mut Vec<Action>,
     pub near_micro_ticks_per_tick: usize,
     pub far_micro_ticks_per_tick: usize,
-    pub scenario_micro_ticks: usize,
+    pub used_path_micro_ticks: usize,
     #[cfg(feature = "enable_render")]
     pub history: &'r mut Vec<Simulator>,
     #[cfg(feature = "enable_stats")]
@@ -60,7 +60,7 @@ impl<'r, 'a, G> Context<'r, 'a, G>
 
         self.simulator.tick(time_interval, micro_ticks_per_tick, self.rng);
 
-        self.scenario_micro_ticks += micro_ticks_per_tick;
+        self.used_path_micro_ticks += micro_ticks_per_tick;
 
         if self.simulator.me().collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
             *self.time_to_ball = Some(self.simulator.current_time());
@@ -77,8 +77,8 @@ impl<'r, 'a, G> Context<'r, 'a, G>
 
         #[cfg(feature = "enable_stats")]
         {
-            self.stats.reached_scenario_limit = self.scenario_micro_ticks >= MAX_MICRO_TICKS;
-            self.stats.scenario_micro_ticks = self.scenario_micro_ticks;
+            self.stats.reached_scenario_limit = self.used_path_micro_ticks >= MAX_MICRO_TICKS;
+            self.stats.scenario_micro_ticks = self.used_path_micro_ticks;
             self.stats.time_to_end = self.simulator.current_time();
             self.stats.time_to_score = if self.simulator.score() != self.stats.game_score {
                 Some(self.simulator.current_time())
@@ -110,7 +110,7 @@ impl JumpAtPosition {
         log!(
             ctx.current_tick, "[{}] <{}> jump at position {}:{}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
         let before_move = ctx.simulator.current_time();
@@ -124,7 +124,7 @@ impl JumpAtPosition {
             log!(
                 ctx.current_tick, "[{}] <{}> jump now {}:{} kick_ball_position={} ball={}",
                 ctx.robot_id, ctx.order_id,
-                ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.me().position().distance(self.position),
                 ctx.simulator.me().position().distance(ctx.simulator.ball().position())
             );
@@ -171,14 +171,14 @@ impl WalkToPosition {
         log!(
             ctx.current_tick, "[{}] <{}> move to position {}:{} target={}/{} ball={}/{}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().position().distance(self.target), max_distance_to_target,
             ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
             max_distance_to_ball
         );
 
         while ctx.simulator.current_tick() < MAX_TICKS
-            && ctx.scenario_micro_ticks < MAX_MICRO_TICKS
+            && ctx.used_path_micro_ticks < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().position().distance(self.target)
                 > max_distance_to_target
@@ -198,7 +198,7 @@ impl WalkToPosition {
             log!(
                 ctx.current_tick, "[{}] <{}> move {}:{} target={}/{} ball={}/{}",
                 ctx.robot_id, ctx.order_id,
-                ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.me().position().distance(self.target), max_distance_to_target,
                 ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
                 max_distance_to_ball
@@ -237,11 +237,11 @@ impl Jump {
         log!(
             ctx.current_tick, "[{}] <{}> jump {}:{}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
         if ctx.simulator.current_tick() < MAX_TICKS
-            && ctx.scenario_micro_ticks < MAX_MICRO_TICKS
+            && ctx.used_path_micro_ticks < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0 {
 
             ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
@@ -256,7 +256,7 @@ impl Jump {
             log!(
                 ctx.current_tick, "[{}] <{}> jump {}:{}",
                 ctx.robot_id, ctx.order_id,
-                ctx.simulator.current_time(), ctx.scenario_micro_ticks
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks
             );
         }
     }
@@ -281,18 +281,18 @@ impl WatchBallMove {
         log!(
             ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.ball().position()
         );
 
         while ctx.simulator.current_tick() < MAX_TICKS
-            && ctx.scenario_micro_ticks < MAX_MICRO_TICKS
+            && ctx.used_path_micro_ticks < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0 {
 
             log!(
                 ctx.current_tick, "[{}] <{}> watch ball move {}:{} ball_position={:?}",
                 ctx.robot_id, ctx.order_id,
-                ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.ball().position()
             );
 
@@ -313,7 +313,7 @@ impl JumpToBall {
         log!(
             ctx.current_tick, "[{}] <{}> jump to ball {}:{}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
         if !self.does_jump_hit_ball(ctx) {
@@ -323,7 +323,7 @@ impl JumpToBall {
         log!(
             ctx.current_tick, "[{}] <{}> jump now {}:{} ball={}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().position().distance(ctx.simulator.ball().position())
         );
 
@@ -352,7 +352,7 @@ impl JumpToBall {
 
         simulator.tick(ctx.simulator.rules().tick_time_interval(), ctx.near_micro_ticks_per_tick, &mut rng);
 
-        ctx.scenario_micro_ticks += ctx.near_micro_ticks_per_tick;
+        ctx.used_path_micro_ticks += ctx.near_micro_ticks_per_tick;
 
         let my_move_equation = MoveEquation::from_robot(simulator.me().base(), simulator.rules());
         let ball_move_equation = MoveEquation::from_ball(simulator.ball().base(), simulator.rules());
@@ -412,7 +412,7 @@ impl FarJump {
         log!(
             ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
             ctx.simulator.rules().ball_distance_limit()
                 + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
@@ -423,14 +423,14 @@ impl FarJump {
         log!(
             ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
             ctx.simulator.rules().ball_distance_limit()
                 + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
         );
 
         while ctx.simulator.current_tick() < MAX_TICKS
-            && ctx.scenario_micro_ticks < MAX_MICRO_TICKS
+            && ctx.used_path_micro_ticks < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().position().distance(ctx.simulator.ball().position())
                 > ctx.simulator.rules().ball_distance_limit()
@@ -441,7 +441,7 @@ impl FarJump {
             log!(
                 ctx.current_tick, "[{}] <{}> far jump {}:{} ball={}/{}",
                 ctx.robot_id, ctx.order_id,
-                ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.me().position().distance(ctx.simulator.ball().position()),
                 ctx.simulator.rules().ball_distance_limit()
                     + ctx.simulator.me().velocity().norm() * ctx.simulator.rules().tick_time_interval()
@@ -468,12 +468,12 @@ impl WatchMeJump {
         log!(
             ctx.current_tick, "[{}] <{}> watch me jump {}:{} distance_to_arena={}/{}",
             ctx.robot_id, ctx.order_id,
-            ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
         );
 
         while ctx.simulator.current_tick() < MAX_TICKS
-            && ctx.scenario_micro_ticks < MAX_MICRO_TICKS
+            && ctx.used_path_micro_ticks < MAX_MICRO_TICKS
             && ctx.simulator.score() == 0
             && ctx.simulator.me().distance_to_arena() - ctx.simulator.me().radius() > 1e-3
             && !(
@@ -497,7 +497,7 @@ impl WatchMeJump {
             log!(
                 ctx.current_tick, "[{}] <{}> watch me jump {}:{} distance_to_arena={}/{}",
                 ctx.robot_id, ctx.order_id,
-                ctx.simulator.current_time(), ctx.scenario_micro_ticks,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
             );
 
