@@ -320,3 +320,130 @@ fn test_try_play_continue_jump_with_nitro() {
         ticks_with_far_micro_ticks: 62,
     });
 }
+
+
+#[test]
+fn test_try_play_when_far_from_ball_at_my_side() {
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::common::IdGenerator;
+
+    #[cfg(feature = "enable_stats")]
+    use my_strategy::my_strategy::stats::Stats;
+
+    let mut world = example_world(GameType::TwoRobots);
+
+    world.me.set_position(Vec3::new(20.0, 1.0, -30.0));
+    world.me.radius = 1.05;
+    let me = world.me.clone();
+    world.game.robots.iter_mut()
+        .find(|v| v.id == me.id)
+        .map(|v| *v = me.clone());
+    world.game.ball.set_position(Vec3::new(-20.0, 10.0, 30.0));
+
+    let mut rng = example_rng();
+    let mut order_id_generator = IdGenerator::new();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks,
+    };
+
+    let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
+
+    assert_eq!(result.score(), 800);
+    assert_eq!(result.action().jump_speed, 0.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(-16.148150133875735, 0.0, 25.283141562191375));
+
+    #[cfg(feature = "enable_stats")]
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 1,
+        current_tick: 0,
+        order: "jump_at_position",
+        time_to_jump: 1.6666666666666656,
+        time_to_watch: 1.6666666666666656,
+        time_to_end: 1.6666666666666656,
+        time_to_score: None,
+        iteration: 1,
+        total_iterations: 5,
+        game_score: 0,
+        order_score: 800,
+        scenario_micro_ticks: 300,
+        play_micro_ticks: 4000,
+        game_micro_ticks: 4000,
+        game_micro_ticks_limit: 28000,
+        current_step: 3,
+        reached_game_limit: false,
+        reached_play_limit: false,
+        reached_scenario_limit: false,
+        other_number: 0,
+        ticks_with_near_micro_ticks: 0,
+        ticks_with_far_micro_ticks: 100,
+    });
+}
+
+#[test]
+fn test_try_play_when_far_from_ball_at_opponent_side() {
+    use my_strategy::examples::{GameType, example_world, example_rng};
+    use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::common::IdGenerator;
+
+    #[cfg(feature = "enable_stats")]
+    use my_strategy::my_strategy::stats::Stats;
+
+    let mut world = example_world(GameType::TwoRobots);
+
+    world.me.set_position(Vec3::new(-20.0, 1.0, 30.0));
+    world.me.radius = 1.05;
+    let me = world.me.clone();
+    world.game.robots.iter_mut()
+        .find(|v| v.id == me.id)
+        .map(|v| *v = me.clone());
+    world.game.ball.set_position(Vec3::new(20.0, 10.0, -30.0));
+
+    let mut rng = example_rng();
+    let mut order_id_generator = IdGenerator::new();
+    let mut micro_ticks = 0;
+    let mut ctx = OrderContext {
+        rng: &mut rng,
+        order_id_generator: &mut order_id_generator,
+        micro_ticks: &mut micro_ticks,
+    };
+
+    let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
+
+    assert_eq!(result.score(), 334);
+    assert_eq!(result.action().jump_speed, 0.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(16.148150133875735, 0.0, -25.283141562191375));
+
+    #[cfg(feature = "enable_stats")]
+    assert_eq!(result.stats(), &Stats {
+        player_id: 1,
+        robot_id: 1,
+        current_tick: 0,
+        order: "jump_at_position",
+        time_to_jump: 1.6666666666666656,
+        time_to_watch: 1.6666666666666656,
+        time_to_end: 1.6666666666666656,
+        time_to_score: None,
+        iteration: 1,
+        total_iterations: 5,
+        game_score: 0,
+        order_score: 334,
+        scenario_micro_ticks: 300,
+        play_micro_ticks: 4000,
+        game_micro_ticks: 4000,
+        game_micro_ticks_limit: 28000,
+        current_step: 3,
+        reached_game_limit: false,
+        reached_play_limit: false,
+        reached_scenario_limit: false,
+        other_number: 0,
+        ticks_with_near_micro_ticks: 0,
+        ticks_with_far_micro_ticks: 100,
+    });
+}
