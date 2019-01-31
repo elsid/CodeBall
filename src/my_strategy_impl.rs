@@ -70,7 +70,7 @@ impl Strategy for MyStrategyImpl {
             self.update_world_me(me);
         }
         if !self.world.is_reset_ticks() {
-            self.apply_action(action);
+            self.apply_order(action);
         }
         self.on_finish();
     }
@@ -326,7 +326,7 @@ impl MyStrategyImpl {
         self.orders = all_orders;
     }
 
-    fn apply_action(&mut self, action: &mut Action) {
+    fn apply_order(&mut self, action: &mut Action) {
         self.orders.iter()
             .find(|v| v.robot_id() == self.world.me.id)
             .map(|v| {
