@@ -113,22 +113,10 @@ impl JumpAtPosition {
             ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
-        let before_move = ctx.simulator.current_time();
-
         WalkToPosition {
             target: self.position,
             max_speed: self.my_max_speed,
         }.perform(ctx);
-
-        if before_move == ctx.simulator.current_time() {
-            log!(
-                ctx.current_tick, "[{}] <{}> jump now {}:{} kick_ball_position={} ball={}",
-                ctx.robot_id, ctx.order_id,
-                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
-                ctx.simulator.me().position().distance(self.position),
-                ctx.simulator.me().position().distance(ctx.simulator.ball().position())
-            );
-        }
 
         Jump {
         }.perform(ctx);
