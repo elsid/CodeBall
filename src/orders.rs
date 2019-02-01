@@ -316,7 +316,7 @@ impl Play {
 
         let time_to_play = get_min_time_to_play_ball(other, world);
 
-        if time_to_play > (MAX_TICKS - 10) as f64 * world.rules.tick_time_interval() {
+        if time_to_play > (MAX_TICKS - 1) as f64 * world.rules.tick_time_interval() {
             return None;
         }
 
