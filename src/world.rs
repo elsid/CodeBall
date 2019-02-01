@@ -1,6 +1,6 @@
 use crate::model::{Robot, Game, Rules};
 
-const MICRO_TICKS_LIMIT_PER_TICK: usize = 14000;
+const MICRO_TICKS_LIMIT_PER_TICK: usize = 15000;
 
 #[derive(Debug, Clone)]
 pub struct World {

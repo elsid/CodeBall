@@ -14,7 +14,7 @@ use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-const MAX_PLAY_MICRO_TICKS: usize = 30000;
+const MAX_PLAY_MICRO_TICKS: usize = 40000;
 const MAX_PATH_MICRO_TICKS: usize = 1000;
 const MAX_ITERATIONS: usize = 5;
 
