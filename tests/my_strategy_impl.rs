@@ -156,7 +156,6 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
 
 #[test]
 fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
-    use my_strategy::model::{Ball, Robot};
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, Solid};
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
@@ -206,7 +205,6 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
 
 #[test]
 fn test_two_robots_with_nitro_goalkeeper_should_catch() {
-    use my_strategy::model::{Ball, Robot};
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::{Simulator, RobotCollisionType, Solid};
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
