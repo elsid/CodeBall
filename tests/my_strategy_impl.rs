@@ -186,21 +186,21 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 42);
+    assert_eq!(simulator.current_tick(), 44);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().collision_type() == RobotCollisionType::None
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 64);
+    assert_eq!(simulator.current_tick(), 63);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.score() == 0 && simulator.current_tick() < 100
     });
 
     assert_eq!(simulator.score(), -1);
-    assert_eq!(simulator.current_tick(), 64);
+    assert_eq!(simulator.current_tick(), 63);
 }
 
 #[test]
@@ -235,14 +235,14 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch() {
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 31);
+    assert_eq!(simulator.current_tick(), 36);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().collision_type() == RobotCollisionType::None
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 53);
+    assert_eq!(simulator.current_tick(), 54);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.score() == 0 && simulator.current_tick() < 100
