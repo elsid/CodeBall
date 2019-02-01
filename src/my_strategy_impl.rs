@@ -10,7 +10,7 @@ use crate::my_strategy::roles::Role;
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
 
-const ROBOT_PRIORITY_CHANGE_GAP: i32 = 0;
+const ROBOT_PRIORITY_CHANGE_GAP: i32 = 10;
 const ROBOT_ROLE_CHANGE_GAP: i32 = 0;
 
 pub struct MyStrategyImpl {
@@ -222,9 +222,18 @@ impl MyStrategyImpl {
                 .map(|(_, id)| *id)
                 .collect();
         } else {
-            self.robots_priority = self.orders.iter()
-                .filter(|v| self.world.is_teammate(v.robot_id()))
-                .map(|v| v.robot_id())
+            let mut robots_with_distance_to_ball = self.robots_priority.iter().enumerate()
+                .map(|(n, id)| {
+                    let robot = self.world.get_robot(*id);
+                    let distance = self.world.game.ball.position().distance(robot.position());
+                    (as_score(distance) - ROBOT_PRIORITY_CHANGE_GAP * n as i32, *id)
+                })
+                .collect::<Vec<_>>();
+
+            robots_with_distance_to_ball.sort();
+
+            self.robots_priority = robots_with_distance_to_ball.iter()
+                .map(|(_, id)| *id)
                 .collect();
         }
     }
@@ -239,11 +248,10 @@ impl MyStrategyImpl {
             order_id_generator: &mut self.order_id_generator,
             micro_ticks: &mut self.micro_ticks,
         };
-        let has_orders = !self.orders.is_empty();
         let opposite_world = world.opposite();
         let roles = &self.roles;
 
-        let opponents_orders = world.game.robots.iter()
+        let mut other_orders = world.game.robots.iter()
             .filter(|v| {
                 !v.is_teammate && v.position().distance(world.game.ball.position()) < 10.0
             })
@@ -256,74 +264,49 @@ impl MyStrategyImpl {
             .into_iter()
             .collect::<Vec<_>>();
 
-        let mut teammates_orders = self.robots_priority.iter()
-            .enumerate()
-            .map(|(n, robot_id)| {
-                let robot = world.get_robot(*robot_id);
-                let max_z = roles.iter()
-                    .find(|v| v.robot_id() == *robot_id)
-                    .unwrap()
-                    .max_z(world);
-                (n, Order::try_play(robot, world, &opponents_orders[..], max_z, &mut ctx))
-            })
-            .collect::<Vec<_>>();
+        for robot_id in self.robots_priority.iter() {
+            let robot = world.get_robot(*robot_id);
+            let max_z = roles.iter()
+                .find(|v| v.robot_id() == *robot_id)
+                .unwrap()
+                .max_z(world);
+            let order = Order::try_play(robot, world, &other_orders[..], max_z, &mut ctx);
 
-        teammates_orders.sort_by_key(|(n, order)| {
-            if has_orders {
-                -(order.score() - *n as i32 * ROBOT_PRIORITY_CHANGE_GAP)
-            } else {
-                -order.score()
-            }
-        });
-
-        let opponents_orders_num = opponents_orders.len();
-        let mut all_orders = opponents_orders;
-
-        for (_, order) in teammates_orders.into_iter() {
-            all_orders.push(order);
-        }
-
-        if all_orders.len() > opponents_orders_num + 1 {
-            for i in opponents_orders_num + 1..all_orders.len() {
-                let robot_id = all_orders[i].robot_id();
-                let robot = world.get_robot(robot_id);
+            let order = if order.is_idle() {
                 let role = roles.iter()
-                    .find(|v| v.robot_id() == robot_id)
+                    .find(|v| v.robot_id() == *robot_id)
                     .unwrap();
-                let max_z = role.max_z(world);
-                all_orders[i] = {
-                    let order = Order::try_play(robot, world, &all_orders[0..i], max_z, &mut ctx);
-                    if order.is_idle() {
-                        match role {
-                            Role::Forward(_) => {
-                                if robot.nitro_amount < world.rules.START_NITRO_AMOUNT {
-                                    Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator)
-                                } else {
-                                    Order::try_push_opponent(robot, world, ctx.order_id_generator)
-                                }
-                            },
-                            Role::Goalkeeper(_) => {
-                                if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
-                                    && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
-                                        > world.rules.arena.depth / 2.0 + 6.0 {
 
-                                    match Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator) {
-                                        Order::Idle(_) => Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator),
-                                        v => v,
-                                    }
-                                } else {
-                                    Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
-                                }
-                            },
+                match role {
+                    Role::Forward(_) => {
+                        if robot.nitro_amount < world.rules.START_NITRO_AMOUNT {
+                            Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator)
+                        } else {
+                            Order::try_push_opponent(robot, world, ctx.order_id_generator)
                         }
-                    } else {
-                        order
-                    }
+                    },
+                    Role::Goalkeeper(_) => {
+                        if robot.nitro_amount < world.rules.START_NITRO_AMOUNT
+                            && world.game.ball.position().distance(world.rules.get_goalkeeper_position())
+                                > world.rules.arena.depth / 2.0 + 6.0 {
+
+                            match Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator) {
+                                Order::Idle(_) => Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator),
+                                v => v,
+                            }
+                        } else {
+                            Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
+                        }
+                    },
                 }
-            }
+            } else {
+                order
+            };
+
+            other_orders.push(order);
         }
 
-        self.orders = all_orders;
+        self.orders = other_orders;
     }
 
     fn apply_order(&mut self, action: &mut Action) {

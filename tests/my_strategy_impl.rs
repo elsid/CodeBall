@@ -85,12 +85,12 @@ fn test_two_robots_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.12002973933653521,
-        y: 3.354810942127357,
-        z: 0.420288975428902,
-        velocity_x: 11.354546381183205,
-        velocity_y: 19.29040775791538,
-        velocity_z: 39.75840230417671,
+        x: 0.03243278905379864,
+        y: 3.303381664383575,
+        z: 0.2130700408173823,
+        velocity_x: 5.685939055815443,
+        velocity_y: 18.358693352076358,
+        velocity_z: 37.3542733157526,
         radius: 2.0,
     });
     assert_eq!(simulator.me().action().jump_speed, 15.0);
@@ -101,7 +101,7 @@ fn test_two_robots_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 107);
+    assert_eq!(simulator.current_tick(), 112);
 }
 
 #[test]
@@ -135,12 +135,12 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.16470598426968242,
-        y: 3.3891335743145214,
-        z: 0.5611675721011447,
-        velocity_x: 12.177505231201822,
-        velocity_y: 19.758443235976397,
-        velocity_z: 41.48981638489488,
+        x: 0.056160925444193634,
+        y: 3.3328489668251895,
+        z: 0.3395479294638542,
+        velocity_x: 6.349681227964329,
+        velocity_y: 18.65673895906056,
+        velocity_z: 38.390056728199724,
         radius: 2.0,
     });
     assert_eq!(simulator.me().action().jump_speed, 15.0);
@@ -151,7 +151,7 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 113);
+    assert_eq!(simulator.current_tick(), 110);
 }
 
 #[test]
@@ -237,14 +237,14 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch() {
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 30);
+    assert_eq!(simulator.current_tick(), 31);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().collision_type() == RobotCollisionType::None
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 52);
+    assert_eq!(simulator.current_tick(), 53);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.score() == 0 && simulator.current_tick() < 100
