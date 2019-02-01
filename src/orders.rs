@@ -271,7 +271,18 @@ impl Play {
 
             Self::get_with_max_score(without_nitro, with_nitro)
         } else {
-            let jump_to_ball = Self::try_jump_to_ball(robot, world, other, &mut ctx);
+            let jump_to_ball = if robot.nitro_amount > 0.0
+                && world.game.ball.y < world.rules.arena.goal_height + 5.0
+                    && robot.position().distance(world.game.ball.position()) < 15.0 {
+
+                let with_nitro = Self::try_jump_to_ball(true, robot, world, other, &mut ctx);
+                let without_nitro = Self::try_jump_to_ball(false, robot, world, other, &mut ctx);
+
+                Self::get_with_max_score(with_nitro, without_nitro)
+            } else {
+                Self::try_jump_to_ball(false, robot, world, other, &mut ctx)
+            };
+
             let jump_at_position = Self::try_jump_at_position(robot, world, other, max_z, &mut ctx);
 
             Self::get_with_max_score(jump_at_position, jump_to_ball)
@@ -545,7 +556,7 @@ impl Play {
         order
     }
 
-    fn try_jump_to_ball(robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
+    fn try_jump_to_ball(allow_nitro: bool, robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, JumpToBall};
 
         if world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks) {
@@ -590,6 +601,7 @@ impl Play {
         };
 
         let _ = JumpToBall {
+            allow_nitro,
         }.perform(&mut scenario_ctx);
 
         ctx.play_micro_ticks += used_path_micro_ticks;

@@ -310,6 +310,7 @@ impl WatchBallMove {
 }
 
 pub struct JumpToBall {
+    pub allow_nitro: bool,
 }
 
 impl JumpToBall {
@@ -323,11 +324,12 @@ impl JumpToBall {
         );
 
         FarJump {
+            allow_nitro: self.allow_nitro,
         }.perform(ctx)?;
 
         WatchMeJump {
             jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
-            allow_nitro: false,
+            allow_nitro: self.allow_nitro,
         }.perform(ctx)?;
 
         WatchBallMove {
@@ -339,6 +341,7 @@ impl JumpToBall {
 
 #[derive(Debug, Clone)]
 pub struct FarJump {
+    pub allow_nitro: bool,
 }
 
 impl FarJump {
@@ -360,10 +363,18 @@ impl FarJump {
 
         ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
 
-        let velocity = ctx.simulator.me().velocity();
-        if velocity.norm() > 0.0 {
-            let target_velocity = velocity.normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+        if self.allow_nitro && ctx.simulator.me().nitro_amount() > 0.0 {
+            let target_velocity = (ctx.simulator.ball().position() - ctx.simulator.me().position())
+                .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+            ctx.simulator.me_mut().action_mut().use_nitro = true;
+        } else {
+            let velocity = ctx.simulator.me().velocity();
+            if velocity.norm() > 0.0 {
+                let target_velocity = velocity.normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+                ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+            }
+            ctx.simulator.me_mut().action_mut().use_nitro = false;
         }
 
         log!(
