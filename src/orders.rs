@@ -1078,7 +1078,7 @@ fn get_min_time_to_play_ball(other: &[Order], world: &World) -> f64 {
         .filter(|v| world.is_teammate(v.robot_id()))
         .map(|v| {
             v.time_to_ball().map(|v| {
-                v + 10.0 * world.rules.tick_time_interval()
+                v + world.rules.tick_time_interval()
             }).unwrap_or_default()
         })
         .max_by_key(|v| as_score(*v))
