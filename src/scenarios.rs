@@ -135,6 +135,9 @@ impl JumpAtPosition {
             ctx.simulator.current_time(), ctx.used_path_micro_ticks
         );
 
+        MoveToArena {
+        }.perform(ctx)?;
+
         WalkToPosition {
             target: self.position,
             max_speed: self.my_max_speed,
@@ -538,4 +541,41 @@ pub fn does_jump_hit_ball<'r, 'a, G>(ctx: &mut Context<'r, 'a, G>) -> bool
         && my_move_equation.get_velocity(time).y() > -simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
         && my_move_equation.get_position(time).y() < ball_move_equation.get_position(time).y()
         && ball_move_equation.get_position(time).y() > ball_min_y - simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
+}
+
+#[derive(Debug, Clone)]
+pub struct MoveToArena {}
+
+impl MoveToArena {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
+        *ctx.simulator.me_mut().action_mut() = Action::default();
+
+        log!(
+            ctx.current_tick, "[{}] <{}> go down {}:{} distance_to_arena={}",
+            ctx.robot_id, ctx.order_id,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+            ctx.simulator.me().distance_to_arena()
+        );
+
+        while !ctx.simulator.me().base().touch {
+            ctx.simulator.me_mut().action_mut().jump_speed = 0.0;
+            let target_velocity = -ctx.simulator.me().normal_to_arena()
+                * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+            ctx.simulator.me_mut().action_mut().use_nitro = true;
+
+            log!(
+                ctx.current_tick, "[{}] <{}> go down {}:{} distance_to_arena={}",
+                ctx.robot_id, ctx.order_id,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+                ctx.simulator.me().distance_to_arena()
+            );
+
+            ctx.tick(TickType::Far)?;
+        }
+
+        Ok(())
+    }
 }

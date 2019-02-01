@@ -269,7 +269,17 @@ impl Play {
                 None
             };
 
-            Self::get_with_max_score(without_nitro, with_nitro)
+            let continue_jump = Self::get_with_max_score(without_nitro, with_nitro);
+
+            if world.game.ball.position().distance(robot.position()) > 10.0
+                && world.rules.arena.distance(robot.position()) > 2.0 * world.rules.ROBOT_RADIUS {
+
+                let jump_at_position = Self::try_jump_at_position(robot, world, other, max_z, &mut ctx);
+
+                Self::get_with_max_score(continue_jump, jump_at_position)
+            } else {
+                continue_jump
+            }
         } else {
             let jump_to_ball = if robot.nitro_amount > 0.0
                 && world.game.ball.y < world.rules.arena.goal_height + 5.0
