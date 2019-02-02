@@ -123,6 +123,7 @@ impl<'r, 'a, G> Context<'r, 'a, G>
 pub struct JumpAtPosition {
     pub position: Vec3,
     pub my_max_speed: f64,
+    pub allow_nitro: bool,
 }
 
 impl JumpAtPosition {
@@ -141,11 +142,12 @@ impl JumpAtPosition {
         }.perform(ctx)?;
 
         Jump {
+            allow_nitro: self.allow_nitro,
         }.perform(ctx)?;
 
         WatchMeJump {
             jump_speed: ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED,
-            allow_nitro: false,
+            allow_nitro: self.allow_nitro,
         }.perform(ctx)?;
 
         WatchBallMove {
@@ -158,6 +160,7 @@ impl JumpAtPosition {
         JumpAtPosition {
             position: self.position.opposite(),
             my_max_speed: self.my_max_speed,
+            allow_nitro: self.allow_nitro,
         }
     }
 }
@@ -232,6 +235,7 @@ impl WalkToPosition {
 
 #[derive(Debug, Clone)]
 pub struct Jump {
+    pub allow_nitro: bool,
 }
 
 impl Jump {
@@ -259,6 +263,7 @@ impl Jump {
             ctx.simulator.ball().position() - ctx.simulator.me().position()
         ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
         ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+        ctx.simulator.me_mut().action_mut().use_nitro = self.allow_nitro;
 
         ctx.tick(TickType::Near)?;
 

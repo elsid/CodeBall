@@ -373,7 +373,7 @@ impl Play {
 
                 iterations += 1;
 
-                let mut candidate = Self::try_jump_near_ball(&initial_simulator, &global_simulator, robot, world, other, ctx);
+                let mut candidate = Self::try_jump_near_ball(false, &initial_simulator, &global_simulator, robot, world, other, ctx);
 
                 #[cfg(feature = "enable_stats")]
                 {
@@ -409,7 +409,7 @@ impl Play {
         order
     }
 
-    fn try_jump_near_ball(initial_simulator: &Simulator, global_simulator: &Simulator,
+    fn try_jump_near_ball(allow_nitro: bool, initial_simulator: &Simulator, global_simulator: &Simulator,
                           robot: &Robot, world: &World, other: &[Order], ctx: &mut InnerOrderContext) -> Option<Play> {
         use crate::my_strategy::scenarios::{Context, JumpAtPosition};
 
@@ -496,6 +496,7 @@ impl Play {
             let scenario = JumpAtPosition {
                 position: target,
                 my_max_speed: required_speed,
+                allow_nitro,
             };
 
             let _ = scenario.perform(&mut scenario_ctx);
