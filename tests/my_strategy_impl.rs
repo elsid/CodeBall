@@ -46,9 +46,9 @@ fn test_two_robots_first_action_to_go_for_ball() {
     let mut action = Action::default();
     my_strategy.act(simulator.me().base(), simulator.rules(), &simulator.game(), &mut action);
     assert_eq!(action, Action {
-        target_velocity_x: 16.458955876577786,
+        target_velocity_x: 16.978319495249938,
         target_velocity_y: 0.0,
-        target_velocity_z: 25.081921207372957,
+        target_velocity_z: 24.733310880616365,
         jump_speed: 0.0,
         use_nitro: false,
     });
@@ -85,23 +85,23 @@ fn test_two_robots_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.03243278905379864,
-        y: 3.303381664383575,
-        z: 0.2130700408173823,
-        velocity_x: 5.685939055815443,
-        velocity_y: 18.358693352076358,
-        velocity_z: 37.3542733157526,
+        x: -0.0011459797062779416,
+        y: 3.535510692478625,
+        z: 0.5468419748712248,
+        velocity_x: -0.07374469478481722,
+        velocity_y: 17.1299179029137,
+        velocity_z: 35.18971087488389,
         radius: 2.0,
     });
     assert_eq!(simulator.me().action().jump_speed, 15.0);
-    assert_eq!(simulator.current_tick(), 44);
+    assert_eq!(simulator.current_tick(), 45);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.score() == 0 && simulator.current_tick() < 150
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 112);
+    assert_eq!(simulator.current_tick(), 116);
 }
 
 #[test]
@@ -126,7 +126,7 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
             && simulator.current_tick() < 150
     });
 
-    assert_eq!(simulator.me().position().y(), 1.2933734665735612);
+    assert_eq!(simulator.me().position().y(), 1.293384565284894);
     assert_eq!(simulator.current_tick(), 38);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
@@ -135,12 +135,12 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.ball().base(), &Ball {
-        x: 0.07518673046093485,
-        y: 3.3542492636668504,
-        z: 0.4328583066673137,
-        velocity_x: 7.137854054436037,
-        velocity_y: 19.270863543141555,
-        velocity_z: 41.093413695478176,
+        x: 0.008554082373327217,
+        y: 3.307117848029193,
+        z: 0.23373750302531543,
+        velocity_x: 1.3726393982194756,
+        velocity_y: 18.234645334589796,
+        velocity_z: 37.506922600418974,
         radius: 2.0,
     });
     assert_eq!(simulator.me().action().jump_speed, 15.0);
@@ -151,7 +151,7 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 105);
+    assert_eq!(simulator.current_tick(), 111);
 }
 
 #[test]
@@ -186,7 +186,7 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 44);
+    assert_eq!(simulator.current_tick(), 47);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().collision_type() == RobotCollisionType::None
@@ -235,7 +235,7 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch() {
             && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.current_tick(), 36);
+    assert_eq!(simulator.current_tick(), 29);
 
     simulate_while(&mut my_strategy, &mut simulator, &mut rng, |simulator| {
         simulator.me().collision_type() == RobotCollisionType::None

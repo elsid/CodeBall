@@ -416,7 +416,7 @@ impl Play {
         let time_interval = world.rules.tick_time_interval();
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
 
-        let points = get_points(&global_simulator, world.game.current_tick, ctx.rng);
+        let points = get_points(&global_simulator, world.game.current_tick);
 
         let mut order: Option<Play> = None;
 
@@ -845,9 +845,8 @@ fn get_order_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f6
     as_score(score)
 }
 
-pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRng) -> Vec<Vec3> {
+pub fn get_points(simulator: &Simulator, current_tick: i32) -> Vec<Vec3> {
     use crate::my_strategy::physics::get_min_distance_between_spheres;
-    use crate::my_strategy::random::Rng;
     use crate::my_strategy::common::Clamp;
     use crate::my_strategy::plane::Plane;
     use crate::my_strategy::mat3::Mat3;
@@ -889,9 +888,13 @@ pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRn
         robot.id(), base_position, base_direction, min_distance, max_distance
     );
     let mut result = Vec::new();
-    for _ in 0..number {
-        let distance = rng.gen_range(min_distance, max_distance);
-        let angle = rng.gen_range(-std::f64::consts::PI, std::f64::consts::PI);
+    let distance = (max_distance + min_distance) / 2.0;
+    for i in 0..number {
+        let angle = if i % 2 == 0 {
+            std::f64::consts::PI * i as f64 / number as f64
+        } else {
+            -std::f64::consts::PI * i as f64 / number as f64
+        };
         let rotation = Mat3::rotation(ball.normal_to_arena(), angle);
         let position = base_position + rotation * base_direction * distance;
         let projected = rules.arena.projected_with_shift(position, rules.ROBOT_MAX_RADIUS);

@@ -20,9 +20,9 @@ fn test_try_play() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1145);
+    assert_eq!(result.score(), 1117);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(-15.811748664438161, 0.0, 25.494874076422462));
+    assert_eq!(result.action().target_velocity(), Vec3::new(-16.3826505756388, 0.0, 25.131827631840103));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -31,18 +31,18 @@ fn test_try_play() {
         current_tick: 0,
         order: "jump_at_position",
         time_to_jump: 0.733333333333334,
-        time_to_watch: 0.7666666666666674,
+        time_to_watch: 0.7833333333333341,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 4,
+        iteration: 2,
         total_iterations: 5,
         game_score: 0,
-        order_score: 1145,
+        order_score: 1117,
         path_micro_ticks: 300,
         plan_micro_ticks: 5375,
         game_micro_ticks: 5375,
         game_micro_ticks_limit: 30000,
-        current_step: 8,
+        current_step: 4,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
@@ -90,9 +90,9 @@ fn test_try_play_should_not_jump_on_ball_top() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1278);
+    assert_eq!(result.score(), 1334);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(15.065425465228744, 0.0, 25.942878705950065));
+    assert_eq!(result.action().target_velocity(), Vec3::new(17.187563285087787, 0.0, 24.588364490569568));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -101,13 +101,13 @@ fn test_try_play_should_not_jump_on_ball_top() {
         current_tick: 0,
         order: "jump_at_position",
         time_to_jump: 0.31666666666666665,
-        time_to_watch: 0.35,
+        time_to_watch: 0.36666666666666664,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
         iteration: 5,
         total_iterations: 5,
         game_score: 0,
-        order_score: 1278,
+        order_score: 1334,
         path_micro_ticks: 300,
         plan_micro_ticks: 3550,
         game_micro_ticks: 3550,
@@ -355,7 +355,7 @@ fn test_try_play_when_far_from_ball_at_my_side() {
 
     assert_eq!(result.score(), 800);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(-16.148150133875735, 0.0, 25.283141562191375));
+    assert_eq!(result.action().target_velocity(), Vec3::new(-16.641005886756876, 0.0, 24.961508830135312));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -418,7 +418,7 @@ fn test_try_play_when_far_from_ball_at_opponent_side() {
 
     assert_eq!(result.score(), 334);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(16.148150133875735, 0.0, -25.283141562191375));
+    assert_eq!(result.action().target_velocity(), Vec3::new(16.641005886756876, 0.0, -24.961508830135312));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -480,10 +480,10 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 500);
+    assert_eq!(result.score(), 530);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(9.87305861387808, 0.0, -28.32883184331694));
+    assert_eq!(result.action().target_velocity(), Vec3::new(11.693888968138127, 0.0, -27.62703315234659));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -491,25 +491,25 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         robot_id: 1,
         current_tick: 0,
         order: "jump_at_position",
-        time_to_jump: 0.5833333333333335,
-        time_to_watch: 0.7666666666666674,
-        time_to_end: 1.566666666666666,
-        time_to_score: Some(1.566666666666666),
-        iteration: 2,
+        time_to_jump: 0.5666666666666668,
+        time_to_watch: 0.9500000000000013,
+        time_to_end: 1.6666666666666656,
+        time_to_score: None,
+        iteration: 1,
         total_iterations: 5,
-        game_score: -1,
-        order_score: 500,
-        path_micro_ticks: 282,
-        plan_micro_ticks: 5051,
-        game_micro_ticks: 5051,
+        game_score: 0,
+        order_score: 530,
+        path_micro_ticks: 300,
+        plan_micro_ticks: 5069,
+        game_micro_ticks: 5069,
         game_micro_ticks_limit: 30000,
-        current_step: 4,
+        current_step: 3,
         reached_game_limit: false,
         reached_play_limit: false,
         reached_scenario_limit: false,
         other_number: 0,
         ticks_with_near_micro_ticks: 0,
-        ticks_with_far_micro_ticks: 94,
+        ticks_with_far_micro_ticks: 100,
     });
 }
 
