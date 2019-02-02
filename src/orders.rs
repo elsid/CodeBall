@@ -851,6 +851,7 @@ pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRn
     use crate::my_strategy::common::Clamp;
     use crate::my_strategy::plane::Plane;
     use crate::my_strategy::mat3::Mat3;
+    use crate::my_strategy::entity::Entity;
 
     let ball = simulator.ball();
     let robot = simulator.me();
