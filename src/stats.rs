@@ -13,7 +13,7 @@ pub struct Stats {
     pub game_score: i32,
     pub order_score: i32,
     pub path_micro_ticks: usize,
-    pub play_micro_ticks: usize,
+    pub plan_micro_ticks: usize,
     pub game_micro_ticks: usize,
     pub game_micro_ticks_limit: usize,
     pub current_step: usize,

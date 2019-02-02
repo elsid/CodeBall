@@ -292,7 +292,7 @@ impl Play {
         {
             if let Some(v) = &mut order {
                 v.stats.total_iterations = ctx.total_iterations;
-                v.stats.play_micro_ticks = ctx.play_micro_ticks;
+                v.stats.plan_micro_ticks = ctx.play_micro_ticks;
                 v.stats.game_micro_ticks = *ctx.game_micro_ticks;
                 v.stats.game_micro_ticks_limit = world.get_micro_ticks_limit();
                 v.stats.reached_play_limit = ctx.play_micro_ticks >= ctx.max_play_micro_ticks;
