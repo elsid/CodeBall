@@ -416,7 +416,7 @@ impl Play {
         let time_interval = world.rules.tick_time_interval();
         let ball_distance_limit = world.rules.ROBOT_MAX_RADIUS + world.rules.BALL_RADIUS;
 
-        let points = get_points(&global_simulator, world, ctx.rng);
+        let points = get_points(&global_simulator, world.game.current_tick, ctx.rng);
 
         let mut order: Option<Play> = None;
 
@@ -845,7 +845,7 @@ fn get_order_score(rules: &Rules, simulator: &Simulator, time_to_ball: Option<f6
     as_score(score)
 }
 
-pub fn get_points(simulator: &Simulator, world: &World, rng: &mut XorShiftRng) -> Vec<Vec3> {
+pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRng) -> Vec<Vec3> {
     use crate::my_strategy::physics::get_min_distance_between_spheres;
     use crate::my_strategy::random::Rng;
     use crate::my_strategy::common::Clamp;
@@ -861,7 +861,7 @@ pub fn get_points(simulator: &Simulator, world: &World, rng: &mut XorShiftRng) -
     let max_time_diff = 2.0 * (rules.ROBOT_RADIUS + rules.BALL_RADIUS) / rules.ROBOT_MAX_GROUND_SPEED;
     let number = if time_to_ball < simulator.current_time() + max_time_diff {
         if time_to_ball < rules.tick_time_interval() * 10.0 {
-            if world.game.robots.len() <= 4 {
+            if simulator.robots().len() <= 4 {
                 9
             } else {
                 7
@@ -883,7 +883,7 @@ pub fn get_points(simulator: &Simulator, world: &World, rng: &mut XorShiftRng) -
         .clamp(min_distance + 1e-3, rules.BALL_RADIUS + rules.ROBOT_MAX_RADIUS);
     let base_direction = Plane::projected(to_robot, ball.normal_to_arena()).normalized();
     log!(
-        world.game.current_tick,
+        current_tick,
         "[{}] get_points base_position={:?} base_direction={:?} min_distance={} max_distance={}",
         robot.id(), base_position, base_direction, min_distance, max_distance
     );
@@ -895,7 +895,7 @@ pub fn get_points(simulator: &Simulator, world: &World, rng: &mut XorShiftRng) -
         let position = base_position + rotation * base_direction * distance;
         let projected = rules.arena.projected_with_shift(position, rules.ROBOT_MAX_RADIUS);
         log!(
-            world.game.current_tick,
+            current_tick,
             "[{}] get_points distance={} angle={} position={:?} projected={:?} distance_to_ball={}",
             robot.id(), distance, angle, position, projected, projected.distance(ball.position())
         );
