@@ -25,6 +25,7 @@ def main():
     report_distances(records, tick_time)
     report_radius(records)
     report_hits(records)
+    report_rounds(records)
     matplotlib.pyplot.show()
 
 
@@ -110,6 +111,21 @@ def report_hits(records):
         *hits_by_players,
         hits_by_players[0] / hits_by_players[1]
     )
+
+
+def report_rounds(records):
+    first = True
+    score_0 = 0
+    row('initial ball.y', 'ticks', 'winner')
+    for record in records:
+        if first:
+            start = record
+            first = False
+        elif record['reset_ticks'] == 119:
+            first = True
+            player = record['names'][0] if score_0 < record['scores'][0] else record['names'][1]
+            score_0 = record['scores'][0]
+            row(start['ball']['position']['y'], record['current_tick'] - start['current_tick'], player)
 
 
 def fill(record, first):
