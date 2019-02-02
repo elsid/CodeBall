@@ -14,7 +14,7 @@ use crate::my_strategy::render::Render;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-const MAX_PLAY_MICRO_TICKS: usize = 40000;
+const MAX_PLAN_MICRO_TICKS: usize = 40000;
 const MAX_PATH_MICRO_TICKS: usize = 1000;
 const MAX_ITERATIONS: usize = 5;
 
@@ -247,8 +247,8 @@ impl Play {
             rng: ctx.rng,
             order_id_generator: ctx.order_id_generator,
             game_micro_ticks: ctx.micro_ticks,
-            max_play_micro_ticks: MAX_PLAY_MICRO_TICKS * 2 / world.game.robots.len(),
-            play_micro_ticks: 0,
+            max_plan_micro_ticks: MAX_PLAN_MICRO_TICKS * 2 / world.game.robots.len(),
+            plan_micro_ticks: 0,
             total_iterations: 0,
         };
 
@@ -292,10 +292,10 @@ impl Play {
         {
             if let Some(v) = &mut order {
                 v.stats.total_iterations = ctx.total_iterations;
-                v.stats.plan_micro_ticks = ctx.play_micro_ticks;
+                v.stats.plan_micro_ticks = ctx.plan_micro_ticks;
                 v.stats.game_micro_ticks = *ctx.game_micro_ticks;
                 v.stats.game_micro_ticks_limit = world.get_micro_ticks_limit();
-                v.stats.reached_play_limit = ctx.play_micro_ticks >= ctx.max_play_micro_ticks;
+                v.stats.reached_play_limit = ctx.plan_micro_ticks >= ctx.max_plan_micro_ticks;
                 v.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks);
                 v.stats.other_number = other.len();
             }
@@ -342,7 +342,7 @@ impl Play {
 
         while (iterations < MAX_ITERATIONS || order.is_none())
             && global_simulator.current_tick() < MAX_TICKS
-            && ctx.play_micro_ticks < ctx.max_play_micro_ticks
+            && ctx.plan_micro_ticks < ctx.max_plan_micro_ticks
             && !world.is_micro_ticks_limit_reached(*ctx.game_micro_ticks) {
 
             log!(
@@ -396,7 +396,7 @@ impl Play {
                 }
 
                 global_simulator.tick(time_interval, NEAR_MICRO_TICKS_PER_TICK, ctx.rng);
-                ctx.play_micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
+                ctx.plan_micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
                 *ctx.game_micro_ticks += NEAR_MICRO_TICKS_PER_TICK;
             }
         }
@@ -501,7 +501,7 @@ impl Play {
 
             let _ = scenario.perform(&mut scenario_ctx);
 
-            ctx.play_micro_ticks += used_path_micro_ticks;
+            ctx.plan_micro_ticks += used_path_micro_ticks;
             *ctx.game_micro_ticks += used_path_micro_ticks;
 
             if local_simulator.score() != 0 {
@@ -605,7 +605,7 @@ impl Play {
             allow_nitro,
         }.perform(&mut scenario_ctx);
 
-        ctx.play_micro_ticks += used_path_micro_ticks;
+        ctx.plan_micro_ticks += used_path_micro_ticks;
         *ctx.game_micro_ticks += used_path_micro_ticks;
 
         if !actions.is_empty() {
@@ -695,7 +695,7 @@ impl Play {
             allow_nitro,
         }.perform(&mut scenario_ctx);
 
-        ctx.play_micro_ticks += used_path_micro_ticks;
+        ctx.plan_micro_ticks += used_path_micro_ticks;
         *ctx.game_micro_ticks += used_path_micro_ticks;
 
         if !actions.is_empty() {
@@ -958,8 +958,8 @@ struct InnerOrderContext<'r> {
     pub rng: &'r mut XorShiftRng,
     pub order_id_generator: &'r mut IdGenerator,
     pub game_micro_ticks: &'r mut usize,
-    pub max_play_micro_ticks: usize,
-    pub play_micro_ticks: usize,
+    pub max_plan_micro_ticks: usize,
+    pub plan_micro_ticks: usize,
     pub total_iterations: usize,
 }
 
