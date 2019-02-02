@@ -99,7 +99,7 @@ impl<'r, 'a, G> Context<'r, 'a, G>
         #[cfg(feature = "enable_stats")]
         {
             self.stats.reached_scenario_limit = *self.used_path_micro_ticks >= self.max_path_micro_ticks;
-            self.stats.scenario_micro_ticks = *self.used_path_micro_ticks;
+            self.stats.path_micro_ticks = *self.used_path_micro_ticks;
             self.stats.time_to_end = self.simulator.current_time();
             self.stats.time_to_score = if self.simulator.score() != self.stats.game_score {
                 Some(self.simulator.current_time())
