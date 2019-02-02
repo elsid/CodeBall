@@ -24,16 +24,17 @@ def main():
     report_speeds(records)
     report_distances(records, tick_time)
     report_radius(records)
+    report_hits(records)
     matplotlib.pyplot.show()
 
 
 def report_speeds(records):
-    speeds = split_by_robots(dict(get_speeds(v)) for v in records if v['reset_ticks'] is None)
+    speeds = split_by_keys(dict(get_speeds(v)) for v in records if v['reset_ticks'] is None)
     fig, ax = matplotlib.pyplot.subplots()
     ax.set_title('speeds distribution')
     bins = numpy.arange(0, max(max(v) for v in speeds.values()) + 1, 0.1)
     for k, v in speeds.items():
-        ax.hist(v, bins=bins, label=k, histtype='step')
+        ax.hist(v, bins=bins, label=k, histtype='step', linewidth=2)
     ax.grid(True)
     ax.legend()
     ax.set_xticks(numpy.arange(0, max(max(v) for v in speeds.values()) + 1, 1.0))
@@ -48,11 +49,11 @@ def report_speeds(records):
 
 
 def report_distances(records, tick_time):
-    distances = split_by_robots(get_distances(records, tick_time))
+    distances = split_by_keys(get_distances(records, tick_time))
     fig, ax = matplotlib.pyplot.subplots()
     ax.set_title('distances')
     for k, v in distances.items():
-        ax.plot(numpy.arange(0, len(v), 1), v, label=k)
+        ax.plot(numpy.arange(0, len(v), 1), v, label=k, linewidth=2)
         ax.set_xticks(numpy.arange(0, len(v) + 1, 1000))
     for goal, player in get_goals(records):
         ax.axvline(goal, color='green' if player else 'red')
@@ -69,11 +70,11 @@ def report_distances(records, tick_time):
 
 
 def report_radius(records):
-    radius = split_by_robots(dict(get_radius(v)) for v in records if v['reset_ticks'] is None)
+    radius = split_by_keys(dict(get_radius(v)) for v in records if v['reset_ticks'] is None)
     fig, ax = matplotlib.pyplot.subplots()
     ax.set_title('radius distribution')
     for k, v in radius.items():
-        ax.hist(v, label=k)
+        ax.hist(v, label=k, linewidth=2)
     ax.grid(True)
     ax.legend()
     names = sorted(records[0]['names'])
@@ -89,6 +90,25 @@ def report_radius(records):
         *[statistics.mean(v) for _, v in sorted(radius.items())],
         *radius_by_players,
         radius_by_players[0] / radius_by_players[1]
+    )
+
+
+def report_hits(records):
+    hits = split_by_keys(get_hits(records))
+    fig, ax = matplotlib.pyplot.subplots()
+    ax.set_title('hits')
+    for k, v in hits.items():
+        ax.plot(numpy.arange(0, len(v), 1), v, label=k, linewidth=2)
+        ax.set_xticks(numpy.arange(0, len(v) + 1, 1000))
+    ax.grid(True)
+    ax.legend()
+    names = sorted(records[0]['names'])
+    hits_by_players = [sum([w[-1] for k, w in hits.items() if v in k]) for v in names]
+    row(
+        'hits',
+        *['-' for _ in records[0]['robots']],
+        *hits_by_players,
+        hits_by_players[0] / hits_by_players[1]
     )
 
 
@@ -140,7 +160,17 @@ def get_radius(record):
         yield '%s-%s' % (record['names'][robot['player_index']], robot['id']), robot['radius']
 
 
-def split_by_robots(values):
+def get_hits(records):
+    hits = {v: 0 for v in records[0]['names']}
+    for record in records:
+        hits = {k: v for k, v in hits.items()}
+        for hit in record['hits']:
+            if hit['player_index'] is not None:
+                hits[record['names'][hit['player_index']]] += 1
+        yield hits
+
+
+def split_by_keys(values):
     result = defaultdict(list)
     for value in values:
         for k, v in value.items():
