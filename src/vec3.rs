@@ -2,7 +2,7 @@ use std::ops::{Add, Sub, Mul, Div, Neg};
 use crate::my_strategy::common::{Square};
 use crate::my_strategy::vec2::Vec2;
 
-#[derive(Default, Clone, Copy, PartialOrd)]
+#[derive(Default, Clone, Copy, PartialOrd, Serialize, Deserialize)]
 pub struct Vec3 {
     x: f64,
     y: f64,

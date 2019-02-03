@@ -170,7 +170,12 @@ impl MyStrategyImpl {
         if robots_ids.is_empty() {
             Vec::new()
         } else if robots_ids.len() == 1 {
-            vec![Role::forward(robots_ids[0])]
+            if cfg!(feature = "use_single_goalkeeper") {
+                vec![Role::goalkeeper(robots_ids[0])]
+            } else {
+                vec![Role::forward(robots_ids[0])]
+            }
+
         } else {
             let robots = robots_ids.iter()
                 .map(|v| self.world.get_robot(*v))

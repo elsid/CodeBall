@@ -12,6 +12,11 @@ name = "repeater"
 edition = "2018"
 path = "src/repeater.rs"
 
+[[bin]]
+name = "simulation_tool"
+edition = "2018"
+path = "src/simulation_tool.rs"
+
 [dependencies]
 log = "0.4.6"
 env_logger = "0.6.0"
@@ -28,6 +33,7 @@ enable_time = []
 use_test_strategy = []
 use_goalkeeper_strategy = []
 use_forward_strategy = []
+use_single_goalkeeper = []
 disable_output = []
 
 [[bench]]

@@ -7,6 +7,7 @@ pub enum GameType {
     TwoRobots,
     TwoRobotsWithNitro,
     ThreeRobotsWithNitro,
+    OneRobotWithNitro,
 }
 
 impl GameType {
@@ -15,6 +16,7 @@ impl GameType {
             GameType::TwoRobots => false,
             GameType::TwoRobotsWithNitro => true,
             GameType::ThreeRobotsWithNitro => true,
+            GameType::OneRobotWithNitro => true,
         }
     }
 
@@ -23,6 +25,7 @@ impl GameType {
             GameType::TwoRobots => 2,
             GameType::TwoRobotsWithNitro => 2,
             GameType::ThreeRobotsWithNitro => 3,
+            GameType::OneRobotWithNitro => 1,
         }
     }
 }
@@ -52,7 +55,12 @@ pub fn example_game(game_type: GameType, rules: &Rules) -> Game {
             Player { id: 1, me: true, strategy_crashed: false, score: 0 },
             Player { id: 2, me: false, strategy_crashed: false, score: 0 },
         ],
-        robots: if game_type.team_size() == 2 {
+        robots: if game_type.team_size() == 1 {
+            vec![
+                example_me(game_type, rules),
+                example_opponent_1(game_type, rules),
+            ]
+        } else if game_type.team_size() == 2 {
             vec![
                 example_me(game_type, rules),
                 example_teammate_1(game_type, rules),
@@ -193,7 +201,9 @@ pub fn example_teammate_2(game_type: GameType, rules: &Rules) -> Robot {
 
 pub fn example_opponent_1(game_type: GameType, rules: &Rules) -> Robot {
     Robot {
-        id: if game_type.team_size() == 2 {
+        id: if game_type.team_size() == 1 {
+            2
+        } else if game_type.team_size() == 2 {
             3
         } else {
             4

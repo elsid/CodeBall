@@ -159,6 +159,14 @@ impl RobotExt {
         self.base.nitro_amount = value;
     }
 
+    pub fn ignore(&self) -> bool {
+        self.ignore
+    }
+
+    pub fn set_ignore(&mut self, value: bool) {
+        self.ignore = value;
+    }
+
     pub fn arena_collision_mask(&self) -> ArenaCollisionMask {
         self.arena_collision_mask
     }
