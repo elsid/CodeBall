@@ -228,10 +228,15 @@ impl Jump {
         );
 
         ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
+        let speed = if self.allow_nitro {
+            ctx.simulator.rules().MAX_ENTITY_SPEED
+        } else {
+            ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED
+        };
         let target_velocity = ctx.simulator.rules().arena.projected_at(
             ctx.simulator.ball().position(),
             ctx.simulator.ball().position() - ctx.simulator.me().position()
-        ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+        ).normalized() * speed;
         ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
         ctx.simulator.me_mut().action_mut().use_nitro = self.allow_nitro;
 
