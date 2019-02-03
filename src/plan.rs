@@ -147,7 +147,43 @@ impl<'r> VisitorImpl<'r> {
         State::initial(self.state_id_generator.next(), plan)
     }
 
-    pub fn generate_positions_to_jump<'a, G>(&mut self, state: &Forked<'a, G>) -> Vec<Transition>
+    pub fn get_transitions_for_initial_state<'a, G>(state: &Final<'a, G>) -> Vec<Transition>
+        where G: Clone + Fn(i32, i32) -> Option<&'a Action>  {
+
+        use crate::my_strategy::entity::Entity;
+
+        if state.plan.simulator.rules().is_flying(state.plan.simulator.me().base()) {
+            let mut result = vec![
+                Transition::watch_me_jump(0.0, false),
+                Transition::watch_me_jump(state.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, false),
+            ];
+
+            if state.plan.simulator.me().nitro_amount() > 0.0 {
+                result.push(Transition::watch_me_jump(0.0, true));
+                result.push(Transition::watch_me_jump(state.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, true));
+            }
+
+            result
+        } else {
+            let mut result = Vec::new();
+
+            if state.plan.time_to_play == 0.0 {
+                if state.plan.simulator.me().nitro_amount() > 0.0
+                    && state.plan.simulator.ball().position().y() < state.plan.simulator.rules().arena.goal_height + 5.0
+                    && state.plan.simulator.me().position().distance(state.plan.simulator.ball().position()) < 15.0 {
+                    result.push(Transition::far_jump(true));
+                }
+
+                result.push(Transition::far_jump(false));
+            }
+
+            result.push(Transition::observe(0, state.plan.time_to_play, state.plan.max_z));
+
+            result
+        }
+    }
+
+    pub fn get_transitions_for_forked_state<'a, G>(state: &Forked<'a, G>) -> Vec<Transition>
         where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -316,45 +352,13 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
     }
 
     fn get_transitions(&mut self, state: &State<'a, G>) -> Vec<Transition> {
-        use crate::my_strategy::entity::Entity;
-
         match state {
-            State::Initial(v) => {
-                if v.plan.simulator.rules().is_flying(v.plan.simulator.me().base()) {
-                    let mut result = vec![
-                        Transition::watch_me_jump(0.0, false),
-                        Transition::watch_me_jump(v.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, false),
-                    ];
-
-                    if v.plan.simulator.me().nitro_amount() > 0.0 {
-                        result.push(Transition::watch_me_jump(0.0, true));
-                        result.push(Transition::watch_me_jump(v.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, true));
-                    }
-
-                    result
-                } else {
-                    let mut result = Vec::new();
-
-                    if v.plan.time_to_play == 0.0 {
-                        if v.plan.simulator.me().nitro_amount() > 0.0
-                            && v.plan.simulator.ball().position().y() < v.plan.simulator.rules().arena.goal_height + 5.0
-                            && v.plan.simulator.me().position().distance(v.plan.simulator.ball().position()) < 15.0 {
-                            result.push(Transition::far_jump(true));
-                        }
-
-                        result.push(Transition::far_jump(false));
-                    }
-
-                    result.push(Transition::observe(0, v.plan.time_to_play, v.plan.max_z));
-
-                    result
-                }
-            },
+            State::Initial(v) => Self::get_transitions_for_initial_state(v),
             State::Observed(v) => vec![
                 Transition::fork(),
                 Transition::observe(v.number + 1, v.plan.time_to_play, v.plan.max_z),
             ],
-            State::Forked(v) => self.generate_positions_to_jump(v),
+            State::Forked(v) => Self::get_transitions_for_forked_state(v),
             State::Walked(_) => vec![Transition::jump(false)],
             State::Jumped(v) => vec![
                 Transition::watch_me_jump(v.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, false)
