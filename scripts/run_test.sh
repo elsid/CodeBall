@@ -2,6 +2,7 @@
 
 ID=${1}
 OTHER=${2}
+ARGS=
 PREFIX=
 SUFFIX=
 
@@ -29,6 +30,11 @@ if ! [[ "${DURATION}" ]]; then
 fi
 
 SUFFIX=${SUFFIX}_${TEAM_SIZE}_${DURATION}
+
+if [[ "${UNTIL_FIRST_GOAL}" ]]; then
+    ARGS="${ARGS} --until-first-goal"
+    SUFFIX=${SUFFIX}_ufg
+fi
 
 if ! [[ "${PORTS_SHIFT}" ]]; then
     PORTS_SHIFT=0
@@ -63,7 +69,8 @@ local_runner/codeball2018 \
     --p1-name ${OTHER} \
     --p2-name ${VERSION} \
     --p1 tcp-${PLAYER_1_PORT} \
-    --p2 tcp-${PLAYER_2_PORT} &
+    --p2 tcp-${PLAYER_2_PORT} \
+    ${ARGS} &
 LOCAL_RUNNER_PID=$!
 
 sleep 1
