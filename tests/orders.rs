@@ -9,7 +9,7 @@ fn test_try_play() {
     use my_strategy::my_strategy::stats::Stats;
 
     let world = example_world(GameType::TwoRobots);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
     let mut ctx = OrderContext {
@@ -206,7 +206,7 @@ fn test_try_play_continue_jump() {
     use my_strategy::my_strategy::stats::Stats;
 
     let mut world = example_world(GameType::TwoRobots);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
     let mut ctx = OrderContext {
@@ -271,7 +271,7 @@ fn test_try_play_continue_jump_with_nitro() {
     use my_strategy::my_strategy::stats::Stats;
 
     let mut world = example_world(GameType::TwoRobotsWithNitro);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
     let mut ctx = OrderContext {
@@ -347,7 +347,7 @@ fn test_try_play_when_far_from_ball_at_my_side() {
         .map(|v| *v = me.clone());
     world.game.ball.set_position(Vec3::new(-20.0, 10.0, 30.0));
 
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
     let mut ctx = OrderContext {
@@ -411,7 +411,7 @@ fn test_try_play_when_far_from_ball_at_opponent_side() {
         .map(|v| *v = me.clone());
     world.game.ball.set_position(Vec3::new(20.0, 10.0, -30.0));
 
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
     let mut ctx = OrderContext {
@@ -467,7 +467,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
     use my_strategy::my_strategy::stats::Stats;
 
     let mut world = example_world(GameType::TwoRobotsWithNitro);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
     let mut ctx = OrderContext {
@@ -533,7 +533,7 @@ fn test_try_play_goalkeeper_should_catch() {
     use my_strategy::my_strategy::stats::Stats;
 
     let mut world = example_world(GameType::TwoRobotsWithNitro);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
     let mut ctx = OrderContext {
@@ -599,7 +599,7 @@ fn test_try_play_for_tree_robots_with_nitro() {
     use my_strategy::my_strategy::stats::Stats;
 
     let world = example_world(GameType::ThreeRobotsWithNitro);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
     let mut ctx = OrderContext {

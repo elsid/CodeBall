@@ -63,7 +63,7 @@ fn test_two_robots_first_ball_kick_until_goal() {
     use my_strategy::my_strategy::entity::Entity;
 
     let world = example_world(GameType::TwoRobots);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 2);
     let mut my_strategy = MyStrategyImpl::new(
         &simulator.me().base(),
@@ -113,7 +113,7 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     use my_strategy::my_strategy::entity::Entity;
 
     let world = example_world(GameType::TwoRobotsWithNitro);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 2);
     let mut my_strategy = MyStrategyImpl::new(
         &simulator.me().base(),
@@ -173,7 +173,7 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
     world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
     world.game.ball.set_velocity(Vec3::new(5.10521022216499, 16.6258312833173, -42.698087751137));
 
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 1);
     let mut my_strategy = MyStrategyImpl::new(
         &simulator.me().base(),
@@ -222,7 +222,7 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch() {
     world.game.ball.set_position(Vec3::new(0.198560151715065, 4.92791046901793, -1.66068357870943));
     world.game.ball.set_velocity(Vec3::new(5.10521022216499, 14.6258312833173, -42.698087751137));
 
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 1);
     let mut my_strategy = MyStrategyImpl::new(
         &simulator.me().base(),
@@ -261,7 +261,7 @@ fn test_three_robots_with_nitro_first_ball_kick_until_goal() {
     use my_strategy::my_strategy::entity::Entity;
 
     let world = example_world(GameType::ThreeRobotsWithNitro);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 3);
     let mut my_strategy = MyStrategyImpl::new(
         &simulator.me().base(),

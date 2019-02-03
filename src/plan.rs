@@ -719,7 +719,7 @@ pub fn get_points(simulator: &Simulator, current_tick: i32) -> Vec<Vec3> {
     let max_time_diff = 2.0 * (rules.ROBOT_RADIUS + rules.BALL_RADIUS) / rules.ROBOT_MAX_GROUND_SPEED;
     let number = if time_to_ball < simulator.current_time() + max_time_diff {
         if time_to_ball < rules.tick_time_interval() * 10.0 {
-            if simulator.robots().len() <= 4 {
+            if simulator.rules().team_size <= 2 {
                 9
             } else {
                 7

@@ -8,7 +8,7 @@ use my_strategy::examples::{GameType, example_world, example_rules, example_me, 
 fn test_simulator_tick_robot_walk() {
     let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let max_speed = simulator.rules().ROBOT_MAX_GROUND_SPEED;
     simulator.me_mut().action_mut().set_target_velocity(Vec3::only_z(max_speed));
     simulator.tick(
@@ -27,7 +27,7 @@ fn test_simulator_tick_robot_walk() {
 fn test_simulator_tick_robot_jump() {
     let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.tick(
         simulator.rules().tick_time_interval(),
@@ -45,7 +45,7 @@ fn test_simulator_tick_robot_jump() {
 fn test_simulator_tick_robot_jump_with_half_micro_ticks() {
     let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
@@ -66,7 +66,7 @@ fn test_simulator_tick_robot_jump_with_half_micro_ticks() {
 fn test_simulator_robot_jump() {
     let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
@@ -95,7 +95,7 @@ fn test_simulator_robot_jump() {
 fn test_simulator_robot_jump_with_half_micro_ticks() {
     let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     assert_eq!(
         simulator.me().position(),
@@ -141,7 +141,7 @@ fn test_simulator_robot_kick_ball() {
         world
     };
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.tick(
         simulator.rules().tick_time_interval(),
@@ -181,7 +181,7 @@ fn test_simulator_wait_for_goal() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     for _ in 0..37 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -203,7 +203,7 @@ fn test_simulator_throw_ball_by_plus_x_and_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     ;
     for _ in 0..10 {
         simulator.tick(
@@ -233,7 +233,7 @@ fn test_simulator_throw_ball_by_plus_x_and_neg_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     ;
     for _ in 0..10 {
         simulator.tick(
@@ -263,7 +263,7 @@ fn test_simulator_throw_ball_by_neg_x_and_plus_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     for _ in 0..10 {
         simulator.tick(
             simulator.rules().tick_time_interval(),
@@ -292,7 +292,7 @@ fn test_simulator_throw_ball_by_neg_x_and_z() {
         world
     };
     let mut simulator = Simulator::new(&world, world.game.robots[0].id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     ;
     for _ in 0..10 {
         simulator.tick(
@@ -316,7 +316,7 @@ fn test_simulator_throw_ball_by_neg_x_and_z() {
 fn test_simulator_collide_jumping_robot_and_ball() {
     use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
 
-    let rules = example_rules();
+    let rules = example_rules(GameType::TwoRobots);
     let mut me = RobotExt::from_robot(&example_me(GameType::TwoRobots, &rules), &rules);
     let mut ball = BallExt::from_ball(&example_ball(&rules), &rules);
     ball.set_position(Vec3::new(0.0, rules.BALL_RADIUS, 0.0));
@@ -335,7 +335,7 @@ fn test_simulator_collide_jumping_robot_and_ball() {
 fn test_simulator_collide_jumping_and_moving_robot_and_ball() {
     use my_strategy::my_strategy::physics::get_min_distance_between_spheres;
 
-    let rules = example_rules();
+    let rules = example_rules(GameType::TwoRobots);
     let mut me = RobotExt::from_robot(&example_me(GameType::TwoRobots, &rules), &rules);
     let mut ball = BallExt::from_ball(&example_ball(&rules), &rules);
     ball.set_position(Vec3::new(0.0, rules.BALL_RADIUS, 0.0));
@@ -357,7 +357,7 @@ fn test_simulator_tick_ball_to_goal() {
     world.game.ball.set_position(Vec3::new(0.0, 2.6720979333335597, 40.50000000000227));
     world.game.ball.set_velocity(Vec3::new(0.0, -1.7128000000001131, 30.0));
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,
@@ -376,7 +376,7 @@ fn test_simulator_robot_turn_left() {
     let target = Vec3::new(3.0, 1.0, 0.0);
     simulator.me_mut().set_position(Vec3::new(10.0, 1.0, 0.0));
     simulator.me_mut().set_velocity(Vec3::only_z(30.0));
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     while simulator.me().position().distance(target) > 0.5 {
         let position = simulator.me().position();
         simulator.me_mut().action_mut().set_target_velocity(
@@ -398,7 +398,7 @@ fn test_simulator_robot_turn_back() {
     let target = Vec3::new(10.0, 1.0, -7.0);
     simulator.me_mut().set_position(Vec3::new(10.0, 1.0, 0.0));
     simulator.me_mut().set_velocity(Vec3::only_z(30.0));
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     while simulator.me().position().distance(target) > 0.5 {
         let position = simulator.me().position();
         simulator.me_mut().action_mut().set_target_velocity(
@@ -417,7 +417,7 @@ fn test_simulator_robot_turn_back() {
 fn test_simulator_robot_walk_on_wall() {
     let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let mut prev_y = simulator.me().position().y();
     let mut max_y = simulator.me().position().y();
     while prev_y - simulator.me().position().y() <= 1e-3 {
@@ -454,7 +454,7 @@ fn test_simulator_robot_walk_on_wall() {
 fn test_simulator_tick_robot_jump_using_nitro_with_nitro() {
     let world = example_world(GameType::TwoRobotsWithNitro);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.me_mut().action_mut().target_velocity_y = simulator.rules().MAX_ENTITY_SPEED;
     simulator.me_mut().action_mut().use_nitro = true;
@@ -476,7 +476,7 @@ fn test_simulator_tick_robot_jump_using_nitro_with_nitro() {
 fn test_simulator_tick_robot_jump_using_nitro_without_nitro() {
     let world = example_world(GameType::TwoRobots);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.me_mut().action_mut().jump_speed = simulator.rules().ROBOT_MAX_JUMP_SPEED;
     simulator.me_mut().action_mut().target_velocity_y = simulator.rules().MAX_ENTITY_SPEED;
     simulator.me_mut().action_mut().use_nitro = true;
@@ -498,7 +498,7 @@ fn test_simulator_tick_robot_jump_using_nitro_without_nitro() {
 fn test_simulator_tick_robot_walk_to_nitro_pack() {
     let world = example_world(GameType::TwoRobotsWithNitro);
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     let nearest_nitro_pack = simulator.nitro_packs().iter()
         .map(|v| (v.position().distance(simulator.me().position()).round() as i32, v))
         .min_by_key(|(distance, _)| *distance)
@@ -527,7 +527,7 @@ fn test_simulator_ball_hit_bottom_corner() {
     world.game.ball.set_position(Vec3::new(-24.4378654601576, 2.462833999159444, 34.82362575766481));
     world.game.ball.set_velocity(Vec3::new(6.239753468929283, 2.5046756681021467, 43.74873027140119));
     let mut simulator = Simulator::new(&world, world.me.id);
-    let mut rng = example_rng();
+    let mut rng = example_rng(&world.rules);
     simulator.tick(
         simulator.rules().tick_time_interval(),
         simulator.rules().MICROTICKS_PER_TICK,

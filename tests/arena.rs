@@ -91,7 +91,7 @@ fn test_get_touch_normal() {
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::examples::{GameType, example_arena, example_me, example_rules};
 
-    let rules = example_rules();
+    let rules = example_rules(GameType::TwoRobots);
 
     assert_eq!(
         example_arena().get_approximate_touch_normal(&example_me(GameType::TwoRobots, &rules)),

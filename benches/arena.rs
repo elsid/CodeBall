@@ -4,12 +4,12 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use my_strategy::my_strategy::simulator::BallExt;
 use my_strategy::my_strategy::entity::Entity;
 use my_strategy::my_strategy::vec3::Vec3;
-use my_strategy::examples::{example_ball, example_arena, example_rules};
+use my_strategy::examples::{GameType, example_ball, example_arena, example_rules};
 
 fn arena_collide(c: &mut Criterion) {
     c.bench_function("arena_collide", |b| {
         let arena = example_arena();
-        let rules = example_rules();
+        let rules = example_rules(GameType::TwoRobots);
         let ball = example_ball(&rules);
         b.iter(move || {
             let mut ball = BallExt::new(

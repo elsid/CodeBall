@@ -27,8 +27,7 @@ impl GameType {
     }
 }
 
-pub fn example_rng() -> XorShiftRng {
-    let rules = example_rules();
+pub fn example_rng(rules: &Rules) -> XorShiftRng {
     XorShiftRng::from_seed([
         rules.seed as u32,
         (rules.seed >> 32) as u32,
@@ -38,7 +37,7 @@ pub fn example_rng() -> XorShiftRng {
 }
 
 pub fn example_world(game_type: GameType) -> World {
-    let rules = example_rules();
+    let rules = example_rules(game_type);
     World::new(
         example_me(game_type, &rules),
         rules.clone(),
@@ -288,11 +287,11 @@ pub fn example_ball(rules: &Rules) -> Ball {
     }
 }
 
-pub fn example_rules() -> Rules {
+pub fn example_rules(game_type: GameType) -> Rules {
     Rules {
         max_tick_count: 18000,
         arena: example_arena(),
-        team_size: 2,
+        team_size: game_type.team_size() as i32,
         seed: 42,
         ROBOT_MIN_RADIUS: 1.0,
         ROBOT_MAX_RADIUS: 1.05,

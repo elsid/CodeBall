@@ -241,7 +241,7 @@ impl Play {
         );
 
         let time_to_play = get_min_time_to_play_ball(other, world);
-        let max_plan_micro_ticks = MAX_PLAN_MICRO_TICKS * 2 / world.game.robots.len();
+        let max_plan_micro_ticks = MAX_PLAN_MICRO_TICKS / world.rules.team_size as usize;
 
         let plan = Plan::new(
             world.game.current_tick,

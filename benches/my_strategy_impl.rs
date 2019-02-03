@@ -13,7 +13,7 @@ fn two_robots_with_nitro(c: &mut Criterion) {
 
     c.bench_function("two_robots_with_nitro", |b| {
         let world = example_world(GameType::TwoRobotsWithNitro);
-        let mut rng = example_rng();
+        let mut rng = example_rng(&world.rules);
         let mut simulator = Simulator::new(&world, 1);
         let mut strategies = world.game.players.iter()
             .map(|player| {
