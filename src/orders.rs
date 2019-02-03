@@ -279,7 +279,7 @@ impl Play {
             order.stats.plan_micro_ticks = plan.used_micro_ticks;
             order.stats.game_micro_ticks = *ctx.micro_ticks;
             order.stats.game_micro_ticks_limit = world.get_micro_ticks_limit();
-            order.stats.reached_play_limit = plan.used_micro_ticks >= max_plan_micro_ticks;
+            order.stats.reached_plan_limit = plan.used_micro_ticks >= max_plan_micro_ticks;
             order.stats.reached_game_limit = world.is_micro_ticks_limit_reached(*ctx.micro_ticks);
             order.stats.other_number = other.len();
         }

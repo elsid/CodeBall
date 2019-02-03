@@ -121,7 +121,7 @@ impl<'r, 'a, G> Context<'r, 'a, G>
 
         #[cfg(feature = "enable_stats")]
         {
-            self.stats.reached_scenario_limit = *self.used_path_micro_ticks >= self.max_path_micro_ticks;
+            self.stats.reached_path_limit = *self.used_path_micro_ticks >= self.max_path_micro_ticks;
             self.stats.path_micro_ticks = *self.used_path_micro_ticks;
 
             if micro_ticks_per_tick == NEAR_MICRO_TICKS_PER_TICK {
