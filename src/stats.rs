@@ -34,4 +34,11 @@ impl Stats {
         result.order = order;
         result
     }
+
+    pub fn update(&mut self, other: &Stats) {
+        self.path_micro_ticks += other.path_micro_ticks;
+        self.ticks_with_far_micro_ticks += other.ticks_with_far_micro_ticks;
+        self.ticks_with_near_micro_ticks += other.ticks_with_near_micro_ticks;
+        self.current_step = other.current_step;
+    }
 }

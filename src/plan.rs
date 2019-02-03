@@ -86,7 +86,7 @@ impl<'a, G> Plan<'a, G>
     pub fn search(&self, rng: &mut XorShiftRng) -> Result
         where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
-        let mut visitor = VisitorImpl::new(self.simulator.clone(), rng);
+        let mut visitor = VisitorImpl::new(rng);
 
         let initial_state = visitor.make_initial_state(self.clone());
 
@@ -125,16 +125,14 @@ impl<'a, G> Plan<'a, G>
 }
 
 pub struct VisitorImpl<'r> {
-    initial_simulator: Simulator,
     rng: &'r mut XorShiftRng,
     state_id_generator: IdGenerator,
     used_micro_ticks: usize,
 }
 
 impl<'r> VisitorImpl<'r> {
-    pub fn new(initial_simulator: Simulator, rng: &'r mut XorShiftRng) -> Self {
+    pub fn new(rng: &'r mut XorShiftRng) -> Self {
         VisitorImpl {
-            initial_simulator,
             rng,
             state_id_generator: IdGenerator::new(),
             used_micro_ticks: 0,
@@ -228,7 +226,7 @@ impl<'r> VisitorImpl<'r> {
         where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
         if let State::Observed(state) = state {
-            let mut plan = state.plan.clone();
+            let plan = &state.plan;
 
             log!(
                 plan.current_tick, "[{}] <{}> <{}> fork {}:{}:{}",
@@ -237,19 +235,12 @@ impl<'r> VisitorImpl<'r> {
                 plan.simulator.current_micro_tick()
             );
 
-            let observe_simulator = plan.simulator;
+            let mut initial_plan = state.initial_plan.clone();
 
-            plan.simulator = self.initial_simulator.clone();
-            plan.actions.clear();
-            plan.time_to_ball = None;
-            plan.time_to_goal = None;
-            plan.position_to_jump = None;
-            plan.path_micro_ticks = 0;
+            #[cfg(feature = "enable_stats")]
+            initial_plan.stats.update(&plan.stats);
 
-            #[cfg(feature = "enable_render")]
-            plan.history.clear();
-
-            State::forked(self.state_id_generator.next(), plan, observe_simulator)
+            State::forked(self.state_id_generator.next(), initial_plan, state.plan.simulator.clone())
         } else {
             unimplemented!()
         }
@@ -330,7 +321,13 @@ impl<'r> VisitorImpl<'r> {
         } else {
             match result {
                 Ok(_) => match transition {
-                    Transition::Observe(v) => State::observed(self.state_id_generator.next(), v.number, plan),
+                    Transition::Observe(v) => {
+                        let initial_plan = match state {
+                            State::Observed(v) => v.initial_plan.clone(),
+                            _ => state.plan().clone(),
+                        };
+                        State::observed(self.state_id_generator.next(), v.number, plan, initial_plan)
+                    },
                     Transition::WalkToPosition(_) => State::walked(self.state_id_generator.next(), plan),
                     Transition::Jump(_) => State::jumped(self.state_id_generator.next(), plan),
                     Transition::FarJump(_) => State::far_jumped(self.state_id_generator.next(), plan),
@@ -426,8 +423,8 @@ impl<'a, G> State<'a, G>
         State::Initial(Final { id, score: 0, plan })
     }
 
-    pub fn observed(id: i32, number: usize, plan: Plan<'a, G>) -> Self {
-        State::Observed(Observed { id, number, score: 0, plan })
+    pub fn observed(id: i32, number: usize, plan: Plan<'a, G>, initial_plan: Plan<'a, G>) -> Self {
+        State::Observed(Observed { id, number, score: 0, plan, initial_plan })
     }
 
     pub fn forked(id: i32, plan: Plan<'a, G>, observe_simulator: Simulator) -> Self {
@@ -571,8 +568,9 @@ pub struct Observed<'a, G>
 
     pub id: i32,
     pub score: i32,
-    pub plan: Plan<'a, G>,
     pub number: usize,
+    pub plan: Plan<'a, G>,
+    pub initial_plan: Plan<'a, G>,
 }
 
 #[derive(Clone)]
