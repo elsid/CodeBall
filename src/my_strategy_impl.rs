@@ -27,7 +27,6 @@ pub struct MyStrategyImpl {
     roles: Vec<Role>,
     order_id_generator: IdGenerator,
     micro_ticks: usize,
-    #[cfg(feature = "enable_time")]
     micro_ticks_before: usize,
     #[cfg(feature = "enable_render")]
     render: Render,
@@ -101,7 +100,6 @@ impl MyStrategyImpl {
             roles: Vec::new(),
             order_id_generator: IdGenerator::new(),
             micro_ticks: 0,
-            #[cfg(feature = "enable_time")]
             micro_ticks_before: 0,
             #[cfg(feature = "enable_render")]
             render: Render::new(),
@@ -320,10 +318,7 @@ impl MyStrategyImpl {
 
     fn on_start(&mut self) {
         self.tick_start_time = Instant::now();
-        #[cfg(feature = "enable_time")]
-        {
-            self.micro_ticks_before = self.micro_ticks;
-        }
+        self.micro_ticks_before = self.micro_ticks;
     }
 
     fn on_finish(&mut self) {
@@ -363,6 +358,12 @@ impl MyStrategyImpl {
         let render = &mut self.render;
 
         render.add(Object::text(format!("current_tick: {}", self.world.game.current_tick)));
+
+        render.add(Object::text(format!(
+            "used micro ticks: {}/{} ({}%) +{}", self.micro_ticks, self.world.get_micro_ticks_limit(),
+            self.micro_ticks as f64 / self.world.get_micro_ticks_limit() as f64 * 100.0,
+            self.micro_ticks - self.micro_ticks_before
+        )));
 
         self.world.game.ball.render(render);
         self.world.rules.arena.render_normal(self.world.game.ball.position(), render);
