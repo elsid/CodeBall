@@ -42,6 +42,7 @@ impl Default for MyStrategyImpl {
 
 impl Drop for MyStrategyImpl {
     fn drop(&mut self) {
+        #[cfg(not(feature = "disable_output"))]
         eprintln!("{} {:?} {:?} {:?}", self.micro_ticks, self.time_spent, self.cpu_time_spent, self.max_cpu_time_spent);
     }
 }

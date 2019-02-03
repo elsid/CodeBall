@@ -28,6 +28,7 @@ enable_time = []
 use_test_strategy = []
 use_goalkeeper_strategy = []
 use_forward_strategy = []
+disable_output = []
 
 [[bench]]
 name = "simulator"
