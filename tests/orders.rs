@@ -49,6 +49,7 @@ fn test_try_play() {
         other_number: 0,
         ticks_with_near_micro_ticks: 50,
         ticks_with_far_micro_ticks: 100,
+        path_type: Some("walk_to_position"),
     });
 }
 
@@ -119,6 +120,7 @@ fn test_try_play_should_not_jump_on_ball_top() {
         other_number: 0,
         ticks_with_near_micro_ticks: 25,
         ticks_with_far_micro_ticks: 100,
+        path_type: Some("walk_to_position"),
     });
 }
 
@@ -189,6 +191,7 @@ fn test_try_play_far_jump() {
         other_number: 0,
         ticks_with_near_micro_ticks: 4,
         ticks_with_far_micro_ticks: 96,
+        path_type: Some("far_jump"),
     });
 }
 
@@ -253,6 +256,7 @@ fn test_try_play_continue_jump() {
         other_number: 0,
         ticks_with_near_micro_ticks: 7,
         ticks_with_far_micro_ticks: 64,
+        path_type: Some("watch_me_jump"),
     });
 }
 
@@ -318,6 +322,7 @@ fn test_try_play_continue_jump_with_nitro() {
         other_number: 0,
         ticks_with_near_micro_ticks: 7,
         ticks_with_far_micro_ticks: 66,
+        path_type: Some("watch_me_jump"),
     });
 }
 
@@ -382,6 +387,7 @@ fn test_try_play_when_far_from_ball_at_my_side() {
         other_number: 0,
         ticks_with_near_micro_ticks: 36,
         ticks_with_far_micro_ticks: 100,
+        path_type: Some("walk_to_position"),
     });
 }
 
@@ -445,6 +451,7 @@ fn test_try_play_when_far_from_ball_at_opponent_side() {
         other_number: 0,
         ticks_with_near_micro_ticks: 36,
         ticks_with_far_micro_ticks: 100,
+        path_type: Some("walk_to_position"),
     });
 }
 
@@ -510,6 +517,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         other_number: 0,
         ticks_with_near_micro_ticks: 63,
         ticks_with_far_micro_ticks: 100,
+        path_type: Some("walk_to_position"),
     });
 }
 
@@ -576,5 +584,6 @@ fn test_try_play_goalkeeper_should_catch() {
         other_number: 0,
         ticks_with_near_micro_ticks: 3,
         ticks_with_far_micro_ticks: 97,
+        path_type: Some("far_jump"),
     });
 }

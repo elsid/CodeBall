@@ -384,6 +384,17 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
         #[cfg(feature = "enable_stats")]
         {
             result.plan_mut().stats.iteration = iteration;
+
+            if result.plan_mut().stats.path_type.is_none() {
+                result.plan_mut().stats.path_type = match transition {
+                    Transition::WalkToPosition(_) => Some("walk_to_position"),
+                    Transition::Jump(_) => Some("jump"),
+                    Transition::FarJump(_) => Some("far_jump"),
+                    Transition::WatchMeJump(_) => Some("watch_me_jump"),
+                    Transition::WatchBallMove(_) => Some("watch_ball_move"),
+                    _ => result.plan_mut().stats.path_type,
+                };
+            }
         }
 
         result
