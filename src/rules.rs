@@ -38,7 +38,7 @@ impl Rules {
     pub fn max_robot_jump_height(&self) -> f64 {
         use crate::my_strategy::common::Square;
 
-        let time = self.ROBOT_MAX_JUMP_SPEED / self.GRAVITY;
+        let time = self.jump_to_max_height_time();
         self.ROBOT_MAX_RADIUS
             + self.ROBOT_MAX_JUMP_SPEED * time
             - self.GRAVITY * time.square() / 2.0
@@ -155,5 +155,9 @@ impl Rules {
         position.z() < -self.arena.depth / 2.0 + self.BALL_RADIUS
         && position.y() < self.arena.goal_height + self.BALL_RADIUS
         && position.x().is_between(-self.arena.goal_width / 2.0 + self.BALL_RADIUS, self.arena.goal_width / 2.0 + self.BALL_RADIUS)
+    }
+
+    pub fn jump_to_max_height_time(&self) -> f64 {
+        self.ROBOT_MAX_JUMP_SPEED / self.GRAVITY
     }
 }

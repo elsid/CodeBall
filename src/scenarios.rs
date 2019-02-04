@@ -529,7 +529,7 @@ pub fn does_jump_hit_ball<'r, 'a, G>(ctx: &mut Context<'r, 'a, G>) -> bool
 
     let time = minimize1d(
         0.0,
-        MAX_TICKS as f64 * simulator.rules().tick_time_interval(),
+        simulator.rules().jump_to_max_height_time(),
         10,
         get_distance
     );
