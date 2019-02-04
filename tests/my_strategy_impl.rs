@@ -101,7 +101,7 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
 }
 
 #[test]
-fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
+fn test_two_robots_with_nitro_goalkeeper_should_catch_1() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
@@ -130,8 +130,8 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_but_cant() {
         simulator.score() == 0 && simulator.current_tick() < 100
     });
 
-    assert_eq!(simulator.score(), -1);
-    assert_eq!(simulator.current_tick(), 57);
+    assert_eq!(simulator.score(), 0);
+    assert_eq!(simulator.current_tick(), 100);
 }
 
 #[test]

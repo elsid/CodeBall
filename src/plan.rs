@@ -746,6 +746,14 @@ pub fn get_points(simulator: &Simulator, current_tick: i32) -> Vec<Vec3> {
         robot.id(), base_position, base_direction, min_distance, max_distance
     );
     let mut result = Vec::new();
+
+    if rules.is_near_my_goal(ball.position()) {
+        result.push(
+            ball.position().with_y(rules.ROBOT_RADIUS)
+                .with_max_z(-rules.arena.depth / 2.0 - rules.BALL_RADIUS)
+        );
+    }
+
     let distance = (max_distance + min_distance) / 2.0;
     for i in 0..number {
         let angle = if i % 2 == 0 {

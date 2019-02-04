@@ -70,6 +70,10 @@ impl Vec3 {
         Vec3::new(self.x, self.y.max(y), self.z)
     }
 
+    pub fn with_max_z(&self, max_z: f64) -> Vec3 {
+        Vec3::new(self.x, self.y, self.z.max(max_z))
+    }
+
     pub fn with_neg_x(&self) -> Vec3 {
         self.with_x(-self.x)
     }
