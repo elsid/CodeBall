@@ -283,7 +283,7 @@ impl MyStrategyImpl {
 
                 match role {
                     Role::Forward(_) => {
-                        if robot.nitro_amount < world.rules.START_NITRO_AMOUNT {
+                        if robot.nitro_amount < world.rules.MAX_NITRO_AMOUNT {
                             Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator)
                         } else {
                             Order::try_push_opponent(robot, world, ctx.order_id_generator)
