@@ -212,8 +212,6 @@ impl Jump {
     pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
-        use crate::my_strategy::entity::Entity;
-
         #[cfg(feature = "enable_stats")]
         {
             ctx.stats.time_to_jump = ctx.simulator.current_time();
@@ -228,17 +226,10 @@ impl Jump {
         );
 
         ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
-        let speed = if self.allow_nitro {
-            ctx.simulator.rules().MAX_ENTITY_SPEED
-        } else {
-            ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED
-        };
-        let target_velocity = ctx.simulator.rules().arena.projected_at(
-            ctx.simulator.ball().position(),
-            ctx.simulator.ball().position() - ctx.simulator.me().position()
-        ).normalized() * speed;
+        let use_nitro = self.allow_nitro && ctx.simulator.me().nitro_amount() > 0.0;
+        ctx.simulator.me_mut().action_mut().use_nitro = use_nitro;
+        let target_velocity = get_target_velocity_for_jump(use_nitro, ctx);
         ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
-        ctx.simulator.me_mut().action_mut().use_nitro = self.allow_nitro;
 
         ctx.tick(TickType::Near, ALL)?;
 
@@ -300,7 +291,7 @@ impl FarJump {
 
         use crate::my_strategy::entity::Entity;
 
-        if !does_jump_hit_ball(ctx) {
+        if !does_jump_hit_ball(self.allow_nitro, ctx) {
             return Err(Error::BadCondition);
         }
 
@@ -312,20 +303,10 @@ impl FarJump {
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
         ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
-
-        if self.allow_nitro && ctx.simulator.me().nitro_amount() > 0.0 {
-            let target_velocity = (ctx.simulator.ball().position() - ctx.simulator.me().position())
-                .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
-            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
-            ctx.simulator.me_mut().action_mut().use_nitro = true;
-        } else {
-            let velocity = ctx.simulator.me().velocity();
-            if velocity.norm() > 0.0 {
-                let target_velocity = velocity.normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
-                ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
-            }
-            ctx.simulator.me_mut().action_mut().use_nitro = false;
-        }
+        let use_nitro = self.allow_nitro && ctx.simulator.me().nitro_amount() > 0.0;
+        ctx.simulator.me_mut().action_mut().use_nitro = use_nitro;
+        let target_velocity = get_target_velocity_for_jump(use_nitro, ctx);
+        ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
         log!(
             ctx.current_tick, "[{}] <{}> <{}> far jump {}:{} ball={}/{}",
@@ -495,11 +476,30 @@ impl Observe {
     }
 }
 
-pub fn does_jump_hit_ball<'r, 'a, G>(ctx: &mut Context<'r, 'a, G>) -> bool
+pub fn get_target_velocity_for_jump<'r, 'a, G>(use_nitro: bool, ctx: &Context<'r, 'a, G>) -> Vec3
+    where G: Fn(i32, i32) -> Option<&'a Action> {
+
+    use crate::my_strategy::entity::Entity;
+
+    if use_nitro {
+        (ctx.simulator.ball().position() - ctx.simulator.me().position())
+            .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED
+    } else {
+        let velocity = ctx.simulator.me().velocity();
+        if velocity.norm() > 0.0 {
+            velocity.normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED
+        } else {
+            velocity
+        }
+    }
+}
+
+pub fn does_jump_hit_ball<'r, 'a, G>(allow_nitro: bool, ctx: &mut Context<'r, 'a, G>) -> bool
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
     use crate::my_strategy::physics::MoveEquation;
     use crate::my_strategy::optimization::minimize1d;
+    use crate::my_strategy::entity::Entity;
 
     let mut simulator = ctx.simulator.clone();
     let mut rng = ctx.rng.clone();
@@ -508,9 +508,27 @@ pub fn does_jump_hit_ball<'r, 'a, G>(ctx: &mut Context<'r, 'a, G>) -> bool
 
     simulator.tick(ctx.simulator.rules().tick_time_interval(), ctx.near_micro_ticks_per_tick, &mut rng);
 
+    if allow_nitro && ctx.simulator.me().nitro_amount() > 0.0 {
+        let target_velocity = (ctx.simulator.ball().position() - ctx.simulator.me().position())
+            .normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
+        ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+        ctx.simulator.me_mut().action_mut().use_nitro = true;
+    } else {
+        let velocity = ctx.simulator.me().velocity();
+        if velocity.norm() > 0.0 {
+            let target_velocity = velocity.normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+        }
+        ctx.simulator.me_mut().action_mut().use_nitro = false;
+    }
+
     *ctx.used_path_micro_ticks += ctx.near_micro_ticks_per_tick;
 
-    let my_move_equation = MoveEquation::from_robot(simulator.me().base(), simulator.rules());
+    let my_move_equation = if allow_nitro {
+        MoveEquation::from_robot_with_nitro(simulator.me().base(), simulator.rules())
+    } else {
+        MoveEquation::from_robot(simulator.me().base(), simulator.rules())
+    };
     let ball_move_equation = MoveEquation::from_ball(simulator.ball().base(), simulator.rules());
     let my_min_y = simulator.rules().ROBOT_MIN_RADIUS;
     let ball_min_y = simulator.rules().BALL_RADIUS;

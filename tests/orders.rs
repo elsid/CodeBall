@@ -20,7 +20,7 @@ fn test_try_play() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1121);
+    assert_eq!(result.score(), 1118);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-16.3826505756388, 0.0, 25.131827631840103));
 
@@ -37,7 +37,7 @@ fn test_try_play() {
         iteration: 56,
         total_iterations: 61,
         game_score: 0,
-        order_score: 1121,
+        order_score: 1118,
         path_micro_ticks: 300,
         plan_micro_ticks: 5175,
         game_micro_ticks: 5175,
@@ -91,7 +91,7 @@ fn test_try_play_should_not_jump_on_ball_top() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1334);
+    assert_eq!(result.score(), 1335);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(17.187563285087787, 0.0, 24.588364490569568));
 
@@ -105,10 +105,10 @@ fn test_try_play_should_not_jump_on_ball_top() {
         time_to_watch: 0.36666666666666664,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 45,
-        total_iterations: 48,
+        iteration: 43,
+        total_iterations: 47,
         game_score: 0,
-        order_score: 1334,
+        order_score: 1335,
         path_micro_ticks: 300,
         plan_micro_ticks: 3350,
         game_micro_ticks: 3350,
@@ -177,7 +177,7 @@ fn test_try_play_far_jump() {
         time_to_end: 1.6666666666666656,
         time_to_score: None,
         iteration: 3,
-        total_iterations: 71,
+        total_iterations: 73,
         game_score: 0,
         order_score: 1256,
         path_micro_ticks: 413,
@@ -610,7 +610,7 @@ fn test_try_play_for_tree_robots_with_nitro() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1123);
+    assert_eq!(result.score(), 1120);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-16.3826505756388, 0.0, 25.131827631840103));
 
@@ -627,7 +627,7 @@ fn test_try_play_for_tree_robots_with_nitro() {
         iteration: 18,
         total_iterations: 61,
         game_score: 0,
-        order_score: 1123,
+        order_score: 1120,
         path_micro_ticks: 300,
         plan_micro_ticks: 5175,
         game_micro_ticks: 5175,
