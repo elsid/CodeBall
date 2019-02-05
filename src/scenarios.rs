@@ -476,6 +476,65 @@ impl Observe {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct PushRobot {
+    pub robot_id: i32,
+    pub allow_nitro: bool,
+    pub until_time: f64,
+}
+
+impl PushRobot {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+        use crate::my_strategy::entity::Entity;
+
+        *ctx.simulator.me_mut().action_mut() = Action::default();
+
+        let robot = ctx.simulator.robots().iter()
+            .find(|v| v.id() == self.robot_id)
+            .unwrap();
+
+        log!(
+            ctx.current_tick, "[{}] <{}> <{}> push robot {}:{} distance_to_robot={}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+            ctx.simulator.me().position().distance(robot.position())
+        );
+
+        while ctx.simulator.current_time() < self.until_time {
+            let robot = ctx.simulator.robots().iter()
+                .find(|v| v.id() == self.robot_id)
+                .unwrap();
+
+            let to_robot = robot.position() - ctx.simulator.me().position();
+            let target_velocity = to_robot.normalized() * ctx.simulator.rules().MAX_ENTITY_SPEED;
+
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+
+            let use_nitro = self.allow_nitro
+                && ctx.simulator.me().nitro_amount() > 0.0
+                && to_robot.norm() < 2.5 * ctx.simulator.rules().ROBOT_RADIUS;
+
+            ctx.simulator.me_mut().action_mut().use_nitro = use_nitro;
+
+            if ctx.simulator.rules().is_flying(ctx.simulator.me().base()) {
+                ctx.simulator.me_mut().action_mut().jump_speed = ctx.simulator.rules().ROBOT_MAX_JUMP_SPEED;
+            }
+
+            log!(
+                ctx.current_tick, "[{}] <{}> <{}> push robot {}:{} distance_to_robot={}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+                to_robot.norm()
+            );
+
+            ctx.tick(TickType::Far, LIMITS)?;
+        }
+
+        Ok(())
+    }
+}
+
 pub fn get_target_velocity_for_jump<'r, 'a, G>(use_nitro: bool, ctx: &Context<'r, 'a, G>) -> Vec3
     where G: Fn(i32, i32) -> Option<&'a Action> {
 

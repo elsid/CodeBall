@@ -4,7 +4,7 @@ use crate::my_strategy::search::{Search, Visitor, Identifiable};
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::common::IdGenerator;
 use crate::my_strategy::vec3::Vec3;
-use crate::my_strategy::scenarios::{Jump, FarJump, WatchMeJump, WalkToPosition, Observe,
+use crate::my_strategy::scenarios::{Jump, FarJump, WatchMeJump, WalkToPosition, Observe, PushRobot,
                                     WatchBallMove, Context as ScenarioContext, Result as ScenarioResult};
 
 const MAX_PATH_MICRO_TICKS: usize = 1000;
@@ -177,8 +177,45 @@ impl<'r> VisitorImpl<'r> {
 
             result.push(Transition::observe(0, state.plan.time_to_play, state.plan.max_z));
 
+            Self::try_add_push_robot(&state.plan, &mut result);
+
             result
         }
+    }
+
+    pub fn try_add_push_robot<'a, G>(plan: &Plan<'a, G>, transitions: &mut Vec<Transition>)
+        where G: Clone + Fn(i32, i32) -> Option<&'a Action>  {
+
+        use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::common::as_score;
+
+        let ball = plan.simulator.ball();
+        let me = plan.simulator.me();
+        let rules = plan.simulator.rules();
+
+        if me.nitro_amount() <= rules.START_NITRO_AMOUNT
+            || plan.time_to_play == 0.0
+            || plan.simulator.current_tick() > 0 {
+            return;
+        }
+
+        plan.simulator.robots().iter()
+            .filter(|v| {
+                !v.is_teammate()
+                && v.position().z() < plan.max_z
+                && v.position().distance(ball.position()) < rules.arena.depth / 8.0
+                && v.position().distance(me.position()) < rules.arena.depth / 8.0
+            })
+            .min_by_key(|v| {
+                as_score(v.position().distance(ball.position()))
+            })
+            .map(|v| {
+                transitions.push(Transition::push_robot(
+                    v.id(),
+                    true,
+                    plan.time_to_play.max(20.0 * rules.tick_time_interval())
+                ));
+            });
     }
 
     pub fn get_transitions_for_forked_state<'a, G>(state: &Forked<'a, G>) -> Vec<Transition>
@@ -197,7 +234,7 @@ impl<'r> VisitorImpl<'r> {
             observe_simulator.current_micro_tick()
         );
 
-        get_points(observe_simulator, state.plan.current_tick).into_iter()
+        let mut result = get_points(observe_simulator, state.plan.current_tick).into_iter()
             .map(|point| {
                 let position_to_jump = {
                     let mut robot = observe_simulator.me().clone();
@@ -219,7 +256,11 @@ impl<'r> VisitorImpl<'r> {
 
                 Transition::walk_to_position(position_to_jump, max_speed)
             })
-            .collect()
+            .collect();
+
+        Self::try_add_push_robot(&state.plan, &mut result);
+
+        result
     }
 
     pub fn fork<'a, G>(&mut self, state: &State<'a, G>) -> State<'a, G>
@@ -333,6 +374,7 @@ impl<'r> VisitorImpl<'r> {
                     Transition::FarJump(_) => State::far_jumped(self.state_id_generator.next(), plan),
                     Transition::WatchMeJump(_) => State::hit(self.state_id_generator.next(), plan),
                     Transition::WatchBallMove(_) => State::end(self.state_id_generator.next(), plan),
+                    Transition::PushRobot(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::Fork(_) => unimplemented!(),
                 },
                 Err(_) => State::end(self.state_id_generator.next(), plan),
@@ -603,6 +645,7 @@ pub enum Transition {
     FarJump(FarJump),
     WatchMeJump(WatchMeJump),
     WatchBallMove(WatchBallMove),
+    PushRobot(PushRobot),
 }
 
 impl Transition {
@@ -634,6 +677,10 @@ impl Transition {
         Transition::WatchBallMove(WatchBallMove {})
     }
 
+    pub fn push_robot(robot_id: i32, allow_nitro: bool, until_time: f64) -> Self {
+        Transition::PushRobot(PushRobot { robot_id, allow_nitro, until_time })
+    }
+
     pub fn perform<'r, 'a, G>(&self, ctx: &mut ScenarioContext<'r, 'a, G>) -> ScenarioResult
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
@@ -644,6 +691,7 @@ impl Transition {
             Transition::FarJump(v) => v.perform(ctx),
             Transition::WatchMeJump(v) => v.perform(ctx),
             Transition::WatchBallMove(v) => v.perform(ctx),
+            Transition::PushRobot(v) => v.perform(ctx),
             Transition::Fork(_) => unimplemented!(),
         }
     }
