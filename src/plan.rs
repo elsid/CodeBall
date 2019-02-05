@@ -218,7 +218,7 @@ impl<'r> VisitorImpl<'r> {
             });
     }
 
-    pub fn get_transitions_for_forked_state<'a, G>(state: &Forked<'a, G>) -> Vec<Transition>
+    pub fn get_transitions_for_forked_state<'a, G>(&mut self, state: &Forked<'a, G>) -> Vec<Transition>
         where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -234,7 +234,7 @@ impl<'r> VisitorImpl<'r> {
             observe_simulator.current_micro_tick()
         );
 
-        let mut result = get_points(observe_simulator, state.plan.current_tick).into_iter()
+        let mut result = get_points(observe_simulator, state.plan.current_tick, self.rng).into_iter()
             .map(|point| {
                 let position_to_jump = {
                     let mut robot = observe_simulator.me().clone();
@@ -397,7 +397,7 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
                 Transition::fork(),
                 Transition::observe(v.number + 1, v.plan.time_to_play, v.plan.max_z),
             ],
-            State::Forked(v) => Self::get_transitions_for_forked_state(v),
+            State::Forked(v) => self.get_transitions_for_forked_state(v),
             State::Walked(_) => vec![Transition::jump(false)],
             State::Jumped(v) => vec![
                 Transition::watch_me_jump(v.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, false)
@@ -751,12 +751,13 @@ pub fn get_score(simulator: &Simulator, time_to_ball: Option<f64>, time_to_goal:
     as_score(total)
 }
 
-pub fn get_points(simulator: &Simulator, current_tick: i32) -> Vec<Vec3> {
+pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRng) -> Vec<Vec3> {
     use crate::my_strategy::physics::get_min_distance_between_spheres;
     use crate::my_strategy::common::Clamp;
     use crate::my_strategy::plane::Plane;
     use crate::my_strategy::mat3::Mat3;
     use crate::my_strategy::entity::Entity;
+    use crate::my_strategy::random::Rng;
 
     let ball = simulator.ball();
     let robot = simulator.me();
@@ -802,15 +803,35 @@ pub fn get_points(simulator: &Simulator, current_tick: i32) -> Vec<Vec3> {
         );
     }
 
-    let distance = (max_distance + min_distance) / 2.0;
+    let mean_distance = (max_distance + min_distance) / 2.0;
     for i in 0..number {
-        let angle = if i % 2 == 0 {
-            std::f64::consts::PI * i as f64 / number as f64
+        let (angle, distance) = if i % 2 == 0 {
+            if i % 4 == 0 {
+                (std::f64::consts::PI * i as f64 / number as f64, mean_distance)
+            } else {
+                (
+                    rng.gen_range(
+                        std::f64::consts::PI * (i - 1) as f64 / number as f64,
+                        std::f64::consts::PI * (i + 1) as f64 / number as f64
+                    ),
+                    rng.gen_range(min_distance, max_distance)
+                )
+            }
         } else {
-            -std::f64::consts::PI * i as f64 / number as f64
+            if i + 1 % 4 == 0 {
+                (-std::f64::consts::PI * i as f64 / number as f64, mean_distance)
+            } else {
+                (
+                    rng.gen_range(
+                        -std::f64::consts::PI * (i as f64 + 1.5) / number as f64,
+                        -std::f64::consts::PI * (i as f64 - 0.5) / number as f64
+                    ),
+                    rng.gen_range(min_distance, max_distance)
+                )
+            }
         };
         let rotation = Mat3::rotation(ball.normal_to_arena(), angle);
-        let position = base_position + rotation * base_direction * distance;
+        let position = base_position + rotation * base_direction * mean_distance;
         let projected = rules.arena.projected_with_shift(position, rules.ROBOT_MAX_RADIUS);
         log!(
             current_tick,

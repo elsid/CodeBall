@@ -20,9 +20,9 @@ fn test_try_play() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1118);
+    assert_eq!(result.score(), 1104);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(-16.3826505756388, 0.0, 25.131827631840103));
+    assert_eq!(result.action().target_velocity(), Vec3::new(-14.622886891738023, 0.0, 26.194869324954386));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -30,24 +30,24 @@ fn test_try_play() {
         robot_id: 1,
         current_tick: 0,
         order: "play",
-        time_to_jump: 0.733333333333334,
-        time_to_watch: 0.7833333333333341,
+        time_to_jump: 0.7166666666666672,
+        time_to_watch: 0.7666666666666674,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 56,
-        total_iterations: 61,
+        iteration: 27,
+        total_iterations: 62,
         game_score: 0,
-        order_score: 1118,
+        order_score: 1104,
         path_micro_ticks: 300,
         plan_micro_ticks: 5175,
         game_micro_ticks: 5175,
         game_micro_ticks_limit: 30000,
-        current_step: 8,
+        current_step: 4,
         reached_game_limit: false,
         reached_plan_limit: false,
         reached_path_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 50,
+        ticks_with_near_micro_ticks: 34,
         ticks_with_far_micro_ticks: 100,
         path_type: Some("walk_to_position"),
     });
@@ -91,9 +91,9 @@ fn test_try_play_should_not_jump_on_ball_top() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1335);
+    assert_eq!(result.score(), 1249);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(17.187563285087787, 0.0, 24.588364490569568));
+    assert_eq!(result.action().target_velocity(), Vec3::new(14.569934692261986, 0.0, 26.224358963818748));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -101,14 +101,14 @@ fn test_try_play_should_not_jump_on_ball_top() {
         robot_id: 2,
         current_tick: 0,
         order: "play",
-        time_to_jump: 0.31666666666666665,
-        time_to_watch: 0.36666666666666664,
+        time_to_jump: 0.3,
+        time_to_watch: 0.35,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 43,
+        iteration: 27,
         total_iterations: 47,
         game_score: 0,
-        order_score: 1335,
+        order_score: 1249,
         path_micro_ticks: 300,
         plan_micro_ticks: 3350,
         game_micro_ticks: 3350,
@@ -118,7 +118,7 @@ fn test_try_play_should_not_jump_on_ball_top() {
         reached_plan_limit: false,
         reached_path_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 25,
+        ticks_with_near_micro_ticks: 17,
         ticks_with_far_micro_ticks: 100,
         path_type: Some("walk_to_position"),
     });
@@ -503,7 +503,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         time_to_end: 0.9500000000000013,
         time_to_score: Some(0.9500000000000013),
         iteration: 4,
-        total_iterations: 32,
+        total_iterations: 33,
         game_score: -1,
         order_score: 143,
         path_micro_ticks: 171,
@@ -610,9 +610,9 @@ fn test_try_play_for_tree_robots_with_nitro() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1120);
+    assert_eq!(result.score(), 1129);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(-16.3826505756388, 0.0, 25.131827631840103));
+    assert_eq!(result.action().target_velocity(), Vec3::new(-15.993770179888681, 0.0, 25.38108184126326));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -625,9 +625,9 @@ fn test_try_play_for_tree_robots_with_nitro() {
         time_to_end: 1.6666666666666656,
         time_to_score: None,
         iteration: 18,
-        total_iterations: 61,
+        total_iterations: 64,
         game_score: 0,
-        order_score: 1120,
+        order_score: 1129,
         path_micro_ticks: 300,
         plan_micro_ticks: 5175,
         game_micro_ticks: 5175,
