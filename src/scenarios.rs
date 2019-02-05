@@ -377,10 +377,11 @@ impl Jump {
 }
 
 #[derive(Debug, Clone)]
-pub struct WatchBallMove {
+pub struct Idle {
+    pub ticks: usize,
 }
 
-impl WatchBallMove {
+impl Idle {
     pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
@@ -394,15 +395,15 @@ impl WatchBallMove {
         *ctx.simulator.me_mut().action_mut() = Action::default();
 
         log!(
-            ctx.current_tick, "[{}] <{}> <{}> watch ball move {}:{} ball_position={:?}",
+            ctx.current_tick, "[{}] <{}> <{}> idle {}:{} ball_position={:?}",
             ctx.robot_id, ctx.order_id, ctx.state_id,
             ctx.simulator.current_time(), ctx.used_path_micro_ticks,
             ctx.simulator.ball().position()
         );
 
-        loop {
+        for _ in 0..self.ticks {
             log!(
-                ctx.current_tick, "[{}] <{}> <{}> watch ball move {}:{} ball_position={:?}",
+                ctx.current_tick, "[{}] <{}> <{}> idle {}:{} ball_position={:?}",
                 ctx.robot_id, ctx.order_id, ctx.state_id,
                 ctx.simulator.current_time(), ctx.used_path_micro_ticks,
                 ctx.simulator.ball().position()
@@ -410,6 +411,8 @@ impl WatchBallMove {
 
             ctx.tick(TickType::Far, ALL)?;
         }
+
+        Ok(())
     }
 }
 

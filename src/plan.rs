@@ -13,7 +13,7 @@ use crate::my_strategy::scenarios::{
     WalkToPosition,
     Observe,
     PushRobot,
-    WatchBallMove,
+    Idle,
     WalkToBall,
     WalkToRobot,
     PushBall,
@@ -336,6 +336,11 @@ impl<'r> VisitorImpl<'r> {
             observe_simulator.current_micro_tick()
         );
 
+        let initial_distance_to_ball = state.plan.simulator.ball().position()
+            .distance(state.plan.simulator.me().position());
+        let final_distance_to_ball = observe_simulator.ball().position()
+            .distance(state.plan.simulator.me().position());
+
         let mut result = get_points(observe_simulator, state.plan.current_tick, self.rng).into_iter()
             .map(|point| {
                 let position_to_jump = {
@@ -367,6 +372,15 @@ impl<'r> VisitorImpl<'r> {
             result.push(Transition::walk_to_ball(to_ball, true));
             result.push(Transition::walk_to_ball(-to_ball, true));
             result.push(Transition::walk_to_ball(-to_ball.with_neg_x(), true));
+        }
+
+        if initial_distance_to_ball > rules.ball_distance_limit() * 2.0
+            && observe_simulator.current_tick() < 10
+            && 4.0 * final_distance_to_ball < initial_distance_to_ball
+            && 4.0 * final_distance_to_ball < observe_simulator.current_time() * rules.ROBOT_MAX_GROUND_SPEED {
+            let time = final_distance_to_ball / rules.ROBOT_MAX_GROUND_SPEED / 4.0;
+            let ticks = (time * rules.tick_time_interval()).round().max(3.0) as usize;
+            result.push(Transition::delay(ticks, observe_simulator.clone()));
         }
 
         result
@@ -535,12 +549,13 @@ impl<'r> VisitorImpl<'r> {
                     Transition::Jump(_) => State::jumped(self.state_id_generator.next(), plan),
                     Transition::FarJump(_) => State::far_jumped(self.state_id_generator.next(), plan),
                     Transition::WatchMeJump(_) => State::hit(self.state_id_generator.next(), plan),
-                    Transition::WatchBallMove(_) => State::end(self.state_id_generator.next(), plan),
+                    Transition::Idle(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::PushRobot(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::TakeNitroPack(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::WalkToBall(_) => State::walked_to_ball(self.state_id_generator.next(), plan),
                     Transition::WalkToRobot(v) => State::walked_to_robot(self.state_id_generator.next(), plan, v.robot_id),
                     Transition::PushBall(_) => State::walked_to_ball(self.state_id_generator.next(), plan),
+                    Transition::Delay(v) => State::forked_ball(self.state_id_generator.next(), plan, v.observe_simulator.clone()),
                     Transition::Observe(_) => unimplemented!(),
                     Transition::ForkBall(_) => unimplemented!(),
                     Transition::ForkRobot(_) => unimplemented!(),
@@ -599,7 +614,7 @@ impl<'r, 'c, 'a, G> Visitor<State<'c, 'a, G>, Transition> for VisitorImpl<'r>
             State::FarJumped(v) => vec![
                 Transition::watch_me_jump(v.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, false)
             ],
-            State::Hit(_) => vec![Transition::watch_ball_move()],
+            State::Hit(_) => vec![Transition::idle(std::usize::MAX)],
             State::End(_) => Vec::new(),
         };
 
@@ -916,12 +931,13 @@ pub enum Transition {
     Jump(Jump),
     FarJump(FarJump),
     WatchMeJump(WatchMeJump),
-    WatchBallMove(WatchBallMove),
+    Idle(Idle),
     PushRobot(PushRobot),
     TakeNitroPack(WalkToPosition),
     WalkToBall(WalkToBall),
     WalkToRobot(WalkToRobot),
     PushBall(PushBall),
+    Delay(Delay),
 }
 
 impl Transition {
@@ -953,8 +969,8 @@ impl Transition {
         Transition::WatchMeJump(WatchMeJump { jump_speed, allow_nitro })
     }
 
-    pub fn watch_ball_move() -> Self {
-        Transition::WatchBallMove(WatchBallMove {})
+    pub fn idle(ticks: usize) -> Self {
+        Transition::Idle(Idle { ticks })
     }
 
     pub fn push_robot(robot_id: i32, allow_nitro: bool, until_time: f64) -> Self {
@@ -977,6 +993,10 @@ impl Transition {
         Transition::PushBall(PushBall { until_time })
     }
 
+    pub fn delay(ticks: usize, observe_simulator: Simulator) -> Self {
+        Transition::Delay(Delay { idle: Idle { ticks }, observe_simulator })
+    }
+
     pub fn name(&self) -> &'static str {
         match self {
             Transition::Observe(_) => "observe",
@@ -984,7 +1004,7 @@ impl Transition {
             Transition::Jump(_) => "jump",
             Transition::FarJump(_) => "far_jump",
             Transition::WatchMeJump(_) => "watch_me_jump",
-            Transition::WatchBallMove(_) => "watch_ball_move",
+            Transition::Idle(_) => "idle",
             Transition::PushRobot(_) => "push_robot",
             Transition::TakeNitroPack(_) => "take_nitro_pack",
             Transition::ForkBall(_) => "fork_ball",
@@ -992,6 +1012,7 @@ impl Transition {
             Transition::WalkToRobot(_) => "walk_to_robot",
             Transition::ForkRobot(_) => "fork_robot",
             Transition::PushBall(_) => "push_ball",
+            Transition::Delay(_) => "delay",
         }
     }
 
@@ -1004,7 +1025,7 @@ impl Transition {
             Transition::Jump(v) => v.perform(ctx),
             Transition::FarJump(v) => v.perform(ctx),
             Transition::WatchMeJump(v) => v.perform(ctx),
-            Transition::WatchBallMove(v) => v.perform(ctx),
+            Transition::Idle(v) => v.perform(ctx),
             Transition::PushRobot(v) => v.perform(ctx),
             Transition::TakeNitroPack(v) => v.perform(ctx),
             Transition::WalkToBall(v) => v.perform(ctx),
@@ -1012,6 +1033,7 @@ impl Transition {
             Transition::PushBall(v) => v.perform(ctx),
             Transition::ForkBall(_) => unimplemented!(),
             Transition::ForkRobot(_) => unimplemented!(),
+            Transition::Delay(v) => v.idle.perform(ctx),
         }
     }
 }
@@ -1022,6 +1044,12 @@ pub struct ForkBall;
 #[derive(Debug, Clone)]
 pub struct ForkRobot {
     pub robot_id: i32,
+}
+
+#[derive(Debug, Clone)]
+pub struct Delay {
+    idle: Idle,
+    observe_simulator: Simulator,
 }
 
 pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRng) -> Vec<Vec3> {

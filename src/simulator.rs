@@ -800,3 +800,9 @@ impl Simulator {
         self.ball.render(relative_time, render);
     }
 }
+
+impl std::fmt::Debug for Simulator {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Simulator")
+    }
+}

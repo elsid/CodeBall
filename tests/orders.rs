@@ -50,7 +50,7 @@ fn test_try_play() {
         other_number: 0,
         ticks_with_near_micro_ticks: 34,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
+        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "idle"],
     });
 }
 
@@ -122,7 +122,7 @@ fn test_try_play_should_not_jump_on_ball_top() {
         other_number: 0,
         ticks_with_near_micro_ticks: 33,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
+        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "idle"],
     });
 }
 
@@ -194,7 +194,7 @@ fn test_try_play_far_jump() {
         other_number: 0,
         ticks_with_near_micro_ticks: 4,
         ticks_with_far_micro_ticks: 96,
-        path: vec!["far_jump", "watch_me_jump", "watch_ball_move"],
+        path: vec!["far_jump", "watch_me_jump", "idle"],
     });
 }
 
@@ -260,7 +260,7 @@ fn test_try_play_continue_jump() {
         other_number: 0,
         ticks_with_near_micro_ticks: 7,
         ticks_with_far_micro_ticks: 64,
-        path: vec!["watch_me_jump", "watch_ball_move"],
+        path: vec!["watch_me_jump", "idle"],
     });
 }
 
@@ -327,7 +327,7 @@ fn test_try_play_continue_jump_with_nitro() {
         other_number: 0,
         ticks_with_near_micro_ticks: 7,
         ticks_with_far_micro_ticks: 67,
-        path: vec!["watch_me_jump", "watch_ball_move"],
+        path: vec!["watch_me_jump", "idle"],
     });
 }
 
@@ -593,7 +593,7 @@ fn test_try_play_goalkeeper_should_catch() {
         other_number: 0,
         ticks_with_near_micro_ticks: 34,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork_ball", "walk_to_ball", "jump", "watch_me_jump", "watch_ball_move"],
+        path: vec!["fork_ball", "walk_to_ball", "jump", "watch_me_jump", "idle"],
     });
 }
 
@@ -649,6 +649,6 @@ fn test_try_play_for_tree_robots_with_nitro() {
         other_number: 0,
         ticks_with_near_micro_ticks: 50,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
+        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "idle"],
     });
 }
