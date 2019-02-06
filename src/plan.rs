@@ -747,7 +747,6 @@ pub fn get_score(simulator: &Simulator, my_time_to_ball: Option<f64>,
                  opponent_time_to_ball: Option<f64>, time_to_goal: Option<f64>) -> i32 {
     use crate::my_strategy::common::as_score;
     use crate::my_strategy::scenarios::MAX_TICKS;
-    use crate::my_strategy::vec2::Vec2;
     use crate::my_strategy::entity::Entity;
 
     let rules = simulator.rules();
@@ -756,8 +755,7 @@ pub fn get_score(simulator: &Simulator, my_time_to_ball: Option<f64>,
     let to_goal = rules.get_goal_target() - ball.position();
 
     let ball_goal_distance_score = if simulator.score() == 0 {
-        1.0 - to_goal.norm()
-            / Vec2::new(rules.arena.width + 2.0 * rules.arena.goal_depth, rules.arena.depth).norm()
+        1.0 - to_goal.norm() / rules.arena.max_distance()
     } else if simulator.score() > 0 {
         2.0
     } else {
