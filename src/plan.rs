@@ -195,8 +195,7 @@ impl<'r> VisitorImpl<'r> {
         let rules = plan.simulator.rules();
 
         if me.nitro_amount() <= rules.START_NITRO_AMOUNT
-            || plan.time_to_play == 0.0
-            || plan.simulator.current_tick() > 0 {
+            || plan.simulator.current_tick() > 10 {
             return;
         }
 
