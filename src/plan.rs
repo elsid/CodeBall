@@ -166,11 +166,11 @@ impl<'c, 'a, G> Plan<'c, 'a, G>
         };
 
         let total = 0.0
-            + ball_goal_distance_score
-            + 0.1 * ball_goal_direction_score
-            + 0.5 * my_time_to_ball_score
-            + 0.25 * time_to_goal_score
-            - 0.1 * opponent_time_to_ball_penalty;
+            + ball_goal_distance_score * self.config.ball_goal_distance_score_weight
+            + ball_goal_direction_score * self.config.ball_goal_direction_score_weight
+            + my_time_to_ball_score * self.config.my_time_to_ball_score_weight
+            + time_to_goal_score * self.config.time_to_goal_score_weight
+            - opponent_time_to_ball_penalty * self.config.opponent_time_to_ball_penalty_weight;
 
         as_score(total)
     }

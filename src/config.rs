@@ -11,6 +11,11 @@ pub struct Config {
     pub max_act_micro_ticks: usize,
     pub robot_priority_change_gap: i32,
     pub robot_role_change_gap: i32,
+    pub ball_goal_distance_score_weight: f64,
+    pub ball_goal_direction_score_weight: f64,
+    pub my_time_to_ball_score_weight: f64,
+    pub time_to_goal_score_weight: f64,
+    pub opponent_time_to_ball_penalty_weight: f64,
 }
 
 impl Default for Config {
@@ -27,6 +32,11 @@ impl Default for Config {
             max_act_micro_ticks: 15000,
             robot_priority_change_gap: 10,
             robot_role_change_gap: 0,
+            ball_goal_distance_score_weight: 1.0,
+            ball_goal_direction_score_weight: 0.1,
+            my_time_to_ball_score_weight: 0.5,
+            time_to_goal_score_weight: 0.25,
+            opponent_time_to_ball_penalty_weight: 0.1,
         }
     }
 }
