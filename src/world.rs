@@ -1,9 +1,9 @@
 use crate::model::{Robot, Game, Rules};
-
-const MICRO_TICKS_LIMIT_PER_TICK: usize = 15000;
+use crate::my_strategy::config::Config;
 
 #[derive(Debug, Clone)]
 pub struct World {
+    config: Config,
     pub me: Robot,
     pub rules: Rules,
     pub game: Game,
@@ -11,8 +11,8 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(me: Robot, rules: Rules, game: Game) -> Self {
-        World {me, rules, game, reset_ticks_left: 0}
+    pub fn new(config: Config, me: Robot, rules: Rules, game: Game) -> Self {
+        World { config, me, rules, game, reset_ticks_left: 0 }
     }
 
     pub fn update(&mut self, me: &Robot, game: &Game) {
@@ -41,11 +41,12 @@ impl World {
     }
 
     pub fn get_micro_ticks_limit(&self) -> usize {
-        (self.game.current_tick + 2) as usize * MICRO_TICKS_LIMIT_PER_TICK
+        (self.game.current_tick + 2) as usize * self.config.max_act_micro_ticks
     }
 
     pub fn opposite(&self) -> Self {
         World {
+            config: self.config.clone(),
             me: self.me.opposite(),
             rules: self.rules.clone(),
             game: self.game.opposite(),

@@ -2,17 +2,20 @@
 fn test_try_play() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let world = example_world(GameType::TwoRobots);
     let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -58,12 +61,14 @@ fn test_try_play_should_not_jump_on_ball_top() {
     use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let mut world = example_world(GameType::TwoRobots);
     let mut rng = XorShiftRng::from_seed([
         1662648909,
@@ -73,7 +78,8 @@ fn test_try_play_should_not_jump_on_ball_top() {
     ]);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -129,12 +135,14 @@ fn test_try_play_far_jump() {
     use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::vec3::Vec3;
     use my_strategy::my_strategy::random::{XorShiftRng, SeedableRng};
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let mut world = example_world(GameType::TwoRobots);
     let mut rng = XorShiftRng::from_seed([
         1662648909,
@@ -144,7 +152,8 @@ fn test_try_play_far_jump() {
     ]);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -199,17 +208,20 @@ fn test_try_play_far_jump() {
 fn test_try_play_continue_jump() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let mut world = example_world(GameType::TwoRobots);
     let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -264,17 +276,20 @@ fn test_try_play_continue_jump() {
 fn test_try_play_continue_jump_with_nitro() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let mut world = example_world(GameType::TwoRobotsWithNitro);
     let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -331,12 +346,14 @@ fn test_try_play_continue_jump_with_nitro() {
 fn test_try_play_when_far_from_ball_at_my_side() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let mut world = example_world(GameType::TwoRobots);
 
     world.me.set_position(Vec3::new(20.0, 1.0, -30.0));
@@ -350,7 +367,8 @@ fn test_try_play_when_far_from_ball_at_my_side() {
     let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -395,12 +413,14 @@ fn test_try_play_when_far_from_ball_at_my_side() {
 fn test_try_play_when_far_from_ball_at_opponent_side() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let mut world = example_world(GameType::TwoRobots);
 
     world.me.set_position(Vec3::new(-20.0, 1.0, 30.0));
@@ -414,7 +434,8 @@ fn test_try_play_when_far_from_ball_at_opponent_side() {
     let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -459,18 +480,21 @@ fn test_try_play_when_far_from_ball_at_opponent_side() {
 fn test_try_play_goalkeeper_should_catch_but_cant() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
     use my_strategy::my_strategy::roles::Goalkeeper;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let mut world = example_world(GameType::TwoRobotsWithNitro);
     let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -525,18 +549,21 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
 fn test_try_play_goalkeeper_should_catch() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
     use my_strategy::my_strategy::roles::Goalkeeper;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let mut world = example_world(GameType::TwoRobotsWithNitro);
     let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,
@@ -592,17 +619,20 @@ fn test_try_play_goalkeeper_should_catch() {
 fn test_try_play_for_tree_robots_with_nitro() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::vec3::Vec3;
-    use my_strategy::my_strategy::orders::{Order, OrderContext};
+    use my_strategy::my_strategy::orders::{Order, Context};
     use my_strategy::my_strategy::common::IdGenerator;
+    use my_strategy::my_strategy::config::Config;
 
     #[cfg(feature = "enable_stats")]
     use my_strategy::my_strategy::stats::Stats;
 
+    let config = Config::default();
     let world = example_world(GameType::ThreeRobotsWithNitro);
     let mut rng = example_rng(&world.rules);
     let mut order_id_generator = IdGenerator::new();
     let mut micro_ticks = 0;
-    let mut ctx = OrderContext {
+    let mut ctx = Context {
+        config: &config,
         rng: &mut rng,
         order_id_generator: &mut order_id_generator,
         micro_ticks: &mut micro_ticks,

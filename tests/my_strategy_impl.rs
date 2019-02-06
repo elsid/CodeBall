@@ -9,12 +9,14 @@ fn test_two_robots_first_action_to_go_to_goalkeeper_position() {
     use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::config::Config;
 
     let world = example_world(GameType::TwoRobots);
     let simulator = Simulator::new(&world, 1);
     let mut my_strategy = MyStrategyImpl::new(
-        &simulator.me().base(),
-        &simulator.rules(),
+        Config::default(),
+        simulator.me().base(),
+        simulator.rules(),
         &simulator.game(),
     );
     let mut action = Action::default();
@@ -35,12 +37,14 @@ fn test_two_robots_first_action_to_go_for_ball() {
     use my_strategy::examples::{GameType, example_world};
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::config::Config;
 
     let world = example_world(GameType::TwoRobots);
     let simulator = Simulator::new(&world, 2);
     let mut my_strategy = MyStrategyImpl::new(
-        &simulator.me().base(),
-        &simulator.rules(),
+        Config::default(),
+        simulator.me().base(),
+        simulator.rules(),
         &simulator.game(),
     );
     let mut action = Action::default();
@@ -59,13 +63,15 @@ fn test_two_robots_first_ball_kick_until_goal() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::config::Config;
 
     let world = example_world(GameType::TwoRobots);
     let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 2);
     let mut my_strategy = MyStrategyImpl::new(
-        &simulator.me().base(),
-        &simulator.rules(),
+        Config::default(),
+        simulator.me().base(),
+        simulator.rules(),
         &simulator.game(),
     );
 
@@ -82,13 +88,15 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::config::Config;
 
     let world = example_world(GameType::TwoRobotsWithNitro);
     let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 2);
     let mut my_strategy = MyStrategyImpl::new(
-        &simulator.me().base(),
-        &simulator.rules(),
+        Config::default(),
+        simulator.me().base(),
+        simulator.rules(),
         &simulator.game(),
     );
 
@@ -106,6 +114,7 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_1() {
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
     use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::config::Config;
 
     let mut world = example_world(GameType::TwoRobotsWithNitro);
 
@@ -121,8 +130,9 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch_1() {
     let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 1);
     let mut my_strategy = MyStrategyImpl::new(
-        &simulator.me().base(),
-        &simulator.rules(),
+        Config::default(),
+        simulator.me().base(),
+        simulator.rules(),
         &simulator.game(),
     );
 
@@ -140,6 +150,7 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch() {
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
     use my_strategy::my_strategy::vec3::Vec3;
+    use my_strategy::my_strategy::config::Config;
 
     let mut world = example_world(GameType::TwoRobotsWithNitro);
 
@@ -155,8 +166,9 @@ fn test_two_robots_with_nitro_goalkeeper_should_catch() {
     let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 1);
     let mut my_strategy = MyStrategyImpl::new(
-        &simulator.me().base(),
-        &simulator.rules(),
+        Config::default(),
+        simulator.me().base(),
+        simulator.rules(),
         &simulator.game(),
     );
 
@@ -173,13 +185,15 @@ fn test_three_robots_with_nitro_first_ball_kick_until_goal() {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::config::Config;
 
     let world = example_world(GameType::ThreeRobotsWithNitro);
     let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 3);
     let mut my_strategy = MyStrategyImpl::new(
-        &simulator.me().base(),
-        &simulator.rules(),
+        Config::default(),
+        simulator.me().base(),
+        simulator.rules(),
         &simulator.game(),
     );
 

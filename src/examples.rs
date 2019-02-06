@@ -1,6 +1,7 @@
 use crate::model::{Arena, Ball, Game, Player, Robot, Rules, NitroPack};
 use crate::my_strategy::world::World;
 use crate::my_strategy::random::{XorShiftRng, SeedableRng};
+use crate::my_strategy::config::Config;
 
 #[derive(Copy, Clone)]
 pub enum GameType {
@@ -42,6 +43,7 @@ pub fn example_rng(rules: &Rules) -> XorShiftRng {
 pub fn example_world(game_type: GameType) -> World {
     let rules = example_rules(game_type);
     World::new(
+        Config::default(),
         example_me(game_type, &rules),
         rules.clone(),
         example_game(game_type, &rules),

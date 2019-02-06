@@ -58,6 +58,9 @@ pub mod player;
 #[path = "game.rs"]
 pub mod game;
 
+#[path = "config.rs"]
+pub mod config;
+
 #[path = "world.rs"]
 pub mod world;
 
@@ -123,8 +126,19 @@ pub struct MyStrategy {
 
 impl Strategy for MyStrategy {
     fn act(&mut self, me: &Robot, rules: &Rules, game: &Game, action: &mut Action) {
+        use self::config::Config;
+
         if self.strategy_impl.is_none() {
-            self.strategy_impl = Some(MyStrategyImpl::new(me, rules, game));
+            let config: Config = if cfg!(feature = "read_config") {
+                serde_json::from_str(
+                    std::fs::read_to_string(
+                        std::env::var("CONFIG").expect("CONFIG env is not found")
+                    ).expect("Can't read config file").as_str()
+                ).expect("Can't parse config file")
+            } else {
+                Config::default()
+            };
+            self.strategy_impl = Some(MyStrategyImpl::new(config, me, rules, game));
         }
         self.strategy_impl.as_mut().unwrap().act(me, rules, game, action);
     }

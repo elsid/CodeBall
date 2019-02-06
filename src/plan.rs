@@ -4,19 +4,18 @@ use crate::my_strategy::search::{Search, Visitor, Identifiable};
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::common::IdGenerator;
 use crate::my_strategy::vec3::Vec3;
+use crate::my_strategy::config::Config;
 use crate::my_strategy::scenarios::{Jump, FarJump, WatchMeJump, WalkToPosition, Observe, PushRobot,
                                     WatchBallMove, Context as ScenarioContext, Result as ScenarioResult};
-
-const MAX_PATH_MICRO_TICKS: usize = 1100;
-const MAX_ITERATIONS: usize = 100;
 
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
 #[derive(Clone)]
-pub struct Plan<'a, G>
+pub struct Plan<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
+    pub config: &'c Config,
     pub current_tick: i32,
     pub order_id: i32,
     pub simulator: Simulator,
@@ -52,13 +51,12 @@ pub struct Result {
     pub stats: Stats,
 }
 
-impl<'a, G> Plan<'a, G>
+impl<'c, 'a, G> Plan<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
-    pub fn new(current_tick: i32, order_id: i32, simulator: Simulator, time_to_play: f64,
-               max_z: f64, get_robot_action_at: G, max_plan_micro_ticks: usize) -> Self {
-        use crate::my_strategy::scenarios::NEAR_MICRO_TICKS_PER_TICK;
-
+    pub fn new(config: &'c Config, current_tick: i32, order_id: i32, simulator: Simulator,
+               time_to_play: f64, max_z: f64, get_robot_action_at: G,
+               max_plan_micro_ticks: usize) -> Self {
         Plan {
             #[cfg(feature = "enable_stats")]
             stats: {
@@ -66,7 +64,8 @@ impl<'a, G> Plan<'a, G>
                 let robot_id = simulator.me().id();
                 Stats::new(player_id, robot_id, current_tick, "play")
             },
-            adaptive_near_micro_ticks_per_tick: NEAR_MICRO_TICKS_PER_TICK,
+            adaptive_near_micro_ticks_per_tick: config.near_micro_ticks_per_tick,
+            config,
             max_plan_micro_ticks,
             current_tick,
             order_id,
@@ -93,7 +92,7 @@ impl<'a, G> Plan<'a, G>
         let initial_state = visitor.make_initial_state(self.clone());
 
         let (transitions, final_state, iterations) = Search {
-            max_iterations: MAX_ITERATIONS,
+            max_iterations: self.config.max_iterations,
         }.perform(initial_state, &mut visitor);
 
         let plan = final_state.map(|v| v.take_plan())
@@ -123,11 +122,10 @@ impl<'a, G> Plan<'a, G>
 
     pub fn get_score(&self) -> i32 {
         use crate::my_strategy::common::as_score;
-        use crate::my_strategy::scenarios::MAX_TICKS;
         use crate::my_strategy::entity::Entity;
 
         let rules = self.simulator.rules();
-        let max_time = (MAX_TICKS + 1) as f64 * rules.tick_time_interval();
+        let max_time = (self.config.max_ticks + 1) as f64 * rules.tick_time_interval();
         let ball = self.simulator.ball();
         let to_goal = rules.get_goal_target() - ball.position();
 
@@ -193,13 +191,13 @@ impl<'r> VisitorImpl<'r> {
         }
     }
 
-    pub fn make_initial_state<'a, G>(&mut self, plan: Plan<'a, G>) -> State<'a, G>
+    pub fn make_initial_state<'c, 'a, G>(&mut self, plan: Plan<'c, 'a, G>) -> State<'c, 'a, G>
         where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
         State::initial(self.state_id_generator.next(), plan)
     }
 
-    pub fn get_transitions_for_initial_state<'a, G>(state: &Final<'a, G>) -> Vec<Transition>
+    pub fn get_transitions_for_initial_state<'c, 'a, G>(state: &Final<'c, 'a, G>) -> Vec<Transition>
         where G: Clone + Fn(i32, i32) -> Option<&'a Action>  {
 
         use crate::my_strategy::entity::Entity;
@@ -238,7 +236,7 @@ impl<'r> VisitorImpl<'r> {
         }
     }
 
-    pub fn try_add_push_robot<'a, G>(plan: &Plan<'a, G>, transitions: &mut Vec<Transition>)
+    pub fn try_add_push_robot<'c, 'a, G>(plan: &Plan<'c, 'a, G>, transitions: &mut Vec<Transition>)
         where G: Clone + Fn(i32, i32) -> Option<&'a Action>  {
 
         use crate::my_strategy::entity::Entity;
@@ -272,7 +270,7 @@ impl<'r> VisitorImpl<'r> {
             });
     }
 
-    pub fn try_add_take_nitro_pack<'a, G>(plan: &Plan<'a, G>, transitions: &mut Vec<Transition>)
+    pub fn try_add_take_nitro_pack<'c, 'a, G>(plan: &Plan<'c, 'a, G>, transitions: &mut Vec<Transition>)
         where G: Clone + Fn(i32, i32) -> Option<&'a Action>  {
 
         use crate::my_strategy::entity::Entity;
@@ -304,7 +302,7 @@ impl<'r> VisitorImpl<'r> {
             });
     }
 
-    pub fn get_transitions_for_forked_state<'a, G>(&mut self, state: &Forked<'a, G>) -> Vec<Transition>
+    pub fn get_transitions_for_forked_state<'c, 'a, G>(&mut self, state: &Forked<'c, 'a, G>) -> Vec<Transition>
         where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
@@ -349,7 +347,7 @@ impl<'r> VisitorImpl<'r> {
         result
     }
 
-    pub fn fork<'a, G>(&mut self, state: &State<'a, G>) -> State<'a, G>
+    pub fn fork<'c, 'a, G>(&mut self, state: &State<'c, 'a, G>) -> State<'c, 'a, G>
         where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
         if let State::Observed(state) = state {
@@ -373,11 +371,10 @@ impl<'r> VisitorImpl<'r> {
         }
     }
 
-    pub fn use_scenario<'a, G>(&mut self, state: &State<'a, G>, transition: &Transition) -> State<'a, G>
+    pub fn use_scenario<'c, 'a, G>(&mut self, state: &State<'c, 'a, G>, transition: &Transition) -> State<'c, 'a, G>
         where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
-        use crate::my_strategy::scenarios::{NEAR_MICRO_TICKS_PER_TICK, FAR_MICRO_TICKS_PER_TICK};
 
         let mut plan = state.plan().clone();
 
@@ -397,9 +394,9 @@ impl<'r> VisitorImpl<'r> {
             let ball_distance_limit = plan.simulator.rules().ball_distance_limit()
                 + v.max_speed * time_interval;
             if distance_to_ball > ball_distance_limit {
-                FAR_MICRO_TICKS_PER_TICK
+                plan.config.far_micro_ticks_per_tick
             } else {
-                NEAR_MICRO_TICKS_PER_TICK
+                plan.config.near_micro_ticks_per_tick
             }
         } else {
             plan.adaptive_near_micro_ticks_per_tick
@@ -429,12 +426,13 @@ impl<'r> VisitorImpl<'r> {
             get_robot_action_at: plan.get_robot_action_at.clone(),
             actions: &mut plan.actions,
             near_micro_ticks_per_tick: plan.adaptive_near_micro_ticks_per_tick,
-            far_micro_ticks_per_tick: FAR_MICRO_TICKS_PER_TICK,
+            far_micro_ticks_per_tick: plan.config.far_micro_ticks_per_tick,
             used_path_micro_ticks: &mut plan.path_micro_ticks,
             max_path_micro_ticks: match transition {
                 Transition::Observe(_) => plan.max_plan_micro_ticks - self.used_micro_ticks,
-                _ => MAX_PATH_MICRO_TICKS,
+                _ => plan.config.max_path_micro_ticks,
             },
+            config: plan.config,
             #[cfg(feature = "enable_render")]
             history: &mut plan.history,
             #[cfg(feature = "enable_stats")]
@@ -480,14 +478,14 @@ impl<'r> VisitorImpl<'r> {
     }
 }
 
-impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
+impl<'r, 'c, 'a, G> Visitor<State<'c, 'a, G>, Transition> for VisitorImpl<'r>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
-    fn is_final(&self, state: &State<'a, G>) -> bool {
+    fn is_final(&self, state: &State<'c, 'a, G>) -> bool {
         state.is_final()
     }
 
-    fn get_transitions(&mut self, state: &State<'a, G>) -> Vec<Transition> {
+    fn get_transitions(&mut self, state: &State<'c, 'a, G>) -> Vec<Transition> {
         let result = match state {
             State::Initial(v) => Self::get_transitions_for_initial_state(v),
             State::Observed(v) => vec![
@@ -518,7 +516,7 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
         result
     }
 
-    fn apply(&mut self, iteration: usize, state: &State<'a, G>, transition: &Transition) -> State<'a, G> {
+    fn apply(&mut self, iteration: usize, state: &State<'c, 'a, G>, transition: &Transition) -> State<'c, 'a, G> {
         let mut result = match transition {
             Transition::Fork(_) => self.fork(state),
             _ => self.use_scenario(state, transition),
@@ -550,7 +548,7 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
         result
     }
 
-    fn get_transition_cost(&mut self, source_state: &State<'a, G>, destination_state: &State<'a, G>, transition: &Transition) -> i32 {
+    fn get_transition_cost(&mut self, source_state: &State<'c, 'a, G>, destination_state: &State<'c, 'a, G>, transition: &Transition) -> i32 {
         match transition {
             Transition::Fork(_) => 0,
             Transition::Observe(_) => 1,
@@ -558,57 +556,57 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
         }
     }
 
-    fn get_score(&self, state: &State<'a, G>) -> i32 {
+    fn get_score(&self, state: &State<'c, 'a, G>) -> i32 {
         state.plan().get_score()
     }
 }
 
 #[derive(Clone)]
-pub enum State<'a, G>
+pub enum State<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
-    Initial(Final<'a, G>),
-    Observed(Observed<'a, G>),
-    Forked(Forked<'a, G>),
-    Walked(Final<'a, G>),
-    Jumped(Final<'a, G>),
-    FarJumped(Final<'a, G>),
-    Hit(Final<'a, G>),
-    End(Final<'a, G>),
+    Initial(Final<'c, 'a, G>),
+    Observed(Observed<'c, 'a, G>),
+    Forked(Forked<'c, 'a, G>),
+    Walked(Final<'c, 'a, G>),
+    Jumped(Final<'c, 'a, G>),
+    FarJumped(Final<'c, 'a, G>),
+    Hit(Final<'c, 'a, G>),
+    End(Final<'c, 'a, G>),
 }
 
-impl<'a, G> State<'a, G>
+impl<'c, 'a, G> State<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
-    pub fn initial(id: i32, plan: Plan<'a, G>) -> Self {
+    pub fn initial(id: i32, plan: Plan<'c, 'a, G>) -> Self {
         State::Initial(Final { id, score: 0, plan })
     }
 
-    pub fn observed(id: i32, number: usize, plan: Plan<'a, G>, initial_plan: Plan<'a, G>) -> Self {
+    pub fn observed(id: i32, number: usize, plan: Plan<'c, 'a, G>, initial_plan: Plan<'c, 'a, G>) -> Self {
         State::Observed(Observed { id, number, score: 0, plan, initial_plan })
     }
 
-    pub fn forked(id: i32, plan: Plan<'a, G>, observe_simulator: Simulator) -> Self {
+    pub fn forked(id: i32, plan: Plan<'c, 'a, G>, observe_simulator: Simulator) -> Self {
         State::Forked(Forked { id, score: plan.get_score(), plan, observe_simulator })
     }
 
-    pub fn walked(id: i32, plan: Plan<'a, G>) -> Self {
+    pub fn walked(id: i32, plan: Plan<'c, 'a, G>) -> Self {
         State::Walked(Final { id, score: plan.get_score(), plan })
     }
 
-    pub fn jumped(id: i32, plan: Plan<'a, G>) -> Self {
+    pub fn jumped(id: i32, plan: Plan<'c, 'a, G>) -> Self {
         State::Jumped(Final { id, score: plan.get_score(), plan })
     }
 
-    pub fn far_jumped(id: i32, plan: Plan<'a, G>) -> Self {
+    pub fn far_jumped(id: i32, plan: Plan<'c, 'a, G>) -> Self {
         State::FarJumped(Final { id, score: plan.get_score(), plan })
     }
 
-    pub fn hit(id: i32, plan: Plan<'a, G>) -> Self {
+    pub fn hit(id: i32, plan: Plan<'c, 'a, G>) -> Self {
         State::Hit(Final { id, score: plan.get_score(), plan })
     }
 
-    pub fn end(id: i32, plan: Plan<'a, G>) -> Self {
+    pub fn end(id: i32, plan: Plan<'c, 'a, G>) -> Self {
         State::End(Final { id, score: plan.get_score(), plan })
     }
 
@@ -638,7 +636,7 @@ impl<'a, G> State<'a, G>
         }
     }
 
-    pub fn plan(&self) -> &Plan<'a, G> {
+    pub fn plan(&self) -> &Plan<'c, 'a, G> {
         match self {
             State::Initial(v) => &v.plan,
             State::Observed(v) => &v.plan,
@@ -651,7 +649,7 @@ impl<'a, G> State<'a, G>
         }
     }
 
-    pub fn plan_mut(&mut self) -> &mut Plan<'a, G> {
+    pub fn plan_mut(&mut self) -> &mut Plan<'c, 'a, G> {
         match self {
             State::Initial(v) => &mut v.plan,
             State::Observed(v) => &mut v.plan,
@@ -664,7 +662,7 @@ impl<'a, G> State<'a, G>
         }
     }
 
-    pub fn take_plan(self) -> Plan<'a, G> {
+    pub fn take_plan(self) -> Plan<'c, 'a, G> {
         match self {
             State::Initial(v) => v.plan,
             State::Observed(v) => v.plan,
@@ -698,7 +696,7 @@ impl<'a, G> State<'a, G>
     }
 }
 
-impl<'a, G> std::fmt::Debug for State<'a, G>
+impl<'c, 'a, G> std::fmt::Debug for State<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -706,7 +704,7 @@ impl<'a, G> std::fmt::Debug for State<'a, G>
     }
 }
 
-impl<'a, G> Identifiable for State<'a, G>
+impl<'c, 'a, G> Identifiable for State<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
     fn id(&self) -> i32 {
@@ -715,32 +713,32 @@ impl<'a, G> Identifiable for State<'a, G>
 }
 
 #[derive(Clone)]
-pub struct Final<'a, G>
+pub struct Final<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
     pub id: i32,
     pub score: i32,
-    pub plan: Plan<'a, G>,
+    pub plan: Plan<'c, 'a, G>,
 }
 
 #[derive(Clone)]
-pub struct Observed<'a, G>
+pub struct Observed<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
     pub id: i32,
     pub score: i32,
     pub number: usize,
-    pub plan: Plan<'a, G>,
-    pub initial_plan: Plan<'a, G>,
+    pub plan: Plan<'c, 'a, G>,
+    pub initial_plan: Plan<'c, 'a, G>,
 }
 
 #[derive(Clone)]
-pub struct Forked<'a, G>
+pub struct Forked<'c, 'a, G>
     where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
 
     pub id: i32,
     pub score: i32,
-    pub plan: Plan<'a, G>,
+    pub plan: Plan<'c, 'a, G>,
     pub observe_simulator: Simulator,
 }
 

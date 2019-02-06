@@ -194,11 +194,11 @@ impl MyStrategyImpl {
     }
 
     fn give_orders(&mut self) {
-        use crate::my_strategy::orders::OrderContext;
+        use crate::my_strategy::orders::Context;
         use crate::my_strategy::common::as_score;
 
         let world = &self.world;
-        let mut ctx = OrderContext {
+        let mut ctx = Context {
             rng: &mut self.rng,
             order_id_generator: &mut self.order_id_generator,
             micro_ticks: &mut self.micro_ticks,

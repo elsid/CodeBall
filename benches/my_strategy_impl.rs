@@ -10,6 +10,7 @@ fn two_robots_with_nitro(c: &mut Criterion) {
     use my_strategy::examples::{GameType, example_world, example_rng};
     use my_strategy::my_strategy::simulator::Simulator;
     use my_strategy::my_strategy::my_strategy_impl::MyStrategyImpl;
+    use my_strategy::my_strategy::config::Config;
 
     c.bench_function("two_robots_with_nitro", |b| {
         let world = example_world(GameType::TwoRobotsWithNitro);
@@ -20,10 +21,11 @@ fn two_robots_with_nitro(c: &mut Criterion) {
                 (
                     player.id,
                     MyStrategyImpl::new(
+                        Config::default(),
                         simulator.robots().iter()
                             .find(|v| v.base().player_id == player.id)
                             .unwrap().base(),
-                        &simulator.rules(),
+                        simulator.rules(),
                         &simulator.game(),
                     ),
                 )

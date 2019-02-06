@@ -3,6 +3,7 @@ use crate::my_strategy::world::World;
 use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::common::IdGenerator;
+use crate::my_strategy::config::Config;
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
@@ -13,8 +14,6 @@ use crate::my_strategy::vec3::Vec3;
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
 
-const MAX_PLAN_MICRO_TICKS: usize = 40000;
-
 pub enum Order {
     Idle(Idle),
     Play(Play),
@@ -24,7 +23,7 @@ pub enum Order {
 }
 
 impl Order {
-    pub fn try_play(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut OrderContext) -> Order {
+    pub fn try_play(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut Context) -> Order {
         if let Some(play) = Play::try_new(robot, world, other, max_z, ctx) {
             Order::Play(play)
         } else {
@@ -231,7 +230,7 @@ pub struct Play {
 }
 
 impl Play {
-    pub fn try_new(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut OrderContext) -> Option<Self> {
+    pub fn try_new(robot: &Robot, world: &World, other: &[Order], max_z: f64, ctx: &mut Context) -> Option<Self> {
         use crate::my_strategy::plan::Plan;
 
         log!(
@@ -241,9 +240,10 @@ impl Play {
         );
 
         let time_to_play = get_min_time_to_play_ball(other, world);
-        let max_plan_micro_ticks = MAX_PLAN_MICRO_TICKS / world.rules.team_size as usize;
+        let max_plan_micro_ticks = ctx.config.max_plan_micro_ticks / world.rules.team_size as usize;
 
         let plan = Plan::new(
+            ctx.config,
             world.game.current_tick,
             ctx.order_id_generator.next(),
             make_initial_simulator(robot, world),
@@ -386,7 +386,8 @@ impl WalkToGoalkeeperPosition {
     }
 }
 
-pub struct OrderContext<'r> {
+pub struct Context<'r> {
+    pub config: &'r Config,
     pub rng: &'r mut XorShiftRng,
     pub order_id_generator: &'r mut IdGenerator,
     pub micro_ticks: &'r mut usize,

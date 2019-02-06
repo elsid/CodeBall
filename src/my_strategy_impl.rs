@@ -6,14 +6,13 @@ use crate::my_strategy::world::World;
 use crate::my_strategy::orders::Order;
 use crate::my_strategy::common::IdGenerator;
 use crate::my_strategy::roles::Role;
+use crate::my_strategy::config::Config;
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::Render;
 
-const ROBOT_PRIORITY_CHANGE_GAP: i32 = 10;
-const ROBOT_ROLE_CHANGE_GAP: i32 = 0;
-
 pub struct MyStrategyImpl {
+    config: Config,
     world: World,
     rng: XorShiftRng,
     start_time: Instant,
@@ -77,13 +76,12 @@ impl Strategy for MyStrategyImpl {
 }
 
 impl MyStrategyImpl {
-    pub fn new(me: &Robot, rules: &Rules, game: &Game) -> Self {
-        let world = World::new(me.clone(), rules.clone(), game.clone());
-
+    pub fn new(config: Config, me: &Robot, rules: &Rules, game: &Game) -> Self {
         log!(game.current_tick, "start");
 
         MyStrategyImpl {
-            world: world.clone(),
+            world: World::new(config.clone(), me.clone(), rules.clone(), game.clone()),
+            config,
             rng: XorShiftRng::from_seed([
                 rules.seed as u32,
                 (rules.seed >> 32) as u32,
@@ -140,7 +138,7 @@ impl MyStrategyImpl {
                 .all(|(l, r)| l == r);
 
         if !is_same {
-            if self.roles.is_empty() || new_score > current_score + ROBOT_ROLE_CHANGE_GAP {
+            if self.roles.is_empty() || new_score > current_score + self.config.robot_role_change_gap {
                 log!(
                     self.world.game.current_tick, "assign roles {:?} with total score {} ({})",
                     new_roles, new_score, new_score - current_score
@@ -230,7 +228,7 @@ impl MyStrategyImpl {
                 .map(|(n, id)| {
                     let robot = self.world.get_robot(*id);
                     let distance = self.world.game.ball.position().distance(robot.position());
-                    (as_score(distance) - ROBOT_PRIORITY_CHANGE_GAP * n as i32, *id)
+                    (as_score(distance) - self.config.robot_priority_change_gap * n as i32, *id)
                 })
                 .collect::<Vec<_>>();
 
@@ -243,11 +241,12 @@ impl MyStrategyImpl {
     }
 
     fn give_orders(&mut self) {
-        use crate::my_strategy::orders::OrderContext;
+        use crate::my_strategy::orders::Context;
         use crate::my_strategy::common::as_score;
 
         let world = &self.world;
-        let mut ctx = OrderContext {
+        let mut ctx = Context {
+            config: &self.config,
             rng: &mut self.rng,
             order_id_generator: &mut self.order_id_generator,
             micro_ticks: &mut self.micro_ticks,

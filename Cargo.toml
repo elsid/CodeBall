@@ -35,6 +35,7 @@ use_goalkeeper_strategy = []
 use_forward_strategy = []
 use_single_goalkeeper = []
 disable_output = []
+read_config = []
 
 [[bench]]
 name = "simulator"

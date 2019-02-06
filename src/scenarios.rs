@@ -2,14 +2,10 @@ use crate::model::Action;
 use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec3::Vec3;
+use crate::my_strategy::config::Config;
+
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
-
-pub const MAX_TICKS: i32 = 100;
-pub const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
-pub const FAR_MICRO_TICKS_PER_TICK: usize = 3;
-const MAX_OBSERVATIONS: usize = 6;
-const TICKS_PER_STEPS: &'static [usize] = &[1, 3, 4, 8];
 
 pub struct Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
@@ -30,6 +26,7 @@ pub struct Context<'r, 'a, G>
     pub far_micro_ticks_per_tick: usize,
     pub used_path_micro_ticks: &'r mut usize,
     pub max_path_micro_ticks: usize,
+    pub config: &'r Config,
     #[cfg(feature = "enable_render")]
     pub history: &'r mut Vec<Simulator>,
     #[cfg(feature = "enable_stats")]
@@ -66,7 +63,7 @@ impl<'r, 'a, G> Context<'r, 'a, G>
             return Err(Error::Goal);
         }
 
-        if checks & TICK_LIMIT != 0 && self.simulator.current_tick() >= MAX_TICKS {
+        if checks & TICK_LIMIT != 0 && self.simulator.current_tick() >= self.config.max_ticks {
             return Err(Error::TicksLimit);
         }
 
@@ -112,7 +109,7 @@ impl<'r, 'a, G> Context<'r, 'a, G>
             self.stats.reached_path_limit = *self.used_path_micro_ticks >= self.max_path_micro_ticks;
             self.stats.path_micro_ticks = *self.used_path_micro_ticks;
 
-            if micro_ticks_per_tick == NEAR_MICRO_TICKS_PER_TICK {
+            if micro_ticks_per_tick == self.config.near_micro_ticks_per_tick {
                 self.stats.ticks_with_near_micro_ticks += 1;
             } else {
                 self.stats.ticks_with_far_micro_ticks += 1;
@@ -438,14 +435,14 @@ impl Observe {
 
         use crate::my_strategy::entity::Entity;
 
-        if self.number >= MAX_OBSERVATIONS {
+        if self.number >= ctx.config.max_observations {
             return Err(Error::BadCondition);
         }
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
         ctx.simulator.set_ignore_me(true);
 
-        let step = TICKS_PER_STEPS[self.number.min(TICKS_PER_STEPS.len() - 1)];
+        let step = ctx.config.ticks_per_steps[self.number.min(ctx.config.ticks_per_steps.len() - 1)];
 
         #[cfg(feature = "enable_stats")]
         {

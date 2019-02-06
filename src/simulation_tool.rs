@@ -55,6 +55,7 @@ fn check_goalkeeper() {
 
 fn simulate_goalkeeper(ball_position: Vec3, ball_velocity: Vec3, mut world: World) -> Result {
     use crate::examples::example_rng;
+    use crate::my_strategy::config::Config;
 
     world.me.set_position(world.rules.get_goalkeeper_position(ball_position));
     let me = world.me.clone();
@@ -67,8 +68,9 @@ fn simulate_goalkeeper(ball_position: Vec3, ball_velocity: Vec3, mut world: Worl
     let mut rng = example_rng(&world.rules);
     let mut simulator = Simulator::new(&world, 1);
     let mut my_strategy = MyStrategyImpl::new(
-        &simulator.me().base(),
-        &simulator.rules(),
+        Config::default(),
+        simulator.me().base(),
+        simulator.rules(),
         &simulator.game(),
     );
 
