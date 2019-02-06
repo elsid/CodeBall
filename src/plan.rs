@@ -122,7 +122,59 @@ impl<'a, G> Plan<'a, G>
     }
 
     pub fn get_score(&self) -> i32 {
-        get_score(&self.simulator, self.my_time_to_ball, self.opponent_time_to_ball, self.time_to_goal)
+        use crate::my_strategy::common::as_score;
+        use crate::my_strategy::scenarios::MAX_TICKS;
+        use crate::my_strategy::entity::Entity;
+
+        let rules = self.simulator.rules();
+        let max_time = (MAX_TICKS + 1) as f64 * rules.tick_time_interval();
+        let ball = self.simulator.ball();
+        let to_goal = rules.get_goal_target() - ball.position();
+
+        let ball_goal_distance_score = if self.simulator.score() == 0 {
+            1.0 - to_goal.norm() / rules.arena.max_distance()
+        } else if self.simulator.score() > 0 {
+            2.0
+        } else {
+            0.0
+        };
+
+        let ball_goal_direction_score = if ball.velocity().norm() > 0.0 {
+            (to_goal.cos(ball.velocity()) + 1.0) / 2.0
+        } else {
+            0.0
+        };
+
+        let my_time_to_ball_score = if let Some(v) = self.my_time_to_ball {
+            1.0 - v / max_time
+        } else {
+            0.0
+        };
+
+        let time_to_goal_score = if let Some(v) = self.time_to_goal {
+            if self.simulator.score() > 0 {
+                1.0 - v / max_time
+            } else {
+                v / max_time
+            }
+        } else {
+            0.0
+        };
+
+        let opponent_time_to_ball_penalty = if let Some(v) = self.opponent_time_to_ball {
+            1.0 - v / max_time
+        } else {
+            0.0
+        };
+
+        let total = 0.0
+            + ball_goal_distance_score
+            + 0.1 * ball_goal_direction_score
+            + 0.5 * my_time_to_ball_score
+            + 0.25 * time_to_goal_score
+            - 0.1 * opponent_time_to_ball_penalty;
+
+        as_score(total)
     }
 }
 
@@ -742,63 +794,6 @@ impl Transition {
 
 #[derive(Debug, Clone)]
 pub struct Fork;
-
-pub fn get_score(simulator: &Simulator, my_time_to_ball: Option<f64>,
-                 opponent_time_to_ball: Option<f64>, time_to_goal: Option<f64>) -> i32 {
-    use crate::my_strategy::common::as_score;
-    use crate::my_strategy::scenarios::MAX_TICKS;
-    use crate::my_strategy::entity::Entity;
-
-    let rules = simulator.rules();
-    let max_time = (MAX_TICKS + 1) as f64 * rules.tick_time_interval();
-    let ball = simulator.ball();
-    let to_goal = rules.get_goal_target() - ball.position();
-
-    let ball_goal_distance_score = if simulator.score() == 0 {
-        1.0 - to_goal.norm() / rules.arena.max_distance()
-    } else if simulator.score() > 0 {
-        2.0
-    } else {
-        0.0
-    };
-
-    let ball_goal_direction_score = if ball.velocity().norm() > 0.0 {
-        (to_goal.cos(ball.velocity()) + 1.0) / 2.0
-    } else {
-        0.0
-    };
-
-    let my_time_to_ball_score = if let Some(v) = my_time_to_ball {
-        1.0 - v / max_time
-    } else {
-        0.0
-    };
-
-    let time_to_goal_score = if let Some(v) = time_to_goal {
-        if simulator.score() > 0 {
-            1.0 - v / max_time
-        } else {
-            v / max_time
-        }
-    } else {
-        0.0
-    };
-
-    let opponent_time_to_ball_penalty = if let Some(v) = opponent_time_to_ball {
-        1.0 - v / max_time
-    } else {
-        0.0
-    };
-
-    let total = 0.0
-        + ball_goal_distance_score
-        + 0.1 * ball_goal_direction_score
-        + 0.5 * my_time_to_ball_score
-        + 0.25 * time_to_goal_score
-        - 0.1 * opponent_time_to_ball_penalty;
-
-    as_score(total)
-}
 
 pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRng) -> Vec<Vec3> {
     use crate::my_strategy::physics::get_min_distance_between_spheres;
