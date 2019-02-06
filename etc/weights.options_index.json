@@ -22,5 +22,33 @@
   "nitro_amount_score_weight": {
     "type": "float",
     "index": 5
+  },
+  "distance_to_ball_score_weight": {
+    "type": "float",
+    "index": 6
+  },
+  "time_to_goal_penalty_weight": {
+    "type": "float",
+    "index": 7
+  },
+  "ball_goal_distance_penalty_weight": {
+    "type": "float",
+    "index": 8
+  },
+  "ball_goal_direction_penalty_weight": {
+    "type": "float",
+    "index": 9
+  },
+  "my_time_to_ball_penalty_weight": {
+    "type": "float",
+    "index": 10
+  },
+  "distance_to_ball_penalty_weight": {
+    "type": "float",
+    "index": 11
+  },
+  "nitro_amount_penalty_weight": {
+    "type": "float",
+    "index": 12
   }
 }

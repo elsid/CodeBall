@@ -3,6 +3,7 @@ use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::search::{Search, Visitor, Identifiable};
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::common::IdGenerator;
+use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::config::Config;
 use crate::my_strategy::scenarios::{Jump, FarJump, WatchMeJump, WalkToPosition, Observe, PushRobot,
@@ -128,55 +129,97 @@ impl<'c, 'a, G> Plan<'c, 'a, G>
         let max_time = (self.config.max_ticks + 1) as f64 * rules.tick_time_interval();
         let ball = self.simulator.ball();
         let me = self.simulator.me();
-        let to_goal = rules.get_goal_target() - ball.position();
-
-        let ball_goal_distance_score = if self.simulator.score() == 0 {
-            1.0 - to_goal.norm() / rules.arena.max_distance()
-        } else if self.simulator.score() > 0 {
-            2.0
-        } else {
-            0.0
-        };
-
-        let ball_goal_direction_score = if ball.velocity().norm() > 0.0 {
-            (to_goal.cos(ball.velocity()) + 1.0) / 2.0
-        } else {
-            0.0
-        };
-
-        let my_time_to_ball_score = if let Some(v) = self.my_time_to_ball {
-            1.0 - v / max_time
-        } else {
-            0.0
-        };
-
-        let time_to_goal_score = if let Some(v) = self.time_to_goal {
-            if self.simulator.score() > 0 {
-                1.0 - v / max_time
-            } else {
-                v / max_time
-            }
-        } else {
-            0.0
-        };
-
-        let opponent_time_to_ball_penalty = if let Some(v) = self.opponent_time_to_ball {
-            1.0 - v / max_time
-        } else {
-            0.0
-        };
 
         let nitro_amount_score = me.nitro_amount() / rules.MAX_NITRO_AMOUNT;
 
-        let total = 0.0
-            + ball_goal_distance_score * self.config.ball_goal_distance_score_weight
-            + ball_goal_direction_score * self.config.ball_goal_direction_score_weight
-            + my_time_to_ball_score * self.config.my_time_to_ball_score_weight
-            + time_to_goal_score * self.config.time_to_goal_score_weight
-            - opponent_time_to_ball_penalty * self.config.opponent_time_to_ball_penalty_weight
-            + nitro_amount_score * self.config.nitro_amount_score_weight;
+        let score = if self.simulator.score() > 0 {
+            let time_to_goal_score = 1.0 - self.time_to_goal.unwrap_or(0.0) / max_time;
 
-        as_score(total)
+            let total = weighted(0.0, 0.0)
+                + weighted(time_to_goal_score, self.config.time_to_goal_score_weight);
+
+            as_score(3.0 + total.x() / total.y())
+        } else if self.simulator.score() < 0 {
+            0
+        } else {
+            if let Some(time_to_ball) = self.my_time_to_ball {
+                let time_to_ball_score = 1.0 - time_to_ball / max_time;
+                let to_goal = rules.get_goal_target() - ball.position();
+                let ball_goal_distance_score = 1.0 - to_goal.norm() / rules.arena.max_distance();
+                let ball_goal_direction_score = if ball.velocity().norm() > 0.0 {
+                    (to_goal.cos(ball.velocity()) + 1.0) / 2.0
+                } else {
+                    0.0
+                };
+
+                let total = weighted(0.0, 0.0)
+                    + weighted(time_to_ball_score, self.config.my_time_to_ball_score_weight)
+                    + weighted(ball_goal_distance_score, self.config.ball_goal_distance_score_weight)
+                    + weighted(ball_goal_direction_score, self.config.ball_goal_direction_score_weight)
+                    + weighted(nitro_amount_score, self.config.nitro_amount_score_weight);
+
+                as_score(2.0 + total.x() / total.y())
+            } else {
+                let distance_to_ball_score = 1.0 - me.position().distance(ball.position())
+                    / rules.arena.max_distance();
+
+                let total = weighted(0.0, 0.0)
+                    + weighted(distance_to_ball_score, self.config.distance_to_ball_score_weight)
+                    + weighted(nitro_amount_score, self.config.nitro_amount_score_weight);
+
+                as_score(1.0 + total.x() / total.y())
+            }
+        };
+
+        let nitro_amount_penalty = self.simulator.robots().iter()
+            .filter(|v| !v.is_teammate())
+            .map(|v| v.nitro_amount())
+            .sum::<f64>() / (rules.MAX_NITRO_AMOUNT * (self.simulator.robots().len() / 2) as f64);
+
+        let penalty = if self.simulator.score() > 0 {
+            0
+        } else if self.simulator.score() < 0 {
+            let time_to_goal_penalty = 1.0 - self.time_to_goal.unwrap_or(0.0) / max_time;
+
+             let total = weighted(0.0, 0.0)
+                + weighted(time_to_goal_penalty, self.config.time_to_goal_penalty_weight);
+
+            as_score(2.0 + total.x() / total.y())
+        } else {
+            if let Some(time_to_ball) = self.opponent_time_to_ball {
+                let time_to_ball_penalty = 1.0 - time_to_ball / max_time;
+                let to_goal = rules.get_goal_target().opposite() - ball.position();
+                let ball_goal_distance_penalty = 1.0 - to_goal.norm() / rules.arena.max_distance();
+                let ball_goal_direction_penalty = if ball.velocity().norm() > 0.0 {
+                    (to_goal.cos(ball.velocity()) + 1.0) / 2.0
+                } else {
+                    0.0
+                };
+
+                let total = weighted(0.0, 0.0)
+                    + weighted(time_to_ball_penalty, self.config.opponent_time_to_ball_penalty_weight)
+                    + weighted(ball_goal_distance_penalty, self.config.ball_goal_distance_penalty_weight)
+                    + weighted(ball_goal_direction_penalty, self.config.ball_goal_direction_penalty_weight)
+                    + weighted(nitro_amount_penalty, self.config.nitro_amount_penalty_weight);
+
+                as_score(1.0 + total.x() / total.y())
+            } else {
+                let distance = self.simulator.robots().iter()
+                    .filter(|v| !v.is_teammate())
+                    .map(|v| v.position().distance(ball.position()))
+                    .min_by_key(|v| as_score(*v))
+                    .unwrap();
+                let distance_to_ball_penalty = 1.0 - distance / rules.arena.max_distance();
+
+                let total = weighted(0.0, 0.0)
+                    + weighted(distance_to_ball_penalty, self.config.distance_to_ball_penalty_weight)
+                    + weighted(nitro_amount_penalty, self.config.nitro_amount_penalty_weight);
+
+                as_score(total.x() / total.y())
+            }
+        };
+
+        2 * score - penalty
     }
 }
 
@@ -907,4 +950,8 @@ pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRn
     }
 
     result
+}
+
+pub fn weighted(value: f64, weight: f64) -> Vec2 {
+    Vec2::new(value * weight, weight)
 }
