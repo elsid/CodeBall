@@ -178,6 +178,7 @@ impl<'r> VisitorImpl<'r> {
             result.push(Transition::observe(0, state.plan.time_to_play, state.plan.max_z));
 
             Self::try_add_push_robot(&state.plan, &mut result);
+            Self::try_add_take_nitro_pack(&state.plan, &mut result);
 
             result
         }
@@ -215,6 +216,38 @@ impl<'r> VisitorImpl<'r> {
                     true,
                     plan.time_to_play.max(20.0 * rules.tick_time_interval())
                 ));
+            });
+    }
+
+    pub fn try_add_take_nitro_pack<'a, G>(plan: &Plan<'a, G>, transitions: &mut Vec<Transition>)
+        where G: Clone + Fn(i32, i32) -> Option<&'a Action>  {
+
+        use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::common::as_score;
+
+        let rules = plan.simulator.rules();
+        let me = plan.simulator.me();
+
+        if me.nitro_amount() == rules.MAX_NITRO_AMOUNT {
+            return;
+        }
+
+        plan.simulator.nitro_packs().iter()
+            .filter(|v| {
+                v.z < plan.max_z && v.respawn_ticks.map(|v| v < 100).unwrap_or(true)
+            })
+            .map(|v| (v.position().distance(me.position()), v))
+            .filter(|(distance, _)| *distance < rules.arena.depth / 8.0)
+            .min_by_key(|(distance, _)| as_score(*distance))
+            .map(|(_, nitro_pack)| {
+                let distance = nitro_pack.position().distance(me.position());
+                let max_speed = if distance > rules.min_running_distance() {
+                    rules.ROBOT_MAX_GROUND_SPEED
+                } else {
+                    rules.ROBOT_MAX_GROUND_SPEED / rules.min_running_distance()
+                };
+
+                transitions.push(Transition::take_nitro_pack(nitro_pack.position(), max_speed));
             });
     }
 
@@ -376,6 +409,7 @@ impl<'r> VisitorImpl<'r> {
                     Transition::WatchMeJump(_) => State::hit(self.state_id_generator.next(), plan),
                     Transition::WatchBallMove(_) => State::end(self.state_id_generator.next(), plan),
                     Transition::PushRobot(_) => State::initial(self.state_id_generator.next(), plan),
+                    Transition::TakeNitroPack(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::Fork(_) => unimplemented!(),
                 },
                 Err(_) => State::end(self.state_id_generator.next(), plan),
@@ -647,6 +681,7 @@ pub enum Transition {
     WatchMeJump(WatchMeJump),
     WatchBallMove(WatchBallMove),
     PushRobot(PushRobot),
+    TakeNitroPack(WalkToPosition),
 }
 
 impl Transition {
@@ -682,6 +717,10 @@ impl Transition {
         Transition::PushRobot(PushRobot { robot_id, allow_nitro, until_time })
     }
 
+    pub fn take_nitro_pack(target: Vec3, max_speed: f64) -> Self {
+        Transition::TakeNitroPack(WalkToPosition { target, max_speed })
+    }
+
     pub fn perform<'r, 'a, G>(&self, ctx: &mut ScenarioContext<'r, 'a, G>) -> ScenarioResult
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
@@ -693,6 +732,7 @@ impl Transition {
             Transition::WatchMeJump(v) => v.perform(ctx),
             Transition::WatchBallMove(v) => v.perform(ctx),
             Transition::PushRobot(v) => v.perform(ctx),
+            Transition::TakeNitroPack(v) => v.perform(ctx),
             Transition::Fork(_) => unimplemented!(),
         }
     }
