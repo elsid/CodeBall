@@ -8,7 +8,7 @@ use crate::my_strategy::stats::Stats;
 pub const MAX_TICKS: i32 = 100;
 pub const NEAR_MICRO_TICKS_PER_TICK: usize = 25;
 pub const FAR_MICRO_TICKS_PER_TICK: usize = 3;
-const MAX_OBSERVATIONS: usize = 5;
+const MAX_OBSERVATIONS: usize = 6;
 const TICKS_PER_STEPS: &'static [usize] = &[1, 3, 4, 8];
 
 pub struct Context<'r, 'a, G>

@@ -7,7 +7,7 @@ use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::scenarios::{Jump, FarJump, WatchMeJump, WalkToPosition, Observe, PushRobot,
                                     WatchBallMove, Context as ScenarioContext, Result as ScenarioResult};
 
-const MAX_PATH_MICRO_TICKS: usize = 1000;
+const MAX_PATH_MICRO_TICKS: usize = 1100;
 const MAX_ITERATIONS: usize = 100;
 
 #[cfg(feature = "enable_stats")]

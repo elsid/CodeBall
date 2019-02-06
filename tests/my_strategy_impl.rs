@@ -74,7 +74,7 @@ fn test_two_robots_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 110);
+    assert_eq!(simulator.current_tick(), 108);
 }
 
 #[test]
@@ -97,7 +97,7 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 100);
+    assert_eq!(simulator.current_tick(), 102);
 }
 
 #[test]
