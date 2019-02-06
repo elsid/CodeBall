@@ -1,0 +1,26 @@
+{
+  "ball_goal_distance_score_weight": {
+    "type": "float",
+    "index": 0
+  },
+  "ball_goal_direction_score_weight": {
+    "type": "float",
+    "index": 1
+  },
+  "my_time_to_ball_score_weight": {
+    "type": "float",
+    "index": 2
+  },
+  "time_to_goal_score_weight": {
+    "type": "float",
+    "index": 3
+  },
+  "opponent_time_to_ball_penalty_weight": {
+    "type": "float",
+    "index": 4
+  },
+  "nitro_amount_score_weight": {
+    "type": "float",
+    "index": 5
+  }
+}

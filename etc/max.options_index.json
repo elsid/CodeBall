@@ -1,0 +1,10 @@
+{
+  "max_ticks": {
+    "type": "unsigned_int",
+    "index": 0
+  },
+  "max_observations": {
+    "type": "unsigned_int",
+    "index": 1
+  }
+}
