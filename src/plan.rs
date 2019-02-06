@@ -23,7 +23,8 @@ pub struct Plan<'a, G>
     pub time_to_play: f64,
     pub max_z: f64,
     pub get_robot_action_at: G,
-    pub time_to_ball: Option<f64>,
+    pub my_time_to_ball: Option<f64>,
+    pub opponent_time_to_ball: Option<f64>,
     pub time_to_goal: Option<f64>,
     pub position_to_jump: Option<Vec3>,
     pub actions: Vec<Action>,
@@ -73,7 +74,8 @@ impl<'a, G> Plan<'a, G>
             time_to_play,
             max_z,
             get_robot_action_at,
-            time_to_ball: None,
+            my_time_to_ball: None,
+            opponent_time_to_ball: None,
             time_to_goal: None,
             position_to_jump: None,
             actions: Vec::new(),
@@ -103,7 +105,7 @@ impl<'a, G> Plan<'a, G>
             score,
             order_id: plan.order_id,
             simulator: plan.simulator,
-            time_to_ball: plan.time_to_ball,
+            time_to_ball: plan.my_time_to_ball,
             time_to_goal: plan.time_to_goal,
             actions: plan.actions,
             used_micro_ticks: visitor.used_micro_ticks,
@@ -120,7 +122,7 @@ impl<'a, G> Plan<'a, G>
     }
 
     pub fn get_score(&self) -> i32 {
-        get_score(&self.simulator, self.time_to_ball, self.time_to_goal)
+        get_score(&self.simulator, self.my_time_to_ball, self.opponent_time_to_ball, self.time_to_goal)
     }
 }
 
@@ -369,7 +371,8 @@ impl<'r> VisitorImpl<'r> {
             state_id: state.id(),
             simulator: &mut plan.simulator,
             rng: self.rng,
-            time_to_ball: &mut plan.time_to_ball,
+            my_time_to_ball: &mut plan.my_time_to_ball,
+            opponent_time_to_ball: &mut plan.opponent_time_to_ball,
             time_to_goal: &mut plan.time_to_goal,
             get_robot_action_at: plan.get_robot_action_at.clone(),
             actions: &mut plan.actions,
@@ -740,7 +743,8 @@ impl Transition {
 #[derive(Debug, Clone)]
 pub struct Fork;
 
-pub fn get_score(simulator: &Simulator, time_to_ball: Option<f64>, time_to_goal: Option<f64>) -> i32 {
+pub fn get_score(simulator: &Simulator, my_time_to_ball: Option<f64>,
+                 opponent_time_to_ball: Option<f64>, time_to_goal: Option<f64>) -> i32 {
     use crate::my_strategy::common::as_score;
     use crate::my_strategy::scenarios::MAX_TICKS;
     use crate::my_strategy::vec2::Vec2;
@@ -766,7 +770,7 @@ pub fn get_score(simulator: &Simulator, time_to_ball: Option<f64>, time_to_goal:
         0.0
     };
 
-    let time_to_ball_score = if let Some(v) = time_to_ball {
+    let my_time_to_ball_score = if let Some(v) = my_time_to_ball {
         1.0 - v / max_time
     } else {
         0.0
@@ -782,11 +786,18 @@ pub fn get_score(simulator: &Simulator, time_to_ball: Option<f64>, time_to_goal:
         0.0
     };
 
+    let opponent_time_to_ball_penalty = if let Some(v) = opponent_time_to_ball {
+        1.0 - v / max_time
+    } else {
+        0.0
+    };
+
     let total = 0.0
         + ball_goal_distance_score
         + 0.1 * ball_goal_direction_score
-        + 0.5 * time_to_ball_score
-        + 0.25 * time_to_goal_score;
+        + 0.5 * my_time_to_ball_score
+        + 0.25 * time_to_goal_score
+        - 0.1 * opponent_time_to_ball_penalty;
 
     as_score(total)
 }

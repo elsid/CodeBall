@@ -21,7 +21,8 @@ pub struct Context<'r, 'a, G>
     pub state_id: i32,
     pub simulator: &'r mut Simulator,
     pub rng: &'r mut XorShiftRng,
-    pub time_to_ball: &'r mut Option<f64>,
+    pub my_time_to_ball: &'r mut Option<f64>,
+    pub opponent_time_to_ball: &'r mut Option<f64>,
     pub time_to_goal: &'r mut Option<f64>,
     pub get_robot_action_at: G,
     pub actions: &'r mut Vec<Action>,
@@ -124,14 +125,22 @@ impl<'r, 'a, G> Context<'r, 'a, G>
     fn update(&mut self) {
         use crate::my_strategy::simulator::RobotCollisionType;
 
+        if self.my_time_to_ball.is_none() {
+            *self.opponent_time_to_ball = self.simulator.robots().iter()
+                .find(|v| {
+                    !v.is_teammate() && v.collision_type() != RobotCollisionType::None
+                })
+                .map(|_| self.simulator.current_time());
+        }
+
         if self.simulator.score() != 0 && self.time_to_goal.is_none() {
             *self.time_to_goal = Some(self.simulator.current_time());
         }
 
         if !self.simulator.ignore_me()
             && self.simulator.me().collision_type() != RobotCollisionType::None
-            && self.time_to_ball.is_none() {
-            *self.time_to_ball = Some(self.simulator.current_time());
+            && self.my_time_to_ball.is_none() {
+            *self.my_time_to_ball = Some(self.simulator.current_time());
         }
 
         #[cfg(feature = "enable_stats")]
