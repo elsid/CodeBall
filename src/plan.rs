@@ -466,7 +466,15 @@ impl<'r> VisitorImpl<'r> {
                     Transition::TakeNitroPack(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::Fork(_) => unimplemented!(),
                 },
-                Err(_) => State::end(self.state_id_generator.next(), plan),
+                Err(v) => {
+                    log!(
+                        state.plan().current_tick, "[{}] <{}> <{}> error {}:{}:{} {:?}",
+                        state.plan().simulator.me().id(), state.plan().order_id, state.id(),
+                        state.plan().simulator.current_time(), state.plan().simulator.current_tick(),
+                        state.plan().simulator.current_micro_tick(), v
+                    );
+                    State::end(self.state_id_generator.next(), plan)
+                },
             }
         }
     }
@@ -480,7 +488,7 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
     }
 
     fn get_transitions(&mut self, state: &State<'a, G>) -> Vec<Transition> {
-        match state {
+        let result = match state {
             State::Initial(v) => Self::get_transitions_for_initial_state(v),
             State::Observed(v) => vec![
                 Transition::fork(),
@@ -496,7 +504,18 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
             ],
             State::Hit(_) => vec![Transition::watch_ball_move()],
             State::End(_) => Vec::new(),
+        };
+
+        for transition in result.iter() {
+            log!(
+                state.plan().current_tick, "[{}] <{}> <{}> push {}:{}:{} {:?}",
+                state.plan().simulator.me().id(), state.plan().order_id, state.id(),
+                state.plan().simulator.current_time(), state.plan().simulator.current_tick(),
+                state.plan().simulator.current_micro_tick(), transition
+            );
         }
+
+        result
     }
 
     fn apply(&mut self, iteration: usize, state: &State<'a, G>, transition: &Transition) -> State<'a, G> {
@@ -506,10 +525,10 @@ impl<'r, 'a, G> Visitor<State<'a, G>, Transition> for VisitorImpl<'r>
         };
 
         log!(
-            state.plan().current_tick, "[{}] <{}> <{}> transition {}:{}:{} {:?} -> <{}>",
+            state.plan().current_tick, "[{}] <{}> <{}> transition {}:{}:{} {:?} -> <{}> {:?}",
             state.plan().simulator.me().id(), state.plan().order_id, state.id(),
             state.plan().simulator.current_time(), state.plan().simulator.current_tick(),
-            state.plan().simulator.current_micro_tick(), transition, result.id()
+            state.plan().simulator.current_micro_tick(), transition, result.id(), result
         );
 
         #[cfg(feature = "enable_stats")]
