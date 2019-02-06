@@ -330,6 +330,7 @@ impl<'r> VisitorImpl<'r> {
         };
 
         let mut ctx = ScenarioContext {
+            first: true,
             current_tick: plan.current_tick,
             robot_id: plan.simulator.me().id(),
             order_id: plan.order_id,

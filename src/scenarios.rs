@@ -14,6 +14,7 @@ const TICKS_PER_STEPS: &'static [usize] = &[1, 3, 4, 8];
 pub struct Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
+    pub first: bool,
     pub current_tick: i32,
     pub robot_id: i32,
     pub order_id: i32,
@@ -60,8 +61,6 @@ impl<'r, 'a, G> Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
     pub fn tick(&mut self, tick_type: TickType, checks: usize) -> Result {
-        use crate::my_strategy::simulator::RobotCollisionType;
-
         if checks & GOAL != 0 && self.simulator.score() != 0 {
             return Err(Error::Goal);
         }
@@ -89,35 +88,23 @@ impl<'r, 'a, G> Context<'r, 'a, G>
 
         let time_interval = self.simulator.rules().tick_time_interval();
 
+        if self.first {
+            self.first = false;
+            self.update();
+        }
+
         self.simulator.tick(time_interval, micro_ticks_per_tick, self.rng);
+
+        self.update();
 
         *self.used_path_micro_ticks += micro_ticks_per_tick;
 
         if !self.simulator.ignore_me() {
-            if self.simulator.me().collision_type() != RobotCollisionType::None && self.time_to_ball.is_none() {
-                *self.time_to_ball = Some(self.simulator.current_time());
-            }
-
-            if self.simulator.score() != 0 && self.time_to_goal.is_none() {
-                *self.time_to_goal = Some(self.simulator.current_time());
-            }
-
             self.actions.push(self.simulator.me().action().clone());
-
-            #[cfg(feature = "enable_render")]
-            self.history.push(self.simulator.clone());
-
-            #[cfg(feature = "enable_stats")]
-            {
-                self.stats.time_to_end = self.simulator.current_time();
-                self.stats.time_to_score = if self.simulator.score() != self.stats.game_score {
-                    Some(self.simulator.current_time())
-                } else {
-                    None
-                };
-                self.stats.game_score = self.simulator.score();
-            }
         }
+
+        #[cfg(feature = "enable_render")]
+        self.history.push(self.simulator.clone());
 
         #[cfg(feature = "enable_stats")]
         {
@@ -132,6 +119,31 @@ impl<'r, 'a, G> Context<'r, 'a, G>
         }
 
         Ok(())
+    }
+
+    fn update(&mut self) {
+        use crate::my_strategy::simulator::RobotCollisionType;
+
+        if self.simulator.score() != 0 && self.time_to_goal.is_none() {
+            *self.time_to_goal = Some(self.simulator.current_time());
+        }
+
+        if !self.simulator.ignore_me()
+            && self.simulator.me().collision_type() != RobotCollisionType::None
+            && self.time_to_ball.is_none() {
+            *self.time_to_ball = Some(self.simulator.current_time());
+        }
+
+        #[cfg(feature = "enable_stats")]
+        {
+            self.stats.time_to_end = self.simulator.current_time();
+            self.stats.time_to_score = if self.simulator.score() != self.stats.game_score {
+                Some(self.simulator.current_time())
+            } else {
+                None
+            };
+            self.stats.game_score = self.simulator.score();
+        }
     }
 }
 
