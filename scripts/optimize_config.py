@@ -49,7 +49,7 @@ def main():
     result = scipy.optimize.minimize(
         f,
         numpy.array(initial),
-        method='COBYLA',
+        method='Powell',
         options=dict(disp=True),
     )
     print(result)
