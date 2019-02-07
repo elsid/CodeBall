@@ -3,10 +3,11 @@
 import sys
 import statistics
 import numpy
-import matplotlib.pyplot
 
 
 def main():
+    import matplotlib.pyplot
+
     games = list(collect_data(sorted(sys.argv[1:])))
     seeds = [v['seed'] for v in games]
     players = dict(
@@ -102,7 +103,7 @@ def collect_data(paths):
     for path in paths:
         content = read_result(path)
         if content:
-            yield parse_result(read_result(path))
+            yield parse_result(content)
 
 
 def read_result(path):
