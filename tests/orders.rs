@@ -511,7 +511,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 193);
+    assert_eq!(result.score(), -807);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(5.203589045050307, 0.0, -0.5952380952381013));
@@ -529,7 +529,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         iteration: 4,
         total_iterations: 33,
         game_score: -1,
-        order_score: 193,
+        order_score: -807,
         path_micro_ticks: 171,
         plan_micro_ticks: 5774,
         game_micro_ticks: 5774,

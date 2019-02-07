@@ -135,7 +135,7 @@ impl<'c, 'a, G> Plan<'c, 'a, G>
         } else if self.simulator.score() > 0 {
             2.0
         } else {
-            0.0
+            -1.0
         };
 
         let ball_goal_direction_score = if ball.velocity().norm() > 0.0 {
