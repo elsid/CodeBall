@@ -23,7 +23,7 @@ pub struct Stats {
     pub other_number: usize,
     pub ticks_with_near_micro_ticks: usize,
     pub ticks_with_far_micro_ticks: usize,
-    pub path_type: Option<&'static str>,
+    pub path: Vec<&'static str>,
 }
 
 impl Stats {

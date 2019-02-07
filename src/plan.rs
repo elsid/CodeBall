@@ -536,17 +536,7 @@ impl<'r, 'c, 'a, G> Visitor<State<'c, 'a, G>, Transition> for VisitorImpl<'r>
         #[cfg(feature = "enable_stats")]
         {
             result.plan_mut().stats.iteration = iteration;
-
-            if result.plan_mut().stats.path_type.is_none() {
-                result.plan_mut().stats.path_type = match transition {
-                    Transition::WalkToPosition(_) => Some("walk_to_position"),
-                    Transition::Jump(_) => Some("jump"),
-                    Transition::FarJump(_) => Some("far_jump"),
-                    Transition::WatchMeJump(_) => Some("watch_me_jump"),
-                    Transition::WatchBallMove(_) => Some("watch_ball_move"),
-                    _ => result.plan_mut().stats.path_type,
-                };
-            }
+            result.plan_mut().stats.path.push(transition.name());
         }
 
         result
@@ -794,6 +784,20 @@ impl Transition {
 
     pub fn take_nitro_pack(target: Vec3, max_speed: f64) -> Self {
         Transition::TakeNitroPack(WalkToPosition { target, max_speed })
+    }
+
+    pub fn name(&self) -> &'static str {
+        match self {
+            Transition::Observe(_) => "observe",
+            Transition::WalkToPosition(_) => "walk_to_position",
+            Transition::Jump(_) => "jump",
+            Transition::FarJump(_) => "far_jump",
+            Transition::WatchMeJump(_) => "watch_me_jump",
+            Transition::WatchBallMove(_) => "watch_ball_move",
+            Transition::PushRobot(_) => "push_robot",
+            Transition::TakeNitroPack(_) => "take_nitro_pack",
+            Transition::Fork(_) => "fork",
+        }
     }
 
     pub fn perform<'r, 'a, G>(&self, ctx: &mut ScenarioContext<'r, 'a, G>) -> ScenarioResult

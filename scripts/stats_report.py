@@ -14,6 +14,10 @@ def main():
     records = [v for v in raw if isinstance(v, dict)]
     by_ticks = defaultdict(dict)
     for record in records:
+        for k, v in record.items():
+            if isinstance(v, list):
+                record[k] = ','.join(v)
+    for record in records:
         by_ticks[record['current_tick']][record['robot_id']] = record
     values = {k: [v.get(k) for v in records if v.get(k) is not None] for k in records[0]}
     values['time_to_score'] = [v for v in values['time_to_score']]
@@ -64,11 +68,12 @@ def main():
         elif isinstance(v[0], str):
             count = sorted(Counter(v).items(), key=lambda v: -v[1])
             fig, ax = matplotlib.pyplot.subplots()
+            fig.subplots_adjust(left=0.3)
             fig.canvas.set_window_title(k)
             x_coordinates = numpy.arange(len(count))
-            ax.bar(x_coordinates, [v[1] for v in count], align='center')
-            ax.xaxis.set_major_locator(matplotlib.pyplot.FixedLocator(x_coordinates))
-            ax.xaxis.set_major_formatter(matplotlib.pyplot.FixedFormatter(['%s (%s)' % (v[0], v[1]) for v in count]))
+            ax.barh(x_coordinates, [v[1] for v in count], align='center')
+            ax.yaxis.set_major_locator(matplotlib.pyplot.FixedLocator(x_coordinates))
+            ax.yaxis.set_major_formatter(matplotlib.pyplot.FixedFormatter(['%s (%s)' % (v[0], v[1]) for v in count]))
             ax.grid(True)
     fig, ax = matplotlib.pyplot.subplots()
     fig.canvas.set_window_title('game_micro_ticks')
