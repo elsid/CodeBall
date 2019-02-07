@@ -51,8 +51,13 @@ def main():
             fig, ax = matplotlib.pyplot.subplots()
             fig.canvas.set_window_title(k)
             if v and k in ('iteration', 'step', 'total_iterations'):
-                ax.hist(v, bins=numpy.arange(min(v), max(v) + 1, 1))
-                ax.set_xticks(numpy.arange(min(v), max(v) + 1, 1))
+                n = max(v) - min(v)
+                step = 1
+                while n > 50:
+                    n /= 2
+                    step *= 2
+                ax.hist(v, bins=numpy.arange(min(v), max(v) + step, step))
+                ax.set_xticks(numpy.arange(min(v), max(v) + step, step))
             else:
                 ax.hist(v, bins='auto')
             ax.grid(True)
