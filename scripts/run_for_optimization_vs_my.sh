@@ -17,14 +17,14 @@ local_runner/codeball2018 \
     --noshow \
     --nitro true \
     --results-file ${RESULT} \
-    --p1-name v41 \
+    --p1-name v42 \
     --p2-name dev \
     --p1 tcp-${P1} \
     --p2 tcp-${P2} &
 LOCAL_RUNNER_PID=$!
 
 sleep 1
-(bin/v41 127.0.0.1 ${P1} 0000000000000000 &> /dev/null &)
+(bin/v42 127.0.0.1 ${P1} 0000000000000000 &> /dev/null &)
 OTHER_PID=$!
 
 trap "kill -9 ${LOCAL_RUNNER_PID} ${OTHER_PID}" SIGHUP SIGINT SIGTERM
