@@ -105,7 +105,7 @@ fn test_two_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 101);
+    assert_eq!(simulator.current_tick(), 102);
 }
 
 #[test]
@@ -202,7 +202,7 @@ fn test_three_robots_with_nitro_first_ball_kick_until_goal() {
     });
 
     assert_eq!(simulator.score(), 1);
-    assert_eq!(simulator.current_tick(), 103);
+    assert_eq!(simulator.current_tick(), 102);
 }
 
 fn simulate_while<P>(my_strategy: &mut MyStrategyImpl, simulator: &mut Simulator,

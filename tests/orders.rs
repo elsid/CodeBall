@@ -296,7 +296,7 @@ fn test_try_play_continue_jump_with_nitro() {
     };
 
     world.me.set_position(Vec3::new(2.1244535492642953, 1.2931418435925501, -5.178084712824993));
-    world.me.set_velocity(Vec3::new(-15.58616134845358, 14.488369308639712, 24.472022729043868));
+    world.me.set_velocity(Vec3::new(-14.027545213608223, 13.03953237777574, 22.02482045613948));
     world.me.radius = 1.05;
     let me = world.me.clone();
     world.game.robots.iter_mut()
@@ -307,7 +307,7 @@ fn test_try_play_continue_jump_with_nitro() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 2604);
+    assert_eq!(result.score(), 2642);
     assert_eq!(result.action().use_nitro, true);
     assert_eq!(result.action().jump_speed, 15.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-37.54676686691887, 14.6683757644347, 91.51545798538402));
@@ -320,15 +320,15 @@ fn test_try_play_continue_jump_with_nitro() {
         order: "play",
         time_to_jump: 0.0,
         time_to_watch: 0.11666666666666665,
-        time_to_end: 1.2166666666666672,
-        time_to_score: Some(1.2166666666666672),
-        iteration: 2,
+        time_to_end: 1.2333333333333338,
+        time_to_score: Some(1.2333333333333338),
+        iteration: 4,
         total_iterations: 9,
         game_score: 1,
-        order_score: 2604,
-        path_micro_ticks: 373,
-        plan_micro_ticks: 1651,
-        game_micro_ticks: 1651,
+        order_score: 2642,
+        path_micro_ticks: 376,
+        plan_micro_ticks: 1747,
+        game_micro_ticks: 1747,
         game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
@@ -336,7 +336,7 @@ fn test_try_play_continue_jump_with_nitro() {
         reached_path_limit: false,
         other_number: 0,
         ticks_with_near_micro_ticks: 7,
-        ticks_with_far_micro_ticks: 66,
+        ticks_with_far_micro_ticks: 67,
         path_type: Some("watch_me_jump"),
     });
 }
@@ -511,7 +511,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 143);
+    assert_eq!(result.score(), 193);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(5.203589045050307, 0.0, -0.5952380952381013));
@@ -529,7 +529,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         iteration: 4,
         total_iterations: 33,
         game_score: -1,
-        order_score: 143,
+        order_score: 193,
         path_micro_ticks: 171,
         plan_micro_ticks: 5774,
         game_micro_ticks: 5774,
@@ -581,7 +581,7 @@ fn test_try_play_goalkeeper_should_catch() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 773);
+    assert_eq!(result.score(), 823);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 15.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(28.561044526277186, 0.0, -9.179691474554682));
@@ -599,7 +599,7 @@ fn test_try_play_goalkeeper_should_catch() {
         iteration: 3,
         total_iterations: 46,
         game_score: 0,
-        order_score: 773,
+        order_score: 823,
         path_micro_ticks: 391,
         plan_micro_ticks: 4777,
         game_micro_ticks: 4777,
@@ -640,7 +640,7 @@ fn test_try_play_for_tree_robots_with_nitro() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 1140);
+    assert_eq!(result.score(), 1190);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-16.289118072775988, 0.0, 25.19255112947402));
 
@@ -657,7 +657,7 @@ fn test_try_play_for_tree_robots_with_nitro() {
         iteration: 62,
         total_iterations: 78,
         game_score: 0,
-        order_score: 1140,
+        order_score: 1190,
         path_micro_ticks: 300,
         plan_micro_ticks: 6275,
         game_micro_ticks: 6275,

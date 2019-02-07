@@ -127,6 +127,7 @@ impl<'c, 'a, G> Plan<'c, 'a, G>
         let rules = self.simulator.rules();
         let max_time = (self.config.max_ticks + 1) as f64 * rules.tick_time_interval();
         let ball = self.simulator.ball();
+        let me = self.simulator.me();
         let to_goal = rules.get_goal_target() - ball.position();
 
         let ball_goal_distance_score = if self.simulator.score() == 0 {
@@ -165,12 +166,15 @@ impl<'c, 'a, G> Plan<'c, 'a, G>
             0.0
         };
 
+        let nitro_amount_score = me.nitro_amount() / rules.MAX_NITRO_AMOUNT;
+
         let total = 0.0
             + ball_goal_distance_score * self.config.ball_goal_distance_score_weight
             + ball_goal_direction_score * self.config.ball_goal_direction_score_weight
             + my_time_to_ball_score * self.config.my_time_to_ball_score_weight
             + time_to_goal_score * self.config.time_to_goal_score_weight
-            - opponent_time_to_ball_penalty * self.config.opponent_time_to_ball_penalty_weight;
+            - opponent_time_to_ball_penalty * self.config.opponent_time_to_ball_penalty_weight
+            + nitro_amount_score * self.config.nitro_amount_score_weight;
 
         as_score(total)
     }
