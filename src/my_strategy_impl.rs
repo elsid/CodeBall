@@ -345,9 +345,10 @@ impl MyStrategyImpl {
 
     #[cfg(feature = "enable_render")]
     fn render(&mut self) {
-        use crate::my_strategy::render::Object;
+        use crate::my_strategy::render::{Object, Color};
         use crate::my_strategy::vec3::Vec3;
         use crate::my_strategy::roles::Goalkeeper;
+        use crate::my_strategy::common::as_score;
 
         self.render.clear();
 
@@ -373,7 +374,7 @@ impl MyStrategyImpl {
         self.world.game.ball.render(render);
         self.world.rules.arena.render_normal(self.world.game.ball.position(), render);
 
-        for robot in robots {
+        for robot in robots.iter() {
             robot.render(render);
 
             let role = self.roles.iter()
@@ -409,5 +410,20 @@ impl MyStrategyImpl {
             3.0,
             Goalkeeper::get_color()
         ));
+
+        let ball_position = self.world.game.ball.position();
+
+        robots.iter()
+            .min_by_key(|v| {
+                as_score(v.position().distance(ball_position))
+            })
+            .map(|v| {
+                render.add(Object::line(
+                    v.position(),
+                    ball_position,
+                    3.0,
+                    Color::new(0.0, 0.2, 0.8, 0.8)
+                ));
+            });
     }
 }
