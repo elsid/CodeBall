@@ -289,7 +289,7 @@ impl<'r> VisitorImpl<'r> {
 
         plan.simulator.nitro_packs().iter()
             .filter(|v| {
-                v.z < plan.max_z && v.respawn_ticks.map(|v| v < 100).unwrap_or(true)
+                v.z < plan.max_z && v.respawn_ticks.is_none()
             })
             .map(|v| (v.position().distance(me.position()), v))
             .filter(|(distance, _)| *distance < rules.arena.depth / 8.0)

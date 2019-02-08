@@ -421,7 +421,7 @@ impl TakeNitroPack {
 
         world.game.nitro_packs.iter()
             .filter(|v| {
-                v.z < max_z && v.respawn_ticks.map(|v| v < 100).unwrap_or(true)
+                v.z < max_z && v.respawn_ticks.is_none()
             })
             .map(|v| (v.position().distance(robot.position()), v))
             .filter(|(distance, _)| *distance < world.rules.arena.depth / 2.0)
