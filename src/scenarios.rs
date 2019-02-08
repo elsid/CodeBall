@@ -434,6 +434,7 @@ impl Observe {
         where G: Fn(i32, i32) -> Option<&'a Action> {
 
         use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::simulator::RobotCollisionType;
 
         if self.number >= ctx.config.max_observations {
             return Err(Error::BadCondition);
@@ -462,6 +463,11 @@ impl Observe {
             let rules = ctx.simulator.rules();
             let ball_position = ctx.simulator.ball().position();
             let (distance, normal) = rules.arena.distance_and_normal(ball_position);
+            let opponent_collided = ctx.simulator.robots().iter()
+                .find(|v| {
+                    !v.is_teammate() && v.collision_type() != RobotCollisionType::None
+                })
+                .is_some();
 
             if (self.number == 0 || !first)
                 && ctx.simulator.current_time() >= self.wait_until
@@ -471,6 +477,10 @@ impl Observe {
                         distance < rules.max_robot_jump_height()
                         && ball_position.y() < rules.max_robot_wall_walk_height()
                         && Vec3::j().cos(normal) >= 0.0
+                    )
+                    || (
+                        opponent_collided
+                        && ball_position.y() > rules.BALL_RADIUS
                     )
             ) {
                 break;
