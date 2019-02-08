@@ -15,10 +15,11 @@ if [[ ${DEBUG} ]]; then
     PREFIX=debug_
 fi
 
-if ! [[ "${NITRO}" ]]; then
+if [[ "${NITRO}" ]]; then
     NITRO=true
+    SUFFIX=${SUFFIX}_nitro
 else
-    SUFFIX=_nitro
+    NITRO=false
 fi
 
 if ! [[ "${TEAM_SIZE}" ]]; then
