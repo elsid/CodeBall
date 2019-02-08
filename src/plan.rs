@@ -433,7 +433,7 @@ impl<'r> VisitorImpl<'r> {
             far_micro_ticks_per_tick: plan.config.far_micro_ticks_per_tick,
             used_path_micro_ticks: &mut plan.path_micro_ticks,
             max_path_micro_ticks: match transition {
-                Transition::Observe(_) => plan.max_plan_micro_ticks - self.used_micro_ticks,
+                Transition::Observe(_) => plan.max_plan_micro_ticks.max(self.used_micro_ticks) - self.used_micro_ticks,
                 _ => plan.config.max_path_micro_ticks,
             },
             config: plan.config,
