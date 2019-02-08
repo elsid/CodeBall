@@ -205,7 +205,7 @@ impl RobotExt {
 
     #[cfg(feature = "enable_render")]
     pub fn get_color(relative_number: f64, relative_time: f64) -> Color {
-        Color::new(0.8, 0.2 + relative_number * 0.6, 0.2 + relative_time * 0.6, 0.4)
+        Color::new(0.8, 0.2 + relative_number * 0.6, 0.2 + relative_time * 0.6, 0.3)
     }
 }
 
@@ -347,7 +347,7 @@ impl BallExt {
 
     #[cfg(feature = "enable_render")]
     pub fn get_color(relative_time: f64) -> Color {
-        Color::new(0.0, 0.2 + relative_time * 0.6, 0.8, 0.4)
+        Color::new(0.0, 0.2 + relative_time * 0.6, 0.8, 0.2)
     }
 }
 
