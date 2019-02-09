@@ -21,13 +21,14 @@ Player = namedtuple('Player', ('name', 'version', 'place', 'score'))
 @click.option('--last_game_id', default=sys.maxsize, help='Last game id to fetch', type=int)
 @click.option('--version', default=None, help='Version to check (default: all)', type=int)
 @click.option('--sort_by', default='n', help='Sort by field')
-def main(profile, opponent, first_page, last_page, first_game_id, last_game_id, version, sort_by):
+@click.option('--creator', default=None, help='Game creator (default: all)')
+def main(profile, opponent, first_page, last_page, first_game_id, last_game_id, version, sort_by, creator):
     games = list(fetch_games(profile, first_page, last_page))
-    show_report(games, profile, version, opponent, first_game_id, last_game_id, sort_by)
+    show_report(games, profile, version, opponent, first_game_id, last_game_id, sort_by, creator)
 
 
-def show_report(games, profile, version, opponent, first_game_id, last_game_id, sort_by):
-    games = [v for v in games if check_game(v, profile, version, opponent, first_game_id, last_game_id)]
+def show_report(games, profile, version, opponent, first_game_id, last_game_id, sort_by, creator):
+    games = [v for v in games if check_game(v, profile, version, opponent, first_game_id, last_game_id, creator)]
     show_stats_by_game_type(games, profile, sort_by)
     show_stats_by_opponent(games, profile, sort_by)
     show_stats_by_opponent_and_version(games, profile, sort_by)
@@ -35,12 +36,13 @@ def show_report(games, profile, version, opponent, first_game_id, last_game_id, 
     show_stats_by_opponent_and_version_and_game_type(games, profile, sort_by)
 
 
-def check_game(game, profile, version, opponent, first_game_id, last_game_id):
+def check_game(game, profile, version, opponent, first_game_id, last_game_id, creator):
     return (
             profile in game.players_by_name
             and (opponent is None or opponent in game.players_by_name)
             and (version is None or game.players_by_name[profile].version == version)
             and first_game_id <= game.id <= last_game_id
+            and (creator is None or game.creator == creator)
     )
 
 
