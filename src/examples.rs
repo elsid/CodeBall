@@ -60,7 +60,6 @@ pub fn example_game(game_type: GameType, rules: &Rules) -> Game {
         robots: if game_type.team_size() == 1 {
             vec![
                 example_me(game_type, rules),
-                example_opponent_1(game_type, rules),
             ]
         } else if game_type.team_size() == 2 {
             vec![
