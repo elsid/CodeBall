@@ -233,29 +233,29 @@ impl<'r> VisitorImpl<'r> {
 
             result.push(Transition::observe(0, state.plan.time_to_play, state.plan.max_z));
 
-            Self::try_add_push_robot(&state.plan, &mut result);
+            Self::try_add_push_robot(&state.plan.simulator, &state.plan, &mut result);
             Self::try_add_take_nitro_pack(&state.plan, &mut result);
 
             result
         }
     }
 
-    pub fn try_add_push_robot<'c, 'a, G>(plan: &Plan<'c, 'a, G>, transitions: &mut Vec<Transition>)
+    pub fn try_add_push_robot<'c, 'a, G>(simulator: &Simulator, plan: &Plan<'c, 'a, G>, transitions: &mut Vec<Transition>)
         where G: Clone + Fn(i32, i32) -> Option<&'a Action>  {
 
         use crate::my_strategy::entity::Entity;
         use crate::my_strategy::common::as_score;
 
-        let ball = plan.simulator.ball();
+        let ball = simulator.ball();
         let me = plan.simulator.me();
-        let rules = plan.simulator.rules();
+        let rules = simulator.rules();
 
         if me.nitro_amount() <= rules.START_NITRO_AMOUNT
             || plan.simulator.current_tick() > 10 {
             return;
         }
 
-        plan.simulator.robots().iter()
+        simulator.robots().iter()
             .filter(|v| {
                 !v.is_teammate()
                 && v.position().z() < plan.max_z
@@ -346,7 +346,7 @@ impl<'r> VisitorImpl<'r> {
             })
             .collect();
 
-        Self::try_add_push_robot(&state.plan, &mut result);
+        Self::try_add_push_robot(&observe_simulator, &state.plan, &mut result);
 
         result
     }
