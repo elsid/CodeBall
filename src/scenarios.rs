@@ -59,6 +59,8 @@ impl<'r, 'a, G> Context<'r, 'a, G>
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
     pub fn tick(&mut self, tick_type: TickType, checks: usize) -> Result {
+        use crate::my_strategy::entity::Entity;
+
         if checks & GOAL != 0 && self.simulator.score() != 0 {
             return Err(Error::Goal);
         }
@@ -72,10 +74,18 @@ impl<'r, 'a, G> Context<'r, 'a, G>
         }
 
         let current_tick = self.simulator.current_tick();
+        let ball_position = self.simulator.ball().position();
+        let my_position = self.simulator.me().position();
+        let ignore_distance = self.simulator.rules().arena.depth / 2.0;
 
         for robot in self.simulator.robots_mut().iter_mut() {
             if let Some(action) = (self.get_robot_action_at)(robot.id(), current_tick) {
+                robot.set_ignore(false);
                 *robot.action_mut() = action.clone();
+            } else if !robot.is_teammate() {
+                let ignore = robot.position().distance(ball_position) > ignore_distance
+                    && robot.position().distance(my_position) > ignore_distance;
+                robot.set_ignore(ignore);
             }
         }
 
