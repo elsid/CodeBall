@@ -21,6 +21,7 @@ def main():
         by_ticks[record['current_tick']][record['robot_id']] = record
     values = {k: [v.get(k) for v in records if v.get(k) is not None] for k in records[0]}
     values['time_to_score'] = [v for v in values['time_to_score']]
+    values['transitions'] = [w for v in values['path'] for w in v]
     row('', 'n', 'sum', 'q95', 'min', 'max', 'mean', 'median', 'stdev')
     for k, v in values.items():
         if not v:
