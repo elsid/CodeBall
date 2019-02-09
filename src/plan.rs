@@ -13,6 +13,7 @@ use crate::my_strategy::scenarios::{
     Observe,
     PushRobot,
     WatchBallMove,
+    WalkToBall,
     Context as ScenarioContext,
     Result as ScenarioResult,
     Error as ScenarioError
@@ -354,7 +355,13 @@ impl<'r> VisitorImpl<'r> {
 
                 Transition::walk_to_position(position_to_jump, max_speed)
             })
-            .collect();
+            .collect::<Vec<_>>();
+
+        if result.len() < 7 && observe_simulator.rules().team_size <= 2 {
+            let to_ball = observe_simulator.ball().projected_to_arena_position_with_shift(rules.ROBOT_RADIUS)
+                - observe_simulator.me().position();
+            result.push(Transition::walk_to_ball(to_ball, true));
+        }
 
         Self::try_add_push_robot(&observe_simulator, &state.plan, &mut result);
 
@@ -401,19 +408,21 @@ impl<'r> VisitorImpl<'r> {
 
         let path_micro_ticks_before = plan.path_micro_ticks;
 
-        plan.adaptive_near_micro_ticks_per_tick = if let Transition::WalkToPosition(v) = transition {
-            let time_interval = plan.simulator.rules().tick_time_interval();
-            let distance_to_ball = plan.simulator.me().position()
-                .distance(plan.simulator.ball().position());
-            let ball_distance_limit = plan.simulator.rules().ball_distance_limit()
-                + v.max_speed * time_interval;
-            if distance_to_ball > ball_distance_limit {
-                plan.config.far_micro_ticks_per_tick
-            } else {
-                plan.config.near_micro_ticks_per_tick
-            }
-        } else {
-            plan.adaptive_near_micro_ticks_per_tick
+        plan.adaptive_near_micro_ticks_per_tick = match transition {
+            Transition::WalkToPosition(v) => {
+                let time_interval = plan.simulator.rules().tick_time_interval();
+                let distance_to_ball = plan.simulator.me().position()
+                    .distance(plan.simulator.ball().position());
+                let ball_distance_limit = plan.simulator.rules().ball_distance_limit()
+                    + v.max_speed * time_interval;
+                if distance_to_ball > ball_distance_limit {
+                    plan.config.far_micro_ticks_per_tick
+                } else {
+                    plan.config.near_micro_ticks_per_tick
+                }
+            },
+            Transition::WalkToBall(_) => plan.config.far_micro_ticks_per_tick,
+            _ => plan.adaptive_near_micro_ticks_per_tick,
         };
 
         if let Transition::WalkToPosition(v) = transition {
@@ -470,6 +479,7 @@ impl<'r> VisitorImpl<'r> {
                     Transition::WatchBallMove(_) => State::end(self.state_id_generator.next(), plan),
                     Transition::PushRobot(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::TakeNitroPack(_) => State::initial(self.state_id_generator.next(), plan),
+                    Transition::WalkToBall(_) => State::walked(self.state_id_generator.next(), plan),
                     Transition::ForkBall(_) => unimplemented!(),
                 },
                 Err(error) => {
@@ -762,6 +772,7 @@ pub enum Transition {
     WatchBallMove(WatchBallMove),
     PushRobot(PushRobot),
     TakeNitroPack(WalkToPosition),
+    WalkToBall(WalkToBall),
 }
 
 impl Transition {
@@ -801,6 +812,10 @@ impl Transition {
         Transition::TakeNitroPack(WalkToPosition { target, max_speed })
     }
 
+    pub fn walk_to_ball(direction: Vec3, allow_nitro: bool) -> Self {
+        Transition::WalkToBall(WalkToBall { direction, allow_nitro })
+    }
+
     pub fn name(&self) -> &'static str {
         match self {
             Transition::Observe(_) => "observe",
@@ -812,6 +827,7 @@ impl Transition {
             Transition::PushRobot(_) => "push_robot",
             Transition::TakeNitroPack(_) => "take_nitro_pack",
             Transition::ForkBall(_) => "fork_ball",
+            Transition::WalkToBall(_) => "walk_to_ball",
         }
     }
 
@@ -827,6 +843,7 @@ impl Transition {
             Transition::WatchBallMove(v) => v.perform(ctx),
             Transition::PushRobot(v) => v.perform(ctx),
             Transition::TakeNitroPack(v) => v.perform(ctx),
+            Transition::WalkToBall(v) => v.perform(ctx),
             Transition::ForkBall(_) => unimplemented!(),
         }
     }

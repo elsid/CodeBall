@@ -233,6 +233,50 @@ impl WalkToPosition {
 }
 
 #[derive(Debug, Clone)]
+pub struct WalkToBall {
+    pub direction: Vec3,
+    pub allow_nitro: bool,
+}
+
+impl WalkToBall {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
+        use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::plane::Plane;
+
+        *ctx.simulator.me_mut().action_mut() = Action::default();
+
+        log!(
+            ctx.current_tick, "[{}] <{}> <{}> walk to ball {}:{} ball={}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+            ctx.simulator.me().position().distance(ctx.simulator.ball().position())
+        );
+
+        while !does_jump_hit_ball(self.allow_nitro, ctx) {
+            let target_velocity = Plane::projected(
+                self.direction,
+                ctx.simulator.me().normal_to_arena()
+            ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+
+            ctx.tick(TickType::Far, ALL)?;
+
+            log!(
+                ctx.current_tick, "[{}] <{}> <{}> walk to ball {}:{} ball={}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+                ctx.simulator.me().position().distance(ctx.simulator.ball().position())
+            );
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Jump {
     pub allow_nitro: bool,
 }
