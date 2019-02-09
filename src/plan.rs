@@ -302,7 +302,7 @@ impl<'r> VisitorImpl<'r> {
                 v.z < plan.max_z && v.respawn_ticks.is_none()
             })
             .map(|v| (v.position().distance(me.position()), v))
-            .filter(|(distance, _)| *distance < rules.arena.depth / 8.0)
+            .filter(|(distance, _)| *distance < rules.arena.depth / 6.0)
             .min_by_key(|(distance, _)| as_score(*distance))
             .map(|(_, nitro_pack)| {
                 let distance = nitro_pack.position().distance(me.position());
