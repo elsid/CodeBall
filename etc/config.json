@@ -10,10 +10,10 @@
   "max_act_micro_ticks": 15000,
   "robot_priority_change_gap": 10,
   "robot_role_change_gap": 0,
-  "ball_goal_distance_score_weight": 1.0,
-  "ball_goal_direction_score_weight": 0.1,
-  "my_time_to_ball_score_weight": 0.5,
-  "time_to_goal_score_weight": 0.25,
-  "opponent_time_to_ball_penalty_weight": 0.1,
-  "nitro_amount_score_weight": 0.1
+  "ball_goal_distance_score_weight": 1.2360679748635974,
+  "ball_goal_direction_score_weight": 0.0016993994285499695,
+  "my_time_to_ball_score_weight": 0.5000113249625928,
+  "time_to_goal_score_weight": 0.24999619213943386,
+  "opponent_time_to_ball_penalty_weight": 0.09999078428632137,
+  "nitro_amount_score_weight": 0.10000021192195667
 }
