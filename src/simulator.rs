@@ -5,6 +5,7 @@ use crate::my_strategy::random::{Rng, XorShiftRng};
 use crate::my_strategy::world::World;
 use crate::my_strategy::entity::Entity;
 use crate::my_strategy::arena::ArenaCollisionMask;
+use crate::my_strategy::solid::{Solid, SolidId};
 
 #[cfg(feature = "enable_render")]
 use crate::my_strategy::render::{Render, Color};
@@ -19,16 +20,6 @@ trait Shiftable : Entity {
         self.set_position(next_position);
         self.set_velocity(next_velocity);
     }
-}
-
-pub trait Solid : Entity {
-    fn radius(&self) -> f64;
-    fn mass(&self) -> f64;
-    fn radius_change_speed(&self) -> f64;
-    fn arena_e(&self) -> f64;
-    fn set_distance_to_arena(&mut self, value: f64);
-    fn set_normal_to_arena(&mut self, value: Vec3);
-    fn arena_collision_mask(&self) -> ArenaCollisionMask;
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -173,6 +164,10 @@ impl RobotExt {
 
     pub fn set_arena_collision_mask(&mut self, value: ArenaCollisionMask) {
         self.arena_collision_mask = value;
+    }
+
+    pub fn projected_to_arena_position_with_shift(&self, shift: f64) -> Vec3 {
+        self.base().position() - self.normal_to_arena * (self.distance_to_arena - shift)
     }
 
     #[cfg(feature = "enable_render")]
@@ -596,6 +591,19 @@ impl Simulator {
 
     pub fn set_ignore_me(&mut self, value: bool) {
         self.me_mut().ignore = value;
+    }
+
+    pub fn get_solid(&self, solid_id: SolidId) -> &Solid {
+        match solid_id {
+            SolidId::Ball => &self.ball,
+            SolidId::Robot(robot_id) => self.get_robot(robot_id)
+        }
+    }
+
+    pub fn get_robot(&self, robot_id: i32) -> &RobotExt {
+        self.robots.iter()
+            .find(|v| v.id() == robot_id)
+            .unwrap()
     }
 
     pub fn tick(&mut self, time_interval: f64, micro_ticks_per_tick: usize, rng: &mut XorShiftRng) {

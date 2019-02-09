@@ -1,7 +1,7 @@
 use crate::model::{Arena, Robot};
 use crate::my_strategy::common::Clamp;
 use crate::my_strategy::plane::Plane;
-use crate::my_strategy::simulator::Solid;
+use crate::my_strategy::solid::Solid;
 use crate::my_strategy::sphere::Sphere;
 use crate::my_strategy::vec2::Vec2;
 use crate::my_strategy::vec3::Vec3;

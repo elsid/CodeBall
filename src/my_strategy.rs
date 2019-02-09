@@ -43,6 +43,9 @@ pub mod action;
 #[path = "entity.rs"]
 pub mod entity;
 
+#[path = "solid.rs"]
+pub mod solid;
+
 #[path = "ball.rs"]
 pub mod ball;
 

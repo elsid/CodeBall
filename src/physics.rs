@@ -1,5 +1,6 @@
 use crate::model::{Rules, Robot, Ball};
 use crate::my_strategy::vec3::Vec3;
+use crate::my_strategy::solid::Solid;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MoveEquation {
@@ -35,6 +36,14 @@ impl MoveEquation {
             initial_position: robot.position(),
             initial_velocity: robot.velocity(),
             acceleration: rules.gravity_acceleration() + nitro_acceleration
+        }
+    }
+
+    pub fn from_solid(solid: &Solid, rules: &Rules) -> Self {
+        MoveEquation {
+            initial_position: solid.position(),
+            initial_velocity: solid.velocity(),
+            acceleration: rules.gravity_acceleration()
         }
     }
 

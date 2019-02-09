@@ -3,6 +3,7 @@ use crate::my_strategy::random::XorShiftRng;
 use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::config::Config;
+use crate::my_strategy::solid::{Solid, SolidId};
 
 #[cfg(feature = "enable_stats")]
 use crate::my_strategy::stats::Stats;
@@ -46,6 +47,7 @@ pub enum Error {
     MicroTicksLimit,
     BadCondition,
     UseBall,
+    PushRobot(i32),
 }
 
 const GOAL: usize = 1 << 0;
@@ -277,6 +279,51 @@ impl WalkToBall {
 }
 
 #[derive(Debug, Clone)]
+pub struct WalkToRobot {
+    pub direction: Vec3,
+    pub allow_nitro: bool,
+    pub robot_id: i32,
+}
+
+impl WalkToRobot {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
+        use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::plane::Plane;
+
+        *ctx.simulator.me_mut().action_mut() = Action::default();
+
+        log!(
+            ctx.current_tick, "[{}] <{}> <{}> walk to robot {}:{} id={} robot={}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks, self.robot_id,
+            ctx.simulator.me().position().distance(ctx.simulator.get_robot(self.robot_id).position())
+        );
+
+        while !does_jump_hit_robot(self.robot_id, self.allow_nitro, ctx) {
+            let target_velocity = Plane::projected(
+                self.direction,
+                ctx.simulator.me().normal_to_arena()
+            ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+
+            ctx.tick(TickType::Far, ALL)?;
+
+            log!(
+                ctx.current_tick, "[{}] <{}> <{}> walk to robot {}:{} id={} robot={}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks, self.robot_id,
+                ctx.simulator.me().position().distance(ctx.simulator.get_robot(self.robot_id).position())
+            );
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct Jump {
     pub allow_nitro: bool,
 }
@@ -430,7 +477,7 @@ pub struct WatchMeJump {
 impl WatchMeJump {
     pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
         where G: Fn(i32, i32) -> Option<&'a Action> {
-        use crate::my_strategy::simulator::{Solid, RobotCollisionType};
+        use crate::my_strategy::simulator::RobotCollisionType;
         use crate::my_strategy::entity::Entity;
 
         *ctx.simulator.me_mut().action_mut() = Action::default();
@@ -481,7 +528,7 @@ impl WatchMeJump {
 pub struct Observe {
     pub number: usize,
     pub wait_until: f64,
-    pub max_ball_z: f64,
+    pub max_z: f64,
 }
 
 impl Observe {
@@ -518,27 +565,35 @@ impl Observe {
             let rules = ctx.simulator.rules();
             let ball_position = ctx.simulator.ball().position();
             let (distance, normal) = rules.arena.distance_and_normal(ball_position);
-            let opponent_collided = ctx.simulator.robots().iter()
+            let collided_opponent = ctx.simulator.robots().iter()
                 .find(|v| {
                     !v.is_teammate() && v.collision_type() != RobotCollisionType::None
-                })
-                .is_some();
+                });
 
-            if (self.number == 0 || !first)
-                && ctx.simulator.current_time() >= self.wait_until
-                && ball_position.z() < self.max_ball_z
-                && (
-                    ball_position.y() < rules.max_robot_jump_height() || (
-                        distance < rules.max_robot_jump_height()
-                        && ball_position.y() < rules.max_robot_wall_walk_height()
-                        && Vec3::j().cos(normal) >= 0.0
-                    )
-                    || (
-                        opponent_collided
-                        && ball_position.y() > rules.BALL_RADIUS
-                    )
-            ) {
-                return Err(Error::UseBall);
+            if self.number == 0 || !first {
+                if ctx.simulator.current_time() >= self.wait_until
+                    && ball_position.z() < self.max_z
+                    && (
+                        ball_position.y() < rules.max_robot_jump_height() || (
+                            distance < rules.max_robot_jump_height()
+                            && ball_position.y() < rules.max_robot_wall_walk_height()
+                            && Vec3::j().cos(normal) >= 0.0
+                        )
+                        || (
+                            collided_opponent.is_some()
+                            && ball_position.y() > rules.BALL_RADIUS
+                        )
+                ) {
+                    return Err(Error::UseBall);
+                }
+
+                if let Some(v) = collided_opponent {
+                    if v.position().z() < self.max_z
+                        && v.position().distance(ball_position) < rules.arena.depth / 8.0
+                        && v.position().distance(ctx.simulator.me().position()) < rules.arena.depth / 8.0 {
+                        return Err(Error::PushRobot(v.id()));
+                    }
+                }
             }
 
             first = false;
@@ -633,7 +688,19 @@ pub fn get_target_velocity_for_jump(use_nitro: bool, simulator: &Simulator) -> V
     }
 }
 
+pub fn does_jump_hit_robot<'r, 'a, G>(robot_id: i32, allow_nitro: bool, ctx: &mut Context<'r, 'a, G>) -> bool
+    where G: Fn(i32, i32) -> Option<&'a Action> {
+
+    does_jump_hit_solid(SolidId::Robot(robot_id), allow_nitro, ctx)
+}
+
 pub fn does_jump_hit_ball<'r, 'a, G>(allow_nitro: bool, ctx: &mut Context<'r, 'a, G>) -> bool
+    where G: Fn(i32, i32) -> Option<&'a Action> {
+
+    does_jump_hit_solid(SolidId::Ball, allow_nitro, ctx)
+}
+
+pub fn does_jump_hit_solid<'r, 'a, G>(solid_id: SolidId, allow_nitro: bool, ctx: &mut Context<'r, 'a, G>) -> bool
     where G: Fn(i32, i32) -> Option<&'a Action> {
 
     use crate::my_strategy::physics::MoveEquation;
@@ -652,25 +719,26 @@ pub fn does_jump_hit_ball<'r, 'a, G>(allow_nitro: bool, ctx: &mut Context<'r, 'a
 
     *ctx.used_path_micro_ticks += ctx.near_micro_ticks_per_tick;
 
+    let solid = simulator.get_solid(solid_id);
     let my_move_equation = if allow_nitro {
         MoveEquation::from_robot_with_nitro(simulator.me().base(), simulator.rules())
     } else {
         MoveEquation::from_robot(simulator.me().base(), simulator.rules())
     };
-    let ball_move_equation = MoveEquation::from_ball(simulator.ball().base(), simulator.rules());
+    let solid_move_equation = MoveEquation::from_solid(solid, simulator.rules());
     let my_min_y = simulator.rules().ROBOT_MIN_RADIUS;
-    let ball_min_y = simulator.rules().BALL_RADIUS;
+    let solid_min_y = solid.radius();
 
     let get_my_position = |time| {
         my_move_equation.get_position(time).with_max_y(my_min_y)
     };
 
-    let get_ball_position = |time| {
-        ball_move_equation.get_position(time).with_max_y(ball_min_y)
+    let get_solid_position = |time| {
+        solid_move_equation.get_position(time).with_max_y(solid_min_y)
     };
 
     let get_distance = |time| {
-        get_my_position(time).distance(get_ball_position(time))
+        get_my_position(time).distance(get_solid_position(time))
     };
 
     let time = minimize1d(
@@ -680,8 +748,8 @@ pub fn does_jump_hit_ball<'r, 'a, G>(allow_nitro: bool, ctx: &mut Context<'r, 'a
         get_distance
     );
 
-    get_distance(time) < simulator.rules().ROBOT_MAX_RADIUS + simulator.rules().BALL_RADIUS
+    get_distance(time) < simulator.rules().ROBOT_MAX_RADIUS + solid.radius()
         && my_move_equation.get_velocity(time).y() > -simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
-        && my_move_equation.get_position(time).y() < ball_move_equation.get_position(time).y()
-        && ball_move_equation.get_position(time).y() > ball_min_y - simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
+        && my_move_equation.get_position(time).y() < solid_move_equation.get_position(time).y()
+        && solid_move_equation.get_position(time).y() > solid_min_y - simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
 }

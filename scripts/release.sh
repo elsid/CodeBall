@@ -37,6 +37,7 @@ cp src/search.rs ${DIR}/src
 cp src/plan.rs ${DIR}/src
 cp src/line2.rs ${DIR}/src
 cp src/config.rs ${DIR}/src
+cp src/solid.rs ${DIR}/src
 
 cd ${DIR}/src
 
