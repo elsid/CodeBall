@@ -52,7 +52,7 @@ fn test_try_play() {
         other_number: 0,
         ticks_with_near_micro_ticks: 34,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
+        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
     });
 }
 
@@ -126,7 +126,7 @@ fn test_try_play_should_not_jump_on_ball_top() {
         other_number: 0,
         ticks_with_near_micro_ticks: 33,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
+        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
     });
 }
 
@@ -405,7 +405,7 @@ fn test_try_play_when_far_from_ball_at_my_side() {
         other_number: 0,
         ticks_with_near_micro_ticks: 36,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork", "walk_to_position"],
+        path: vec!["fork_ball", "walk_to_position"],
     });
 }
 
@@ -472,7 +472,7 @@ fn test_try_play_when_far_from_ball_at_opponent_side() {
         other_number: 0,
         ticks_with_near_micro_ticks: 36,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork", "walk_to_position"],
+        path: vec!["fork_ball", "walk_to_position"],
     });
 }
 
@@ -541,7 +541,7 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         other_number: 0,
         ticks_with_near_micro_ticks: 63,
         ticks_with_far_micro_ticks: 57,
-        path: vec!["fork", "walk_to_position"],
+        path: vec!["fork_ball", "walk_to_position"],
     });
 }
 
@@ -669,6 +669,6 @@ fn test_try_play_for_tree_robots_with_nitro() {
         other_number: 0,
         ticks_with_near_micro_ticks: 50,
         ticks_with_far_micro_ticks: 100,
-        path: vec!["fork", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
+        path: vec!["fork_ball", "walk_to_position", "jump", "watch_me_jump", "watch_ball_move"],
     });
 }

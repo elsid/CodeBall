@@ -45,6 +45,7 @@ pub enum Error {
     TicksLimit,
     MicroTicksLimit,
     BadCondition,
+    UseBall,
 }
 
 const GOAL: usize = 1 << 0;
@@ -504,7 +505,7 @@ impl Observe {
                         && ball_position.y() > rules.BALL_RADIUS
                     )
             ) {
-                break;
+                return Err(Error::UseBall);
             }
 
             first = false;
@@ -520,8 +521,6 @@ impl Observe {
                 ctx.tick(TickType::Near, LIMITS)?;
             }
         }
-
-        Ok(())
     }
 }
 
