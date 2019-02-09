@@ -32,10 +32,12 @@ DATA_DIR = 'optimization'
 
 def main():
     script = sys.argv[1]
-    config = read_config()
-    options_index = read_options_index()
-    team_size = int(sys.argv[4])
-    seeds = sys.argv[5:]
+    port = sys.argv[2]
+    config = read_json(sys.argv[3])
+    options_index = read_json(sys.argv[4])
+    team_size = int(sys.argv[5])
+    nitro = sys.argv[6]
+    seeds = sys.argv[7:]
     initial = make_initial(config, options_index)
     optimization_id = int(time.time())
     simulation_id = [1]
@@ -44,7 +46,7 @@ def main():
     def f(x):
         for k, v in options_index.items():
             config[k] = OPTIONS_TYPES[v['type']](x[v['index']])
-        return run_simulations(script, config, options_index, team_size, seeds, optimization_id, simulation_id)
+        return run_simulations(script, port, config, options_index, team_size, nitro, seeds, optimization_id, simulation_id)
 
     result = scipy.optimize.minimize(
         f,
@@ -58,23 +60,25 @@ def main():
     print(json.dumps(config))
 
 
-def run_simulations(script, config, options_index, team_size, seeds, optimization_id, simulation_id):
-    score_diff = sum(run_simulation(script, config, options_index, team_size, v, optimization_id, simulation_id) for v in seeds) / len(seeds)
+def run_simulations(script, port, config, options_index, team_size, nitro, seeds, optimization_id, simulation_id):
+    score_diff = sum(run_simulation(script, port, config, options_index, team_size, nitro, v, optimization_id, simulation_id) for v in seeds) / len(seeds)
     print('all', score_diff, {k: config[k] for k in options_index.keys()})
     return score_diff
 
 
-def run_simulation(script, config, options_index, team_size, seed, optimization_id, simulation_id):
+def run_simulation(script, port, config, options_index, team_size, nitro, seed, optimization_id, simulation_id):
     config_path = os.path.abspath(os.path.join(DATA_DIR, 'config.%s.%s.json' % (optimization_id, simulation_id[0])))
     result_path = os.path.abspath(os.path.join(DATA_DIR, 'result.%s.%s.txt' % (optimization_id, simulation_id[0])))
     with open(config_path, 'w') as f:
         json.dump(config, f)
     simulation = subprocess.Popen([
         script,
+        port,
         config_path,
         result_path,
         seed,
         str(team_size),
+        nitro,
     ])
     simulation.wait()
     simulation_id[0] += 1
@@ -84,13 +88,8 @@ def run_simulation(script, config, options_index, team_size, seed, optimization_
     return score_diff
 
 
-def read_config():
-    with open(sys.argv[2]) as f:
-        return json.load(f)
-
-
-def read_options_index():
-    with open(sys.argv[3]) as f:
+def read_json(path):
+    with open(path) as f:
         return json.load(f)
 
 
