@@ -425,7 +425,18 @@ impl WatchMeJump {
                 ctx.simulator.me().distance_to_arena(), ctx.simulator.me().radius()
             );
 
-            ctx.tick(TickType::Near, ALL)?;
+            let distance_to_ball = ctx.simulator.me().position()
+                .distance(ctx.simulator.ball().position());
+            let max_near_distance = ctx.simulator.rules().ball_distance_limit()
+                + ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED.max(ctx.simulator.me().velocity().norm())
+                    * ctx.simulator.rules().tick_time_interval() * 2.0;
+            let tick_type = if distance_to_ball < max_near_distance {
+                TickType::Near
+            } else {
+                TickType::Far
+            };
+
+            ctx.tick(tick_type, ALL)?;
         }
 
         Ok(())

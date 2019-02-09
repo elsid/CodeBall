@@ -257,17 +257,17 @@ fn test_try_play_continue_jump() {
         total_iterations: 5,
         game_score: 1,
         order_score: 3018,
-        path_micro_ticks: 367,
-        plan_micro_ticks: 821,
-        game_micro_ticks: 821,
+        path_micro_ticks: 279,
+        plan_micro_ticks: 645,
+        game_micro_ticks: 645,
         game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
         reached_plan_limit: false,
         reached_path_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 7,
-        ticks_with_far_micro_ticks: 64,
+        ticks_with_near_micro_ticks: 3,
+        ticks_with_far_micro_ticks: 68,
         path: vec!["watch_me_jump", "watch_ball_move"],
     });
 }
@@ -307,7 +307,7 @@ fn test_try_play_continue_jump_with_nitro() {
 
     let result = Order::try_play(&world.me, &world, &[], std::f64::MAX, &mut ctx);
 
-    assert_eq!(result.score(), 3054);
+    assert_eq!(result.score(), 3052);
     assert_eq!(result.action().use_nitro, true);
     assert_eq!(result.action().jump_speed, 15.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-37.54676686691887, 14.6683757644347, 91.51545798538402));
@@ -320,23 +320,23 @@ fn test_try_play_continue_jump_with_nitro() {
         order: "play",
         time_to_jump: 0.0,
         time_to_watch: 0.11666666666666665,
-        time_to_end: 1.2333333333333338,
-        time_to_score: Some(1.2333333333333338),
-        iteration: 6,
+        time_to_end: 1.2500000000000004,
+        time_to_score: Some(1.2500000000000004),
+        iteration: 4,
         total_iterations: 9,
         game_score: 1,
-        order_score: 3054,
-        path_micro_ticks: 376,
-        plan_micro_ticks: 1747,
-        game_micro_ticks: 1747,
+        order_score: 3052,
+        path_micro_ticks: 291,
+        plan_micro_ticks: 1392,
+        game_micro_ticks: 1392,
         game_micro_ticks_limit: 30000,
         current_step: 0,
         reached_game_limit: false,
         reached_plan_limit: false,
         reached_path_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 7,
-        ticks_with_far_micro_ticks: 67,
+        ticks_with_near_micro_ticks: 3,
+        ticks_with_far_micro_ticks: 72,
         path: vec!["watch_me_jump", "watch_ball_move"],
     });
 }
