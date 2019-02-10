@@ -45,8 +45,8 @@ impl Order {
         }
     }
 
-    pub fn try_push_opponent(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Order {
-        if let Some(push_opponent) = PushOpponent::try_new(robot, world, order_id_generator) {
+    pub fn try_push_opponent(robot: &Robot, world: &World, max_z: f64, order_id_generator: &mut IdGenerator) -> Order {
+        if let Some(push_opponent) = PushOpponent::try_new(robot, world, max_z, order_id_generator) {
             Order::PushOpponent(push_opponent)
         } else {
             Self::idle(robot, world, order_id_generator)
@@ -468,12 +468,14 @@ pub struct PushOpponent {
 }
 
 impl PushOpponent {
-    pub fn try_new(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Option<Self> {
+    pub fn try_new(robot: &Robot, world: &World, max_z: f64, order_id_generator: &mut IdGenerator) -> Option<Self> {
         use crate::my_strategy::common::as_score;
 
         world.game.robots.iter()
             .filter(|v| {
-                !v.is_teammate && v.position().distance(world.game.ball.position()) < 10.0
+                !v.is_teammate
+                    && v.position().z() < max_z
+                    && v.position().distance(world.game.ball.position()) < 10.0
             })
             .min_by_key(|v| {
                 as_score(v.position().distance(world.game.ball.position()))

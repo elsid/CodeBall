@@ -112,7 +112,11 @@ impl Forward {
     }
 
     pub fn max_z() -> f64 {
-        std::f64::MAX
+        if cfg!(feature = "use_limited_forward") {
+            10.0
+        } else {
+            std::f64::MAX
+        }
     }
 
     pub fn can_quit() -> bool {
