@@ -140,7 +140,7 @@ impl<'c, 'a, G> Plan<'c, 'a, G>
         let max_time = (self.config.max_ticks + 1) as f64 * rules.tick_time_interval();
         let ball = self.simulator.ball();
         let me = self.simulator.me();
-        let to_goal = rules.get_goal_target() - ball.position();
+        let to_goal = get_goal_target(&self.simulator) - ball.position();
 
         let ball_goal_distance_score = if self.simulator.score() == 0 {
             1.0 - to_goal.norm() / rules.arena.max_distance()
@@ -1066,4 +1066,29 @@ pub fn get_points(simulator: &Simulator, current_tick: i32, rng: &mut XorShiftRn
     }
 
     result
+}
+
+pub fn get_goal_target(simulator: &Simulator) -> Vec3 {
+    use crate::my_strategy::entity::Entity;
+    use crate::my_strategy::optimization::minimize1d;
+
+    let get_sum_distance = |x: f64| {
+        let goal_target = simulator.rules().get_goal_target()
+            .with_x(x)
+            .with_z(simulator.rules().arena.depth / 2.0 + simulator.rules().BALL_RADIUS);
+        simulator.robots().iter()
+            .filter(|v| !v.is_teammate())
+            .map(|v| v.position().distance(goal_target))
+            .sum::<f64>()
+    };
+    let x = minimize1d(
+        -simulator.rules().arena.goal_width / 2.0 + 2.0 * simulator.rules().BALL_RADIUS,
+        simulator.rules().arena.goal_width / 2.0 - 2.0 * simulator.rules().BALL_RADIUS,
+        10,
+        get_sum_distance
+    );
+
+    simulator.rules().get_goal_target()
+        .with_x(x)
+        .with_z(simulator.rules().arena.depth / 2.0 + simulator.rules().BALL_RADIUS)
 }
