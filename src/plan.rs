@@ -358,6 +358,14 @@ impl<'r> VisitorImpl<'r> {
             })
             .collect::<Vec<_>>();
 
+        if observe_simulator.rules().team_size <= 2
+            && observe_simulator.rules().is_near_my_goal(observe_simulator.ball().position()) {
+            let to_ball = observe_simulator.ball().projected_to_arena_position_with_shift(rules.ROBOT_RADIUS)
+                - observe_simulator.me().position();
+            result.push(Transition::walk_to_ball(to_ball, true));
+            result.push(Transition::walk_to_ball(-to_ball, true));
+        }
+
         result
     }
 

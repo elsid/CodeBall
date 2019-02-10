@@ -527,12 +527,12 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         time_to_end: 0.9500000000000013,
         time_to_score: Some(0.9500000000000013),
         iteration: 4,
-        total_iterations: 33,
+        total_iterations: 42,
         game_score: -1,
         order_score: -1045,
         path_micro_ticks: 171,
-        plan_micro_ticks: 5774,
-        game_micro_ticks: 5774,
+        plan_micro_ticks: 8534,
+        game_micro_ticks: 8534,
         game_micro_ticks_limit: 30000,
         current_step: 1,
         reached_game_limit: false,
@@ -581,10 +581,10 @@ fn test_try_play_goalkeeper_should_catch() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 814);
+    assert_eq!(result.score(), 931);
     assert_eq!(result.action().use_nitro, false);
-    assert_eq!(result.action().jump_speed, 15.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(28.561044526277186, 0.0, -9.179691474554682));
+    assert_eq!(result.action().jump_speed, 0.0);
+    assert_eq!(result.action().target_velocity(), Vec3::new(-11.479472765463528, 0.0, 27.7168126779935));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -592,26 +592,26 @@ fn test_try_play_goalkeeper_should_catch() {
         robot_id: 1,
         current_tick: 0,
         order: "play",
-        time_to_jump: 0.0,
-        time_to_watch: 0.44999999999999996,
+        time_to_jump: 0.06666666666666667,
+        time_to_watch: 0.39999999999999997,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 3,
-        total_iterations: 46,
+        iteration: 22,
+        total_iterations: 65,
         game_score: 0,
-        order_score: 814,
-        path_micro_ticks: 391,
-        plan_micro_ticks: 4777,
-        game_micro_ticks: 4777,
+        order_score: 931,
+        path_micro_ticks: 315,
+        plan_micro_ticks: 6712,
+        game_micro_ticks: 6712,
         game_micro_ticks_limit: 30000,
-        current_step: 0,
+        current_step: 3,
         reached_game_limit: false,
         reached_plan_limit: false,
         reached_path_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 3,
-        ticks_with_far_micro_ticks: 97,
-        path: vec!["far_jump", "watch_me_jump", "watch_ball_move"],
+        ticks_with_near_micro_ticks: 34,
+        ticks_with_far_micro_ticks: 100,
+        path: vec!["fork_ball", "walk_to_ball", "jump", "watch_me_jump", "watch_ball_move"],
     });
 }
 
