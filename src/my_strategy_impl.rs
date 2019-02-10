@@ -297,25 +297,12 @@ impl MyStrategyImpl {
                             && world.game.ball.position().distance(world.rules.get_goalkeeper_position(world.game.ball.position()))
                                 > world.rules.arena.depth / 2.0 + 6.0 {
 
-                            let mut order = Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator);
-
-                            if order.is_idle() {
-                                order = Order::try_kick_pusher(robot, world, ctx.order_id_generator);
+                            match Order::try_take_nitro_pack(robot, world, max_z, ctx.order_id_generator) {
+                                Order::Idle(_) => Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator),
+                                v => v,
                             }
-
-                            if order.is_idle() {
-                                order = Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator);
-                            }
-
-                            order
                         } else {
-                            let mut order = Order::try_kick_pusher(robot, world, ctx.order_id_generator);
-
-                            if order.is_idle() {
-                                order = Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator);
-                            }
-
-                            order
+                            Order::walk_to_goalkeeper_position(robot, world, ctx.order_id_generator)
                         }
                     },
                 }

@@ -20,7 +20,6 @@ pub enum Order {
     WalkToGoalkeeperPosition(WalkToGoalkeeperPosition),
     TakeNitroPack(TakeNitroPack),
     PushOpponent(PushOpponent),
-    KickPusher(KickPusher),
 }
 
 impl Order {
@@ -54,14 +53,6 @@ impl Order {
         }
     }
 
-    pub fn try_kick_pusher(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Order {
-        if let Some(kick_pusher) = KickPusher::try_new(robot, world, order_id_generator) {
-            Order::KickPusher(kick_pusher)
-        } else {
-            Self::idle(robot, world, order_id_generator)
-        }
-    }
-
     pub fn idle(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Order {
         Order::Idle(Idle::new(robot, world, order_id_generator))
     }
@@ -73,7 +64,6 @@ impl Order {
             Order::WalkToGoalkeeperPosition(v) => v.id,
             Order::TakeNitroPack(v) => v.id,
             Order::PushOpponent(v) => v.id,
-            Order::KickPusher(v) => v.id,
         }
     }
 
@@ -84,7 +74,6 @@ impl Order {
             Order::WalkToGoalkeeperPosition(v) => v.robot_id,
             Order::TakeNitroPack(v) => v.robot_id,
             Order::PushOpponent(v) => v.robot_id,
-            Order::KickPusher(v) => v.robot_id,
         }
     }
 
@@ -95,7 +84,6 @@ impl Order {
             Order::WalkToGoalkeeperPosition(v) => v.score,
             Order::TakeNitroPack(v) => v.score,
             Order::PushOpponent(v) => v.score,
-            Order::KickPusher(v) => v.score,
         }
     }
 
@@ -106,7 +94,6 @@ impl Order {
             Order::WalkToGoalkeeperPosition(v) => &v.action,
             Order::TakeNitroPack(v) => &v.action,
             Order::PushOpponent(v) => &v.action,
-            Order::KickPusher(v) => &v.action,
         }
     }
 
@@ -120,7 +107,6 @@ impl Order {
                 Order::WalkToGoalkeeperPosition(_) => None,
                 Order::TakeNitroPack(_) => None,
                 Order::PushOpponent(_) => None,
-                Order::KickPusher(_) => None,
             }
         }
     }
@@ -132,7 +118,6 @@ impl Order {
             Order::WalkToGoalkeeperPosition(_) => None,
             Order::TakeNitroPack(_) => None,
             Order::PushOpponent(_) => None,
-            Order::KickPusher(_) => None,
         }
     }
 
@@ -150,7 +135,6 @@ impl Order {
             Order::WalkToGoalkeeperPosition(v) => Order::WalkToGoalkeeperPosition(v.opposite()),
             Order::TakeNitroPack(v) => Order::TakeNitroPack(v.opposite()),
             Order::PushOpponent(v) => Order::PushOpponent(v.opposite()),
-            Order::KickPusher(v) => Order::KickPusher(v.opposite()),
         }
     }
 
@@ -162,7 +146,6 @@ impl Order {
             Order::TakeNitroPack(v) => &v.stats,
             Order::Idle(v) => &v.stats,
             Order::PushOpponent(v) => &v.stats,
-            Order::KickPusher(v) => &v.stats,
         }
     }
 
@@ -174,7 +157,6 @@ impl Order {
             Order::TakeNitroPack(_) => "take_nitro_pack",
             Order::Idle(_) => "idle",
             Order::PushOpponent(_) => "push_opponent",
-            Order::KickPusher(_) => "kick_pusher",
         }
     }
 
@@ -516,55 +498,6 @@ impl PushOpponent {
 
     pub fn opposite(self) -> Self {
         PushOpponent {
-            id: self.id,
-            robot_id: self.robot_id,
-            action: self.action.opposite(),
-            score: self.score,
-            #[cfg(feature = "enable_stats")]
-            stats: self.stats,
-        }
-    }
-}
-
-pub struct KickPusher {
-    pub id: i32,
-    pub robot_id: i32,
-    pub action: Action,
-    pub score: i32,
-    #[cfg(feature = "enable_stats")]
-    pub stats: Stats,
-}
-
-impl KickPusher {
-    pub fn try_new(robot: &Robot, world: &World, order_id_generator: &mut IdGenerator) -> Option<Self> {
-        let pusher = world.game.robots.iter()
-            .find(|v| {
-                !v.is_teammate
-                    && v.position().distance(robot.position()) < v.radius + robot.radius
-                        + world.rules.ROBOT_MAX_GROUND_SPEED * world.rules.tick_time_interval()
-            });
-
-        if let Some(pusher) = pusher {
-            let mut action = Action::default();
-            action.jump_speed = world.rules.ROBOT_MAX_JUMP_SPEED;
-            action.set_target_velocity((pusher.position() - robot.position()).normalized() * world.rules.MAX_ENTITY_SPEED);
-            action.use_nitro = robot.nitro_amount >= world.rules.START_NITRO_AMOUNT;
-
-            Some(KickPusher {
-                id: order_id_generator.next(),
-                robot_id: robot.id,
-                action,
-                score: 0,
-                #[cfg(feature = "enable_stats")]
-                stats: Stats::new(robot.player_id, robot.id, world.game.current_tick, "kick_pusher"),
-            })
-        } else {
-            None
-        }
-    }
-
-    pub fn opposite(self) -> Self {
-        KickPusher {
             id: self.id,
             robot_id: self.robot_id,
             action: self.action.opposite(),
