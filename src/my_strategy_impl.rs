@@ -59,7 +59,7 @@ impl Strategy for MyStrategyImpl {
                 self.set_priority();
                 self.give_orders();
             }
-            #[cfg(feature = "enable_stats")]
+            #[cfg(all(feature = "enable_stats", not(feature = "disable_output")))]
             for v in self.orders.iter() {
                 println!("{}", serde_json::to_string(&v.stats()).unwrap());
             }
