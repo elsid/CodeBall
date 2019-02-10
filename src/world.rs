@@ -3,7 +3,7 @@ use crate::my_strategy::config::Config;
 
 #[derive(Debug, Clone)]
 pub struct World {
-    config: Config,
+    pub config: Config,
     pub me: Robot,
     pub rules: Rules,
     pub game: Game,

@@ -17,6 +17,7 @@ pub struct Config {
     pub time_to_goal_score_weight: f64,
     pub opponent_time_to_ball_penalty_weight: f64,
     pub nitro_amount_score_weight: f64,
+    pub goalkeeper_max_z_factor: f64,
 }
 
 impl Default for Config {
@@ -39,6 +40,7 @@ impl Default for Config {
             time_to_goal_score_weight: 0.24999619213943386,
             opponent_time_to_ball_penalty_weight: 0.09999078428632137,
             nitro_amount_score_weight: 0.10000021192195667,
+            goalkeeper_max_z_factor: 1.6666666666666667,
         }
     }
 }
