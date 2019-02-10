@@ -619,6 +619,7 @@ impl<'r, 'c, 'a, G> Visitor<State<'c, 'a, G>, Transition> for VisitorImpl<'r>
     fn get_transition_cost(&mut self, source_state: &State<'c, 'a, G>, destination_state: &State<'c, 'a, G>, transition: &Transition) -> i32 {
         match transition {
             Transition::ForkBall(_) => 0,
+            Transition::ForkRobot(_) => 0,
             Transition::Observe(_) => 1,
             _ => source_state.score() - destination_state.score(),
         }
