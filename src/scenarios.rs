@@ -684,6 +684,50 @@ impl PushRobot {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct PushBall {
+    pub until_time: f64,
+}
+
+impl PushBall {
+    pub fn perform<'r, 'a, G>(&self, ctx: &mut Context<'r, 'a, G>) -> Result
+        where G: Fn(i32, i32) -> Option<&'a Action> {
+
+        use crate::my_strategy::entity::Entity;
+        use crate::my_strategy::plane::Plane;
+
+        *ctx.simulator.me_mut().action_mut() = Action::default();
+
+        log!(
+            ctx.current_tick, "[{}] <{}> <{}> push robot {}:{} distance_to_ball={}",
+            ctx.robot_id, ctx.order_id, ctx.state_id,
+            ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+            ctx.simulator.me().position().distance(ctx.simulator.ball().position())
+        );
+
+        while ctx.simulator.current_time() < self.until_time {
+            let to_ball = Plane::projected(
+                ctx.simulator.ball().position() - ctx.simulator.me().position(),
+                ctx.simulator.me().normal_to_arena()
+            );
+            let target_velocity = to_ball.normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
+
+            ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+
+            log!(
+                ctx.current_tick, "[{}] <{}> <{}> push ball {}:{} distance_to_ball={}",
+                ctx.robot_id, ctx.order_id, ctx.state_id,
+                ctx.simulator.current_time(), ctx.used_path_micro_ticks,
+                ctx.simulator.me().position().distance(ctx.simulator.ball().position())
+            );
+
+            ctx.tick(TickType::Far, ALL)?;
+        }
+
+        Ok(())
+    }
+}
+
 pub fn get_target_velocity_for_jump(target: SolidId, use_nitro: bool, simulator: &Simulator) -> Vec3 {
 
     use crate::my_strategy::entity::Entity;

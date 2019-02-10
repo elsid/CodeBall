@@ -16,6 +16,7 @@ use crate::my_strategy::scenarios::{
     WatchBallMove,
     WalkToBall,
     WalkToRobot,
+    PushBall,
     Context as ScenarioContext,
     Result as ScenarioResult,
     Error as ScenarioError
@@ -385,11 +386,28 @@ impl<'r> VisitorImpl<'r> {
             vec![Transition::walk_to_robot(state.robot_id, to_robot, true)]
         } else if observe_simulator.current_tick() <= 10 {
             let tick_interval = observe_simulator.rules().tick_time_interval();
-            let until_time = state.plan.time_to_play.max(20.0 * tick_interval);
+            let until_time = state.plan.simulator.current_time() + 20.0 * tick_interval;
             vec![Transition::push_robot(state.robot_id, true, until_time)]
         } else {
             Vec::new()
         }
+    }
+
+    pub fn get_transitions_for_walked_to_ball_state<'c, 'a, G>(&mut self, state: &Final<'c, 'a, G>) -> Vec<Transition>
+        where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
+
+        use crate::my_strategy::entity::Entity;
+
+        let mut result = vec![Transition::jump(SolidId::Ball, false)];
+
+        if state.plan.simulator.rules().team_size <= 2
+            && state.plan.simulator.current_tick() <= 10
+            && !state.plan.simulator.rules().is_near_my_goal(state.plan.simulator.me().position()) {
+            let duration = 10.0 * state.plan.simulator.rules().tick_time_interval();
+            result.push(Transition::push_ball(state.plan.simulator.current_time() + duration));
+        }
+
+        result
     }
 
     pub fn fork<'c, 'a, G>(&mut self, state: &State<'c, 'a, G>) -> State<'c, 'a, G>
@@ -522,6 +540,7 @@ impl<'r> VisitorImpl<'r> {
                     Transition::TakeNitroPack(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::WalkToBall(_) => State::walked_to_ball(self.state_id_generator.next(), plan),
                     Transition::WalkToRobot(v) => State::walked_to_robot(self.state_id_generator.next(), plan, v.robot_id),
+                    Transition::PushBall(_) => State::walked_to_ball(self.state_id_generator.next(), plan),
                     Transition::Observe(_) => unimplemented!(),
                     Transition::ForkBall(_) => unimplemented!(),
                     Transition::ForkRobot(_) => unimplemented!(),
@@ -572,7 +591,7 @@ impl<'r, 'c, 'a, G> Visitor<State<'c, 'a, G>, Transition> for VisitorImpl<'r>
             ],
             State::ForkedBall(v) => self.get_transitions_for_forked_ball_state(v),
             State::ForkedRobot(v) => self.get_transitions_for_forked_robot_state(v),
-            State::WalkedToBall(v) => vec![Transition::jump(SolidId::Ball, false)],
+            State::WalkedToBall(v) => self.get_transitions_for_walked_to_ball_state(v),
             State::WalkedToRobot(v) => vec![Transition::jump(SolidId::Robot(v.robot_id), true)],
             State::Jumped(v) => vec![
                 Transition::watch_me_jump(v.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, false)
@@ -902,6 +921,7 @@ pub enum Transition {
     TakeNitroPack(WalkToPosition),
     WalkToBall(WalkToBall),
     WalkToRobot(WalkToRobot),
+    PushBall(PushBall),
 }
 
 impl Transition {
@@ -953,6 +973,10 @@ impl Transition {
         Transition::WalkToRobot(WalkToRobot { robot_id, direction, allow_nitro })
     }
 
+    pub fn push_ball(until_time: f64) -> Self {
+        Transition::PushBall(PushBall { until_time })
+    }
+
     pub fn name(&self) -> &'static str {
         match self {
             Transition::Observe(_) => "observe",
@@ -967,6 +991,7 @@ impl Transition {
             Transition::WalkToBall(_) => "walk_to_ball",
             Transition::WalkToRobot(_) => "walk_to_robot",
             Transition::ForkRobot(_) => "fork_robot",
+            Transition::PushBall(_) => "push_ball",
         }
     }
 
@@ -984,6 +1009,7 @@ impl Transition {
             Transition::TakeNitroPack(v) => v.perform(ctx),
             Transition::WalkToBall(v) => v.perform(ctx),
             Transition::WalkToRobot(v) => v.perform(ctx),
+            Transition::PushBall(v) => v.perform(ctx),
             Transition::ForkBall(_) => unimplemented!(),
             Transition::ForkRobot(_) => unimplemented!(),
         }
