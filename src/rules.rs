@@ -4,6 +4,9 @@ use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::arena::ArenaCollisionMask;
 use crate::my_strategy::line2::Line2;
 
+#[cfg(feature = "enable_render")]
+use crate::my_strategy::render::Render;
+
 impl Rules {
     pub fn tick_time_interval(&self) -> f64 {
         1.0 / self.TICKS_PER_SECOND as f64
@@ -180,12 +183,69 @@ impl Rules {
     pub fn is_near_my_goal(&self, position: Vec3) -> bool {
         use crate::my_strategy::common::IsBetween;
 
-        position.z() < -self.arena.depth / 2.0 + 3.0 * self.BALL_RADIUS
-        && position.y() < self.arena.goal_height + 2.0 * self.BALL_RADIUS
-        && position.x().is_between(-self.arena.goal_width / 2.0 + self.BALL_RADIUS, self.arena.goal_width / 2.0 + self.BALL_RADIUS)
+        position.z() < self.near_goal_max_z()
+        && position.y() < self.near_goal_max_y()
+        && position.x().is_between(self.near_goal_min_x(), self.near_goal_max_x())
+    }
+
+    pub fn near_goal_min_x(&self) -> f64 {
+        -self.near_goal_max_x()
+    }
+
+    pub fn near_goal_max_x(&self) -> f64 {
+        self.arena.goal_width / 2.0
+    }
+
+    pub fn near_goal_max_y(&self) -> f64 {
+        self.arena.goal_height + 2.0 * self.BALL_RADIUS
+    }
+
+    pub fn near_goal_max_z(&self) -> f64 {
+        -self.arena.depth / 2.0 + 3.0 * self.BALL_RADIUS
     }
 
     pub fn jump_to_max_height_time(&self) -> f64 {
         self.ROBOT_MAX_JUMP_SPEED / self.GRAVITY
     }
+
+    #[cfg(feature = "enable_render")]
+    pub fn render(&self, render: &mut Render) {
+        use crate::my_strategy::render::{Color, Object};
+
+        let color = Color::new(0.5, 0.5, 0.5, 0.8);
+        let width = 3.0;
+
+        for &y in &[self.ROBOT_RADIUS, self.near_goal_max_y()] {
+            render.add(Object::line(
+                Vec3::new(self.near_goal_min_x(), y, -self.arena.depth / 2.0),
+                Vec3::new(self.near_goal_min_x(), y, self.near_goal_max_z()),
+                width,
+                color
+            ));
+
+            render.add(Object::line(
+                Vec3::new(self.near_goal_min_x(), y, self.near_goal_max_z()),
+                Vec3::new(self.near_goal_max_x(), y, self.near_goal_max_z()),
+                width,
+                color
+            ));
+
+            render.add(Object::line(
+                Vec3::new(self.near_goal_max_x(), y, self.near_goal_max_z()),
+                Vec3::new(self.near_goal_max_x(), y, -self.arena.depth / 2.0),
+                width,
+                color
+            ));
+        }
+
+        for &x in &[self.near_goal_min_x(), self.near_goal_max_x()] {
+            render.add(Object::line(
+                Vec3::new(x, 0.0, self.near_goal_max_z()),
+                Vec3::new(x, self.near_goal_max_y(), self.near_goal_max_z()),
+                width,
+                color
+            ));
+        }
+    }
 }
+

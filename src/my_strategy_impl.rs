@@ -425,5 +425,7 @@ impl MyStrategyImpl {
                     Color::new(0.0, 0.2, 0.8, 0.8)
                 ));
             });
+
+        self.world.rules.render(render);
     }
 }
