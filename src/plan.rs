@@ -282,7 +282,7 @@ impl<'r> VisitorImpl<'r> {
                 transitions.push(Transition::push_robot(
                     v.id(),
                     true,
-                    plan.time_to_play.max(20.0 * rules.tick_time_interval())
+                    plan.simulator.current_time() + 20.0 * rules.tick_time_interval()
                 ));
             });
     }
