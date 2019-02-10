@@ -527,12 +527,12 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         time_to_end: 0.9500000000000013,
         time_to_score: Some(0.9500000000000013),
         iteration: 12,
-        total_iterations: 45,
+        total_iterations: 49,
         game_score: -1,
         order_score: -995,
         path_micro_ticks: 342,
-        plan_micro_ticks: 9395,
-        game_micro_ticks: 9395,
+        plan_micro_ticks: 11120,
+        game_micro_ticks: 11120,
         game_micro_ticks_limit: 30000,
         current_step: 8,
         reached_game_limit: false,
@@ -581,7 +581,7 @@ fn test_try_play_goalkeeper_should_catch() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), 931);
+    assert_eq!(result.score(), 963);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 0.0);
     assert_eq!(result.action().target_velocity(), Vec3::new(-11.479472765463528, 0.0, 27.7168126779935));
@@ -596,13 +596,13 @@ fn test_try_play_goalkeeper_should_catch() {
         time_to_watch: 0.39999999999999997,
         time_to_end: 1.6666666666666656,
         time_to_score: None,
-        iteration: 22,
-        total_iterations: 65,
+        iteration: 32,
+        total_iterations: 79,
         game_score: 0,
-        order_score: 931,
+        order_score: 963,
         path_micro_ticks: 315,
-        plan_micro_ticks: 6712,
-        game_micro_ticks: 6712,
+        plan_micro_ticks: 7609,
+        game_micro_ticks: 7609,
         game_micro_ticks_limit: 30000,
         current_step: 3,
         reached_game_limit: false,

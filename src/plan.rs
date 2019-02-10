@@ -364,6 +364,7 @@ impl<'r> VisitorImpl<'r> {
                 - observe_simulator.me().position();
             result.push(Transition::walk_to_ball(to_ball, true));
             result.push(Transition::walk_to_ball(-to_ball, true));
+            result.push(Transition::walk_to_ball(-to_ball.with_neg_x(), true));
         }
 
         result
