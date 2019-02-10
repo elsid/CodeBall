@@ -511,10 +511,10 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
 
     let result = Order::try_play(&world.me, &world, &[], Goalkeeper::max_z(&world), &mut ctx);
 
-    assert_eq!(result.score(), -1045);
+    assert_eq!(result.score(), -995);
     assert_eq!(result.action().use_nitro, false);
     assert_eq!(result.action().jump_speed, 0.0);
-    assert_eq!(result.action().target_velocity(), Vec3::new(5.203589045050307, 0.0, -0.5952380952381013));
+    assert_eq!(result.action().target_velocity(), Vec3::new(26.73720956999724, 0.0, 13.605940776368541));
 
     #[cfg(feature = "enable_stats")]
     assert_eq!(result.stats(), &Stats {
@@ -526,22 +526,22 @@ fn test_try_play_goalkeeper_should_catch_but_cant() {
         time_to_watch: 0.0,
         time_to_end: 0.9500000000000013,
         time_to_score: Some(0.9500000000000013),
-        iteration: 4,
-        total_iterations: 42,
+        iteration: 12,
+        total_iterations: 45,
         game_score: -1,
-        order_score: -1045,
-        path_micro_ticks: 171,
-        plan_micro_ticks: 8534,
-        game_micro_ticks: 8534,
+        order_score: -995,
+        path_micro_ticks: 342,
+        plan_micro_ticks: 9395,
+        game_micro_ticks: 9395,
         game_micro_ticks_limit: 30000,
-        current_step: 1,
+        current_step: 8,
         reached_game_limit: false,
         reached_plan_limit: false,
         reached_path_limit: false,
         other_number: 0,
-        ticks_with_near_micro_ticks: 63,
+        ticks_with_near_micro_ticks: 86,
         ticks_with_far_micro_ticks: 57,
-        path: vec!["fork_ball", "walk_to_position"],
+        path: vec!["fork_ball", "walk_to_ball"],
     });
 }
 

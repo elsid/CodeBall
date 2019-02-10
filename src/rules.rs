@@ -180,8 +180,8 @@ impl Rules {
     pub fn is_near_my_goal(&self, position: Vec3) -> bool {
         use crate::my_strategy::common::IsBetween;
 
-        position.z() < -self.arena.depth / 2.0 + self.BALL_RADIUS
-        && position.y() < self.arena.goal_height + self.BALL_RADIUS
+        position.z() < -self.arena.depth / 2.0 + 3.0 * self.BALL_RADIUS
+        && position.y() < self.arena.goal_height + 2.0 * self.BALL_RADIUS
         && position.x().is_between(-self.arena.goal_width / 2.0 + self.BALL_RADIUS, self.arena.goal_width / 2.0 + self.BALL_RADIUS)
     }
 
