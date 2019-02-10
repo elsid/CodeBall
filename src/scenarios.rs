@@ -207,6 +207,10 @@ impl WalkToPosition {
             );
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
+            let use_nitro = ctx.simulator.me().nitro_amount() > 0.0 && is_pushed(&ctx.simulator);
+
+            ctx.simulator.me_mut().action_mut().use_nitro = use_nitro;
+
             ctx.tick(TickType::Far, ALL)?;
 
             log!(
@@ -264,6 +268,10 @@ impl WalkToBall {
 
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
 
+            let use_nitro = ctx.simulator.me().nitro_amount() > 0.0 && is_pushed(&ctx.simulator);
+
+            ctx.simulator.me_mut().action_mut().use_nitro = use_nitro;
+
             ctx.tick(TickType::Far, ALL)?;
 
             log!(
@@ -308,6 +316,10 @@ impl WalkToRobot {
             ).normalized() * ctx.simulator.rules().ROBOT_MAX_GROUND_SPEED;
 
             ctx.simulator.me_mut().action_mut().set_target_velocity(target_velocity);
+
+            let use_nitro = ctx.simulator.me().nitro_amount() > 0.0 && is_pushed(&ctx.simulator);
+
+            ctx.simulator.me_mut().action_mut().use_nitro = use_nitro;
 
             ctx.tick(TickType::Far, ALL)?;
 
@@ -752,4 +764,19 @@ pub fn does_jump_hit_solid<'r, 'a, G>(solid_id: SolidId, allow_nitro: bool, ctx:
         && my_move_equation.get_velocity(time).y() > -simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
         && my_move_equation.get_position(time).y() < solid_move_equation.get_position(time).y()
         && solid_move_equation.get_position(time).y() > solid_min_y - simulator.rules().tick_time_interval() * simulator.rules().GRAVITY
+}
+
+pub fn is_pushed(simulator: &Simulator) -> bool {
+    use crate::my_strategy::entity::Entity;
+
+    simulator.robots().iter()
+        .find(|v| {
+            !v.is_teammate()
+            && v.velocity().norm() > 0.0
+            && v.position().distance(simulator.me().position())
+                < simulator.me().radius() + v.radius()
+                    + 2.0 * v.velocity().norm() * simulator.rules().tick_time_interval()
+            && v.velocity().cos(simulator.me().position() - v.position()) > 0.0
+        })
+        .is_some()
 }
