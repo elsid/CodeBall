@@ -24,24 +24,16 @@ impl Config {
     pub fn new(team_size: i32) -> Self {
         Config {
             max_ticks: 100,
-            near_micro_ticks_per_tick: if team_size <= 2 {
-                32
-            } else {
-                25
-            },
-            far_micro_ticks_per_tick: if team_size <= 2 {
-                4
-            } else {
-                3
-            },
+            near_micro_ticks_per_tick: 25,
+            far_micro_ticks_per_tick: 3,
             max_observations: 6,
             ticks_per_steps: vec![1, 3, 4, 8],
-            max_iterations: 100,
-            max_path_micro_ticks: if team_size <= 2 {
-                1400
+            max_iterations: if team_size <= 2 {
+                150
             } else {
-                1100
+                100
             },
+            max_path_micro_ticks: 1100,
             max_plan_micro_ticks: 40000,
             max_act_micro_ticks: 15000,
             robot_priority_change_gap: 10,
