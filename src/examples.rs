@@ -43,7 +43,7 @@ pub fn example_rng(rules: &Rules) -> XorShiftRng {
 pub fn example_world(game_type: GameType) -> World {
     let rules = example_rules(game_type);
     World::new(
-        Config::default(),
+        Config::new(rules.team_size),
         example_me(game_type, &rules),
         rules.clone(),
         example_game(game_type, &rules),

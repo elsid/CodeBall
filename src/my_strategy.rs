@@ -125,7 +125,7 @@ impl Strategy for MyStrategy {
                     ).expect("Can't read config file").as_str()
                 ).expect("Can't parse config file")
             } else {
-                Config::default()
+                Config::new(rules.team_size)
             };
             self.strategy_impl = Some(MyStrategyImpl::new(config, me, rules, game));
         }
