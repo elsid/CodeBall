@@ -546,7 +546,7 @@ impl KickPusher {
 
         if let Some(pusher) = pusher {
             let mut action = Action::default();
-            action.jump_speed = world.rules.ROBOT_MAX_JUMP_SPEED;
+            action.jump_speed = 1.0;
             action.set_target_velocity((pusher.position() - robot.position()).normalized() * world.rules.MAX_ENTITY_SPEED);
             action.use_nitro = robot.nitro_amount >= world.rules.START_NITRO_AMOUNT;
 
