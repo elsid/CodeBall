@@ -5,6 +5,7 @@ use crate::my_strategy::simulator::Simulator;
 use crate::my_strategy::common::IdGenerator;
 use crate::my_strategy::vec3::Vec3;
 use crate::my_strategy::config::Config;
+use crate::my_strategy::solid::SolidId;
 use crate::my_strategy::scenarios::{
     Jump,
     FarJump,
@@ -512,15 +513,15 @@ impl<'r> VisitorImpl<'r> {
         } else {
             match result {
                 Ok(_) => match transition {
-                    Transition::WalkToPosition(_) => State::walked(self.state_id_generator.next(), plan),
+                    Transition::WalkToPosition(_) => State::walked_to_ball(self.state_id_generator.next(), plan),
                     Transition::Jump(_) => State::jumped(self.state_id_generator.next(), plan),
                     Transition::FarJump(_) => State::far_jumped(self.state_id_generator.next(), plan),
                     Transition::WatchMeJump(_) => State::hit(self.state_id_generator.next(), plan),
                     Transition::WatchBallMove(_) => State::end(self.state_id_generator.next(), plan),
                     Transition::PushRobot(_) => State::initial(self.state_id_generator.next(), plan),
                     Transition::TakeNitroPack(_) => State::initial(self.state_id_generator.next(), plan),
-                    Transition::WalkToBall(_) => State::walked(self.state_id_generator.next(), plan),
-                    Transition::WalkToRobot(_) => State::walked(self.state_id_generator.next(), plan),
+                    Transition::WalkToBall(_) => State::walked_to_ball(self.state_id_generator.next(), plan),
+                    Transition::WalkToRobot(v) => State::walked_to_robot(self.state_id_generator.next(), plan, v.robot_id),
                     Transition::Observe(_) => unimplemented!(),
                     Transition::ForkBall(_) => unimplemented!(),
                     Transition::ForkRobot(_) => unimplemented!(),
@@ -533,7 +534,7 @@ impl<'r> VisitorImpl<'r> {
                         },
                         (Transition::Observe(t), ScenarioError::PushRobot(robot_id)) => {
                             State::observed_robot(self.state_id_generator.next(), t.number,
-                                                  robot_id, plan, state.get_initial_plan().clone())
+                                                  plan, state.get_initial_plan().clone(), robot_id)
                         },
                         _ => {
                             log!(
@@ -571,7 +572,8 @@ impl<'r, 'c, 'a, G> Visitor<State<'c, 'a, G>, Transition> for VisitorImpl<'r>
             ],
             State::ForkedBall(v) => self.get_transitions_for_forked_ball_state(v),
             State::ForkedRobot(v) => self.get_transitions_for_forked_robot_state(v),
-            State::Walked(_) => vec![Transition::jump(false)],
+            State::WalkedToBall(v) => vec![Transition::jump(SolidId::Ball, false)],
+            State::WalkedToRobot(v) => vec![Transition::jump(SolidId::Robot(v.robot_id), true)],
             State::Jumped(v) => vec![
                 Transition::watch_me_jump(v.plan.simulator.rules().ROBOT_MAX_JUMP_SPEED, false)
             ],
@@ -640,7 +642,8 @@ pub enum State<'c, 'a, G>
     ObservedRobot(ObservedRobot<'c, 'a, G>),
     ForkedBall(ForkedBall<'c, 'a, G>),
     ForkedRobot(ForkedRobot<'c, 'a, G>),
-    Walked(Final<'c, 'a, G>),
+    WalkedToBall(Final<'c, 'a, G>),
+    WalkedToRobot(WalkedToRobot<'c, 'a, G>),
     Jumped(Final<'c, 'a, G>),
     FarJumped(Final<'c, 'a, G>),
     Hit(Final<'c, 'a, G>),
@@ -658,7 +661,7 @@ impl<'c, 'a, G> State<'c, 'a, G>
         State::ObservedBall(ObservedBall { id, number, score: 0, plan, initial_plan })
     }
 
-    pub fn observed_robot(id: i32, number: usize, robot_id: i32, plan: Plan<'c, 'a, G>, initial_plan: Plan<'c, 'a, G>) -> Self {
+    pub fn observed_robot(id: i32, number: usize, plan: Plan<'c, 'a, G>, initial_plan: Plan<'c, 'a, G>, robot_id: i32) -> Self {
         State::ObservedRobot(ObservedRobot { id, number, robot_id, score: 0, plan, initial_plan })
     }
 
@@ -670,8 +673,12 @@ impl<'c, 'a, G> State<'c, 'a, G>
         State::ForkedRobot(ForkedRobot { id, score: plan.get_score(), robot_id, plan, observe_simulator })
     }
 
-    pub fn walked(id: i32, plan: Plan<'c, 'a, G>) -> Self {
-        State::Walked(Final { id, score: plan.get_score(), plan })
+    pub fn walked_to_ball(id: i32, plan: Plan<'c, 'a, G>) -> Self {
+        State::WalkedToBall(Final { id, score: plan.get_score(), plan })
+    }
+
+    pub fn walked_to_robot(id: i32, plan: Plan<'c, 'a, G>, robot_id: i32) -> Self {
+        State::WalkedToRobot(WalkedToRobot { id, score: plan.get_score(), plan, robot_id })
     }
 
     pub fn jumped(id: i32, plan: Plan<'c, 'a, G>) -> Self {
@@ -697,7 +704,8 @@ impl<'c, 'a, G> State<'c, 'a, G>
             State::ObservedRobot(v) => v.id,
             State::ForkedBall(v) => v.id,
             State::ForkedRobot(v) => v.id,
-            State::Walked(v) => v.id,
+            State::WalkedToBall(v) => v.id,
+            State::WalkedToRobot(v) => v.id,
             State::Jumped(v) => v.id,
             State::FarJumped(v) => v.id,
             State::Hit(v) => v.id,
@@ -712,7 +720,8 @@ impl<'c, 'a, G> State<'c, 'a, G>
             State::ObservedRobot(v) => v.score,
             State::ForkedBall(v) => v.score,
             State::ForkedRobot(v) => v.score,
-            State::Walked(v) => v.score,
+            State::WalkedToBall(v) => v.score,
+            State::WalkedToRobot(v) => v.score,
             State::Jumped(v) => v.score,
             State::FarJumped(v) => v.score,
             State::Hit(v) => v.score,
@@ -727,7 +736,8 @@ impl<'c, 'a, G> State<'c, 'a, G>
             State::ObservedRobot(v) => &v.plan,
             State::ForkedBall(v) => &v.plan,
             State::ForkedRobot(v) => &v.plan,
-            State::Walked(v) => &v.plan,
+            State::WalkedToBall(v) => &v.plan,
+            State::WalkedToRobot(v) => &v.plan,
             State::Jumped(v) => &v.plan,
             State::FarJumped(v) => &v.plan,
             State::Hit(v) => &v.plan,
@@ -742,7 +752,8 @@ impl<'c, 'a, G> State<'c, 'a, G>
             State::ObservedRobot(v) => &mut v.plan,
             State::ForkedBall(v) => &mut v.plan,
             State::ForkedRobot(v) => &mut v.plan,
-            State::Walked(v) => &mut v.plan,
+            State::WalkedToBall(v) => &mut v.plan,
+            State::WalkedToRobot(v) => &mut v.plan,
             State::Jumped(v) => &mut v.plan,
             State::FarJumped(v) => &mut v.plan,
             State::Hit(v) => &mut v.plan,
@@ -757,7 +768,8 @@ impl<'c, 'a, G> State<'c, 'a, G>
             State::ObservedRobot(v) => v.plan,
             State::ForkedBall(v) => v.plan,
             State::ForkedRobot(v) => v.plan,
-            State::Walked(v) => v.plan,
+            State::WalkedToBall(v) => v.plan,
+            State::WalkedToRobot(v) => v.plan,
             State::Jumped(v) => v.plan,
             State::FarJumped(v) => v.plan,
             State::Hit(v) => v.plan,
@@ -772,7 +784,8 @@ impl<'c, 'a, G> State<'c, 'a, G>
             State::ObservedRobot(_) => "ObservedRobot",
             State::ForkedBall(_) => "ForkedBall",
             State::ForkedRobot(_) => "ForkedRobot",
-            State::Walked(_) => "Walked",
+            State::WalkedToBall(_) => "WalkedToBall",
+            State::WalkedToRobot(_) => "WalkedToRobot",
             State::Jumped(_) => "Jumped",
             State::FarJumped(_) => "FarJumped",
             State::Hit(_) => "Hit",
@@ -865,6 +878,16 @@ pub struct ForkedRobot<'c, 'a, G>
     pub observe_simulator: Simulator,
 }
 
+#[derive(Clone)]
+pub struct WalkedToRobot<'c, 'a, G>
+    where G: Clone + Fn(i32, i32) -> Option<&'a Action> {
+
+    pub id: i32,
+    pub score: i32,
+    pub plan: Plan<'c, 'a, G>,
+    pub robot_id: i32,
+}
+
 #[derive(Clone, Debug)]
 pub enum Transition {
     Observe(Observe),
@@ -898,8 +921,8 @@ impl Transition {
         Transition::WalkToPosition(WalkToPosition { target, max_speed })
     }
 
-    pub fn jump(allow_nitro: bool) -> Self {
-        Transition::Jump(Jump { allow_nitro })
+    pub fn jump(target: SolidId, allow_nitro: bool) -> Self {
+        Transition::Jump(Jump { target, allow_nitro })
     }
 
     pub fn far_jump(allow_nitro: bool) -> Self {
