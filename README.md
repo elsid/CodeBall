@@ -2,6 +2,8 @@
 
 Bot implementation by http://2018.russianaicup.ru/profile/elsid .
 
+![render](https://imgur.com/91XKJn2.jpg)
+
 ## Usage
 
 Build and run using local runner vs helper:
