@@ -60,9 +60,7 @@ impl Strategy for MyStrategyImpl {
                 self.give_orders();
             }
             #[cfg(all(feature = "enable_stats", not(feature = "disable_output")))]
-            for v in self.orders.iter() {
-                println!("{}", serde_json::to_string(&v.stats()).unwrap());
-            }
+            self.print_stats();
             #[cfg(feature = "enable_render")]
             self.render();
         } else {
@@ -173,7 +171,6 @@ impl MyStrategyImpl {
             } else {
                 vec![Role::forward(robots_ids[0])]
             }
-
         } else {
             let robots = robots_ids.iter()
                 .map(|v| self.world.get_robot(*v))
@@ -344,6 +341,13 @@ impl MyStrategyImpl {
         {
             let micro_ticks = self.micro_ticks - self.micro_ticks_before;
             println!("{} {}", milliseconds(&cpu_time_spent), micro_ticks);
+        }
+    }
+
+    #[cfg(feature = "enable_stats")]
+    fn print_stats(&self) {
+        for v in self.orders.iter() {
+            println!("{}", serde_json::to_string(&v.stats()).unwrap());
         }
     }
 
