@@ -11,6 +11,55 @@ Build and run using local runner vs helper:
 scripts/run_vs_helper.sh
 ```
 
+## Description
+
+### High level logic
+
+Strategy work for all robots at once.
+Actions are calculating once per game tick for all robots.
+Possible action has restrictions depending on a robot role.
+There are following stages:
+1. Assign roles for robots.
+2. Set robots priority.
+3. Give orders for robots.
+
+Each order contains an action which applies to current robot.
+
+### Roles
+
+There are only two roles: *Forward* and *Goalkeeper*.
+For games with single robot there is only one Forward.
+Games with two or more robots has one *Goalkeeper* and the rest are Forwards.
+The difference between roles are where robots can play, when they could quit roles to change it, and what orders they can perform.
+Roles assignment is base on combination which has max total score by role score function.
+If robot can't quit role then role score for new role is 0.
+
+#### Goalkeeper
+
+Plays only in area with z coordinate less than `(arena.corner_radius + world.rules.BALL_RADIUS) * goalkeeper_max_z_factor`.
+*Goalkeeper* can quit role only when there is a teammate in allowed for goalkeeper area which has less position by z.
+Score depends on distance to my goal.
+
+#### Forward
+
+Has no restrictions.
+Score depends on distance to ball and opponent goal.
+
+### Priority
+
+Initially robots are ordered by distance to ball.
+If there is existing order, each robots gets priority penalty `robot_priority_change_gap * number` to lower switch frequency.
+
+### Orders
+
+Orders are predefined scenarios for robots. Each order means some action to reach some goal in the future.
+There are following orders types:
+* `Idle` - do nothing when there is no other applicable order;
+* `Play` - generated order by optimal planning;
+* `WalkToGoalkeeperPosition` - default *Goakeeper's* order;
+* `TakeNitroPack` - go to nearest nitro pack;
+* `PushOpponent` - go to the center of nearest opponent with enabled nitro.
+
 ## Simulation tool
 
 Based on strategy simulation implementation.
