@@ -40,7 +40,7 @@ target/release/simulation_tool check_goalkeeper < hits.json > goalkeeper.json
 ```bash
 scripts/join_simulations.py goalkeeper.json empty.json > empty_and_goalkeeper.json
 ```
-6. See [check goalkeeper report](check-goalkeeper-report) script how to get visual results.
+6. See [check goalkeeper report](#check-goalkeeper-report) script how to get visual results.
 
 ## Scripts
 
@@ -312,7 +312,7 @@ scripts/game_report.py < 389180.c1_scauto4z5zwmzazyszyjcvmpapxte.log
 
 Usage:
 
-1. See [simulation tool](simulation-tool) how to prepare data.
+1. See [simulation tool](#simulation-tool) how to prepare data.
 2. Run report script:
 ```bash
 scripts/check_goalkeeper_report.py < empty_and_goalkeeper.json
