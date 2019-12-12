@@ -59,9 +59,10 @@ def show_stats_by_game_type(games, profile, sort_by):
 def show_stats_by_opponent(games, profile, sort_by):
     stats = defaultdict(lambda: dict(scores=list(), places=list()))
     for game in games:
-        opponent = next(v for v in game.players_by_name.keys() if v != profile)
-        stats[opponent]['scores'].append(game.players_by_name[profile].score)
-        stats[opponent]['places'].append(game.players_by_name[profile].place)
+        opponent = next((v for v in game.players_by_name.keys() if v != profile), None)
+        if opponent is not None:
+            stats[opponent]['scores'].append(game.players_by_name[profile].score)
+            stats[opponent]['places'].append(game.players_by_name[profile].place)
     print()
     row('opponent', 'n', 'total_score', 'mean_score', 'median_score', 'mean_place', 'median_place')
     show_stats(stats, sort_by)
@@ -70,10 +71,11 @@ def show_stats_by_opponent(games, profile, sort_by):
 def show_stats_by_opponent_and_version(games, profile, sort_by):
     stats = defaultdict(lambda: dict(scores=list(), places=list()))
     for game in games:
-        opponent = next(v for v in game.players_by_name.keys() if v != profile)
-        key = (opponent, game.players_by_name[opponent].version)
-        stats[key]['scores'].append(game.players_by_name[profile].score)
-        stats[key]['places'].append(game.players_by_name[profile].place)
+        opponent = next((v for v in game.players_by_name.keys() if v != profile), None)
+        if opponent is not None:
+            key = (opponent, game.players_by_name[opponent].version)
+            stats[key]['scores'].append(game.players_by_name[profile].score)
+            stats[key]['places'].append(game.players_by_name[profile].place)
     print()
     row('opponent', 'version', 'n', 'total_score', 'mean_score', 'median_score', 'mean_place', 'median_place')
     show_stats(stats, sort_by)
@@ -82,10 +84,11 @@ def show_stats_by_opponent_and_version(games, profile, sort_by):
 def show_stats_by_opponent_and_game_type(games, profile, sort_by):
     stats = defaultdict(lambda: dict(scores=list(), places=list()))
     for game in games:
-        opponent = next(v for v in game.players_by_name.keys() if v != profile)
-        key = (opponent, game.type)
-        stats[key]['scores'].append(game.players_by_name[profile].score)
-        stats[key]['places'].append(game.players_by_name[profile].place)
+        opponent = next((v for v in game.players_by_name.keys() if v != profile), None)
+        if opponent is not None:
+            key = (opponent, game.type)
+            stats[key]['scores'].append(game.players_by_name[profile].score)
+            stats[key]['places'].append(game.players_by_name[profile].place)
     print()
     row('opponent', 'game_type', 'n', 'total_score', 'mean_score', 'median_score', 'mean_place', 'median_place')
     show_stats(stats, sort_by)
@@ -94,10 +97,11 @@ def show_stats_by_opponent_and_game_type(games, profile, sort_by):
 def show_stats_by_opponent_and_version_and_game_type(games, profile, sort_by):
     stats = defaultdict(lambda: dict(scores=list(), places=list()))
     for game in games:
-        opponent = next(v for v in game.players_by_name.keys() if v != profile)
-        key = (opponent, game.players_by_name[opponent].version, game.type)
-        stats[key]['scores'].append(game.players_by_name[profile].score)
-        stats[key]['places'].append(game.players_by_name[profile].place)
+        opponent = next((v for v in game.players_by_name.keys() if v != profile), None)
+        if opponent is not None:
+            key = (opponent, game.players_by_name[opponent].version, game.type)
+            stats[key]['scores'].append(game.players_by_name[profile].score)
+            stats[key]['places'].append(game.players_by_name[profile].place)
     print()
     row('opponent', 'version', 'game_type', 'n', 'total_score', 'mean_score', 'median_score', 'mean_place', 'median_place')
     show_stats(stats, sort_by)
