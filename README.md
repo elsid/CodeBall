@@ -4,6 +4,16 @@ Bot implementation by http://2018.russianaicup.ru/profile/elsid .
 
 ![render](https://imgur.com/91XKJn2.jpg)
 
+## Example videos
+
+### Schematic render
+
+[![schematic](https://img.youtube.com/vi/79kaLxe7Glw/0.jpg)](https://youtu.be/79kaLxe7Glw)
+
+### Fancy render
+
+[![fancy](https://img.youtube.com/vi/Ec6Em6IWKTM/0.jpg)](https://youtu.be/Ec6Em6IWKTM)
+
 ## Usage
 
 Build and run using local runner vs helper:
